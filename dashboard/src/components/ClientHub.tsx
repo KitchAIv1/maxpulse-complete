@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { 
   Search, 
   Users, 
@@ -21,8 +19,35 @@ import {
   Activity,
   Calendar,
   Plus,
-  Zap
+  Zap,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  Filter,
+  SortAsc,
+  Download,
+  UserPlus,
+  PhoneCall,
+  Send
 } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 
 // Real-time tracking interfaces
 interface TrackingEvent {
@@ -79,8 +104,11 @@ export function ClientHub() {
   const [clients, setClients] = useState<UnifiedClient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('lastContact');
   const [selectedClient, setSelectedClient] = useState<UnifiedClient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [editingClient, setEditingClient] = useState<UnifiedClient | null>(null);
 
   // Base client data (in production, this would come from API)
   const baseClients: Omit<UnifiedClient, 'currentAssessment' | 'assessmentHistory' | 'isLive'>[] = [
@@ -98,717 +126,627 @@ export function ClientHub() {
     },
     {
       id: 2,
-      name: 'Mark Rodriguez',
-      email: 'mark.r@email.com',
+      name: 'Michael Chen',
+      email: 'michael.chen@gmail.com',
       phone: '+1 (555) 234-5678',
-      status: 'customer',
-      interests: ['Health App'],
-      lastContact: '2024-08-22',
-      value: 97,
+      status: 'prospect',
+      interests: ['Wealth Building', 'Investment'],
+      lastContact: '2024-08-20',
+      value: 250,
       priority: 'medium',
-      source: 'Referral',
-      subscription: 'Health App Premium'
+      source: 'Referral'
     },
     {
       id: 3,
-      name: 'Lisa Chen',
-      email: 'lisa.c@email.com',
+      name: 'Sarah Johnson',
+      email: 'sarah.j@outlook.com',
       phone: '+1 (555) 345-6789',
-      status: 'prospect',
-      interests: ['Health App', 'Business Opportunity', 'Product Package'],
-      lastContact: '2024-08-20',
-      value: 0,
+      status: 'customer',
+      interests: ['Health Coaching', 'Nutrition'],
+      lastContact: '2024-08-19',
+      value: 1200,
       priority: 'high',
-      source: 'Website'
+      source: 'Website',
+      subscription: 'Premium Health Plan'
     },
     {
       id: 4,
-      name: 'David Johnson',
-      email: 'david.j@email.com',
+      name: 'David Wilson',
+      email: 'david.w@company.com',
       phone: '+1 (555) 456-7890',
-      status: 'customer',
+      status: 'lead',
       interests: ['Business Opportunity'],
-      lastContact: '2024-08-22',
-      value: 245,
+      lastContact: '2024-08-18',
+      value: 0,
+      priority: 'low',
+      source: 'Cold Outreach'
+    },
+    {
+      id: 5,
+      name: 'Lisa Thompson',
+      email: 'lisa.thompson@email.com',
+      phone: '+1 (555) 567-8901',
+      status: 'prospect',
+      interests: ['Health App', 'Fitness'],
+      lastContact: '2024-08-17',
+      value: 150,
       priority: 'medium',
-      source: 'Direct Contact',
-      subscription: 'Distributor Package'
+      source: 'Event'
     }
   ];
 
-  // Load and merge real-time assessment data
-  const loadAndMergeData = () => {
+  // Load and merge client data with real-time assessment data
+  const loadClientData = () => {
     setIsLoading(true);
     
-    setTimeout(() => {
-      try {
-        // Load real-time tracking data
-        const trackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]') as TrackingEvent[];
-        
-        // Group tracking events by assessment code
-        const assessmentMap = new Map<string, AssessmentSession>();
-        
-        trackingData.forEach(event => {
-          if (!assessmentMap.has(event.code)) {
-            assessmentMap.set(event.code, {
-              code: event.code,
-              status: 'started',
-              progress: 0,
-              startTime: event.timestamp,
-              lastActivity: event.timestamp,
-              events: []
-            });
-          }
-          
-          const session = assessmentMap.get(event.code)!;
-          session.events.push(event);
-          session.lastActivity = Math.max(session.lastActivity, event.timestamp);
-          
-          // Update session based on events
-          if (event.event === 'priority_selected') {
-            session.priority = event.priority;
-            session.status = 'in_progress';
-          } else if (event.event === 'question_answered') {
-            session.status = 'in_progress';
-            if (event.questionNumber && event.totalQuestions) {
-              session.progress = (event.questionNumber / event.totalQuestions) * 100;
-            }
-          } else if (event.event === 'assessment_completed') {
-            session.status = 'completed';
-            session.progress = 100;
-            session.completionTime = event.timestamp;
-            session.score = event.score;
-          }
-        });
-
-        // Check for abandoned assessments (no activity in last 30 minutes)
-        const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
-        assessmentMap.forEach(session => {
-          if (session.status !== 'completed' && session.lastActivity < thirtyMinutesAgo) {
-            session.status = 'abandoned';
-          }
-        });
-
-        // Merge base clients with assessment data
-        const mergedClients: UnifiedClient[] = baseClients.map(baseClient => {
-          // Find assessments for this client (by email match)
-          const clientAssessments = Array.from(assessmentMap.values()).filter(session => 
-            session.events.some(event => event.customerEmail === baseClient.email)
-          );
-
-          // Find current live assessment
-          const currentAssessment = clientAssessments.find(session => 
-            session.status === 'in_progress' && session.lastActivity > thirtyMinutesAgo
-          );
-
-          return {
-            ...baseClient,
-            currentAssessment,
-            assessmentHistory: clientAssessments,
-            isLive: !!currentAssessment
-          };
-        });
-
-        // Add anonymous assessments as new clients
-        const anonymousAssessments = Array.from(assessmentMap.values()).filter(session =>
-          !session.events.some(event => event.customerEmail) ||
-          !baseClients.some(client => 
-            session.events.some(event => event.customerEmail === client.email)
+    try {
+      // Load real-time tracking data from localStorage
+      const trackingData = localStorage.getItem('maxpulse_assessment_tracking');
+      const sessions: Record<string, AssessmentSession> = trackingData ? JSON.parse(trackingData) : {};
+      
+      // Merge base client data with real-time assessment data
+      const unifiedClients: UnifiedClient[] = baseClients.map(baseClient => {
+        // Find assessment sessions for this client
+        const clientSessions = Object.values(sessions).filter(session => 
+          session.events.some(event => 
+            event.customerEmail === baseClient.email || 
+            event.customerName === baseClient.name
           )
         );
-
-        anonymousAssessments.forEach((session, index) => {
-          const customerName = session.events.find(e => e.customerName)?.customerName;
-          const customerEmail = session.events.find(e => e.customerEmail)?.customerEmail;
+        
+        // Get current active session
+        const currentAssessment = clientSessions.find(session => 
+          session.status === 'started' || session.status === 'in_progress'
+        );
+        
+        // Check if client is currently live (active in last 5 minutes)
+        const isLive = currentAssessment ? 
+          (Date.now() - currentAssessment.lastActivity) < 5 * 60 * 1000 : false;
+        
+        return {
+          ...baseClient,
+          currentAssessment,
+          assessmentHistory: clientSessions,
+          isLive
+        };
+      });
+      
+      // Add anonymous assessment sessions as new clients
+      Object.values(sessions).forEach(session => {
+        const hasMatchingClient = unifiedClients.some(client => 
+          session.events.some(event => 
+            event.customerEmail === client.email || 
+            event.customerName === client.name
+          )
+        );
+        
+        if (!hasMatchingClient && session.events.length > 0) {
+          const firstEvent = session.events[0];
+          const isLive = (Date.now() - session.lastActivity) < 5 * 60 * 1000;
           
-          mergedClients.push({
-            id: 1000 + index, // High ID to avoid conflicts
-            name: customerName || 'Anonymous Assessment',
-            email: customerEmail || `assessment-${session.code}@unknown.com`,
-            phone: 'Unknown',
+          unifiedClients.push({
+            id: Date.now() + Math.random(), // Temporary ID
+            name: firstEvent.customerName || 'Anonymous Client',
+            email: firstEvent.customerEmail || 'No email provided',
+            phone: 'No phone provided',
             status: 'lead',
-            interests: session.priority ? [session.priority] : [],
+            interests: session.priority ? [session.priority] : ['Assessment Taken'],
             lastContact: new Date(session.startTime).toISOString().split('T')[0],
             value: 0,
             priority: 'medium',
-            source: 'Assessment Link',
-            currentAssessment: session.status === 'in_progress' ? session : undefined,
+            source: 'Assessment Tool',
+            currentAssessment: session.status === 'started' || session.status === 'in_progress' ? session : undefined,
             assessmentHistory: [session],
-            isLive: session.status === 'in_progress' && session.lastActivity > thirtyMinutesAgo
+            isLive
           });
-        });
-
-        // Sort by live status first, then by last activity
-        mergedClients.sort((a, b) => {
-          if (a.isLive && !b.isLive) return -1;
-          if (!a.isLive && b.isLive) return 1;
-          
-          const aLastActivity = a.currentAssessment?.lastActivity || new Date(a.lastContact).getTime();
-          const bLastActivity = b.currentAssessment?.lastActivity || new Date(b.lastContact).getTime();
-          
-          return bLastActivity - aLastActivity;
-        });
-
-        setClients(mergedClients);
-        console.log('🎯 Merged client data:', mergedClients.length, 'clients');
-        
-      } catch (error) {
-        console.error('Error loading client data:', error);
-      }
+        }
+      });
       
+      setClients(unifiedClients);
+    } catch (error) {
+      console.error('Error loading client data:', error);
+      // Fallback to base clients without assessment data
+      setClients(baseClients.map(client => ({
+        ...client,
+        assessmentHistory: [],
+        isLive: false
+      })));
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
+  // Load data on component mount and set up refresh interval
   useEffect(() => {
-    loadAndMergeData();
+    loadClientData();
     
-    // Set up real-time listeners (same as ClientProgress)
-    let broadcastChannel: BroadcastChannel | null = null;
-    if (typeof BroadcastChannel !== 'undefined') {
-      broadcastChannel = new BroadcastChannel('maxpulse-tracking');
-      broadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-          console.log('🎯 Received real-time update in Client Hub:', event.data.data);
-          
-          const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-          existingTracking.push(event.data.data);
-          localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-          
-          loadAndMergeData();
-        }
-      };
-    }
+    // Refresh every 30 seconds for real-time updates
+    const interval = setInterval(loadClientData, 30000);
     
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-        console.log('🎯 Received postMessage update in Client Hub:', event.data.data);
-        
-        const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-        existingTracking.push(event.data.data);
-        localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-        
-        loadAndMergeData();
-      }
-    };
-    
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'maxpulse-tracking-event' && event.newValue) {
-        try {
-          const trackingEvent = JSON.parse(event.newValue);
-          if (trackingEvent.type === 'ASSESSMENT_TRACKING_UPDATE') {
-            console.log('🎯 Received localStorage update in Client Hub:', trackingEvent.data);
-            loadAndMergeData();
-          }
-        } catch (error) {
-          console.warn('Error parsing localStorage tracking event:', error);
-        }
-      }
-    };
-    
-    window.addEventListener('message', handleMessage);
-    window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(loadAndMergeData, 30000);
-    
-    return () => {
-      if (broadcastChannel) {
-        broadcastChannel.close();
-      }
-      window.removeEventListener('message', handleMessage);
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
-  // Helper functions
+  // Filter and sort clients
+  const filteredClients = clients
+    .filter(client => {
+      const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           client.phone.includes(searchTerm);
+      
+      const matchesFilter = selectedFilter === 'all' || 
+                           (selectedFilter === 'live' && client.isLive) ||
+                           (selectedFilter === 'assessment' && client.currentAssessment) ||
+                           client.status === selectedFilter;
+      
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'priority':
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return priorityOrder[b.priority] - priorityOrder[a.priority];
+        case 'value':
+          return b.value - a.value;
+        case 'lastContact':
+        default:
+          return new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime();
+      }
+    });
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'lead': return 'bg-yellow-100 text-yellow-800';
-      case 'prospect': return 'bg-blue-100 text-blue-800';
       case 'customer': return 'bg-green-100 text-green-800';
+      case 'prospect': return 'bg-blue-100 text-blue-800';
+      case 'lead': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getAssessmentStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'abandoned': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getPriorityIcon = (priority: string) => {
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return <Star className="h-4 w-4 text-red-500" />;
-      case 'medium': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'low': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      default: return null;
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-orange-100 text-orange-800';
+      case 'low': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const formatTimeAgo = (timestamp: number) => {
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return 'Just now';
+  const getAssessmentStatusIcon = (client: UnifiedClient) => {
+    if (client.isLive) {
+      return <Activity className="h-4 w-4 text-green-600 animate-pulse" />;
+    }
+    if (client.currentAssessment) {
+      return <Clock className="h-4 w-4 text-blue-600" />;
+    }
+    if (client.assessmentHistory.length > 0) {
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
+    }
+    return null;
   };
 
-  // Filter clients
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    let matchesFilter = true;
-    if (selectedFilter === 'live') {
-      matchesFilter = client.isLive;
-    } else if (selectedFilter === 'completed') {
-      matchesFilter = client.assessmentHistory.some(a => a.status === 'completed');
-    } else if (selectedFilter !== 'all') {
-      matchesFilter = client.status === selectedFilter;
+  const handleDeleteClient = (clientId: number) => {
+    if (confirm('Are you sure you want to delete this client?')) {
+      setClients(clients.filter(c => c.id !== clientId));
     }
-    
-    return matchesSearch && matchesFilter;
-  });
+  };
 
-  // Calculate stats
-  const stats = {
-    total: clients.length,
-    live: clients.filter(c => c.isLive).length,
-    completed: clients.filter(c => c.assessmentHistory.some(a => a.status === 'completed')).length,
-    leads: clients.filter(c => c.status === 'lead').length,
-    prospects: clients.filter(c => c.status === 'prospect').length,
-    customers: clients.filter(c => c.status === 'customer').length,
-    revenue: clients.reduce((sum, c) => sum + c.value, 0)
+  const handleStatusChange = (clientId: number, newStatus: 'lead' | 'prospect' | 'customer') => {
+    setClients(clients.map(c => 
+      c.id === clientId ? { ...c, status: newStatus } : c
+    ));
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <Users className="h-8 w-8 text-red-600" />
+          <h1 className="text-2xl lg:text-3xl text-gray-900 flex items-center gap-3">
+            <Users className="h-8 w-8 text-blue-600" />
             Client Hub
           </h1>
-          <p className="text-gray-600 mt-1">Manage clients and track assessments in real-time</p>
+          <p className="text-gray-600 mt-1">
+            Manage your clients and track assessment progress in real-time
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={loadAndMergeData} disabled={isLoading} variant="outline">
+        
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={loadClientData} 
+            variant="outline" 
+            size="sm"
+            disabled={isLoading}
+          >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button onClick={() => setShowAddClient(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
             Add Client
           </Button>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-5 w-5 text-blue-600" />
-            </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Clients</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
             </div>
+            <Users className="h-8 w-8 text-blue-600" />
           </div>
-        </Card>
+        </div>
         
-        <Card className="p-4 ring-2 ring-red-200 bg-red-50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Zap className="h-5 w-5 text-red-600" />
-            </div>
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-red-700 font-medium">Live Now</p>
-              <p className="text-2xl font-bold text-red-900">{stats.live}</p>
+              <p className="text-sm text-gray-600">Live Now</p>
+              <p className="text-2xl font-bold text-green-600">{clients.filter(c => c.isLive).length}</p>
             </div>
+            <Activity className="h-8 w-8 text-green-600" />
           </div>
-        </Card>
+        </div>
         
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
+              <p className="text-sm text-gray-600">In Assessment</p>
+              <p className="text-2xl font-bold text-blue-600">{clients.filter(c => c.currentAssessment).length}</p>
             </div>
+            <Clock className="h-8 w-8 text-blue-600" />
           </div>
-        </Card>
+        </div>
         
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Star className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Leads</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.leads}</p>
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Prospects</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.prospects}</p>
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
+        <div className="bg-white p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.customers}</p>
+              <p className="text-2xl font-bold text-purple-600">{clients.filter(c => c.status === 'customer').length}</p>
             </div>
+            <Star className="h-8 w-8 text-purple-600" />
           </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">${stats.revenue}</p>
-            </div>
-          </div>
-        </Card>
+        </div>
       </div>
 
       {/* Filters and Search */}
-      <Card className="p-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="bg-white p-4 rounded-lg border space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search clients by name or email..."
+                placeholder="Search clients by name, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
             </div>
           </div>
+          
           <div className="flex gap-2">
-            <Tabs value={selectedFilter} onValueChange={setSelectedFilter}>
-              <TabsList>
-                <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
-                <TabsTrigger value="live" className="text-red-600">
-                  <Zap className="h-3 w-3 mr-1" />
-                  Live ({stats.live})
-                </TabsTrigger>
-                <TabsTrigger value="completed">Completed ({stats.completed})</TabsTrigger>
-                <TabsTrigger value="lead">Leads ({stats.leads})</TabsTrigger>
-                <TabsTrigger value="prospect">Prospects ({stats.prospects})</TabsTrigger>
-                <TabsTrigger value="customer">Customers ({stats.customers})</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter: {selectedFilter === 'all' ? 'All' : selectedFilter}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setSelectedFilter('all')}>All Clients</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter('live')}>Live Now</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter('assessment')}>In Assessment</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSelectedFilter('lead')}>Leads</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter('prospect')}>Prospects</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedFilter('customer')}>Customers</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <SortAsc className="h-4 w-4 mr-2" />
+                  Sort
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setSortBy('lastContact')}>Last Contact</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('status')}>Status</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('priority')}>Priority</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('value')}>Value</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
+      </div>
 
-        {/* Client Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Client List */}
-          <div className="space-y-4">
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Card key={i} className="p-4 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  </Card>
-                ))}
-              </div>
-            ) : filteredClients.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No clients found</h3>
-                <p className="text-gray-600">Try adjusting your search or filters</p>
-              </Card>
-            ) : (
-              filteredClients.map(client => (
-                <Card 
-                  key={client.id} 
-                  className={`p-4 cursor-pointer transition-all hover:shadow-md ${
-                    client.isLive ? 'ring-2 ring-red-500 bg-red-50' : ''
-                  } ${
-                    selectedClient?.id === client.id ? 'ring-2 ring-blue-500' : ''
-                  }`}
-                  onClick={() => setSelectedClient(client)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex items-center">
-                        {getPriorityIcon(client.priority)}
+      {/* Client List */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="text-left p-4 font-medium text-gray-900">Client</th>
+                <th className="text-left p-4 font-medium text-gray-900">Status</th>
+                <th className="text-left p-4 font-medium text-gray-900">Assessment</th>
+                <th className="text-left p-4 font-medium text-gray-900">Priority</th>
+                <th className="text-left p-4 font-medium text-gray-900">Value</th>
+                <th className="text-left p-4 font-medium text-gray-900">Last Contact</th>
+                <th className="text-right p-4 font-medium text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredClients.map((client) => (
+                <tr key={client.id} className="border-b hover:bg-gray-50 transition-colors">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-blue-600 font-medium text-sm">
+                            {client.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-900">{client.name}</h3>
+                          <p className="font-medium text-gray-900 truncate">{client.name}</p>
                           {client.isLive && (
-                            <Badge className="bg-red-100 text-red-800 animate-pulse">
-                              <Zap className="h-3 w-3 mr-1" />
-                              LIVE
-                            </Badge>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-xs text-green-600 font-medium">LIVE</span>
+                            </div>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600">{client.email}</p>
-                        <p className="text-xs text-gray-500">{client.phone}</p>
+                        <p className="text-sm text-gray-500 truncate">{client.email}</p>
+                        <p className="text-xs text-gray-400">{client.phone}</p>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge className={getStatusColor(client.status)}>
-                        {client.status}
-                      </Badge>
-                      {client.subscription && (
-                        <div className="text-xs text-gray-600">{client.subscription}</div>
+                  </td>
+                  
+                  <td className="p-4">
+                    <Badge className={getStatusColor(client.status)} variant="secondary">
+                      {client.status}
+                    </Badge>
+                  </td>
+                  
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      {getAssessmentStatusIcon(client)}
+                      {client.currentAssessment ? (
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {client.currentAssessment.progress}% Complete
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {client.currentAssessment.status}
+                          </p>
+                        </div>
+                      ) : client.assessmentHistory.length > 0 ? (
+                        <div>
+                          <p className="text-sm text-gray-900">Completed</p>
+                          <p className="text-xs text-gray-500">
+                            {client.assessmentHistory.length} assessment{client.assessmentHistory.length > 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No assessment</p>
                       )}
                     </div>
-                  </div>
+                  </td>
                   
-                  {/* Assessment Status */}
-                  {client.currentAssessment && (
-                    <div className="mb-3 p-2 bg-blue-50 rounded-lg">
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-blue-700 font-medium">Current Assessment</span>
-                        <Badge className={getAssessmentStatusColor(client.currentAssessment.status)}>
-                          {client.currentAssessment.status.replace('_', ' ')}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-blue-600 mb-1">
-                        <span>Progress</span>
-                        <span>{Math.round(client.currentAssessment.progress)}%</span>
-                      </div>
-                      <div className="w-full bg-blue-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${client.currentAssessment.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
+                  <td className="p-4">
+                    <Badge className={getPriorityColor(client.priority)} variant="secondary">
+                      {client.priority}
+                    </Badge>
+                  </td>
                   
-                  {/* Assessment History Summary */}
-                  {client.assessmentHistory.length > 0 && !client.currentAssessment && (
-                    <div className="mb-3 text-sm text-gray-600">
-                      <span className="font-medium">Assessments:</span> {client.assessmentHistory.length} completed
-                    </div>
-                  )}
+                  <td className="p-4">
+                    <p className="font-medium text-gray-900">${client.value}</p>
+                  </td>
                   
-                  {/* Interests */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {client.interests.slice(0, 3).map((interest, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {interest}
-                      </Badge>
-                    ))}
-                    {client.interests.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{client.interests.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
+                  <td className="p-4">
+                    <p className="text-sm text-gray-900">{client.lastContact}</p>
+                  </td>
                   
-                  {/* Actions and Last Contact */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Mail className="h-3 w-3" />
+                  <td className="p-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedClient(client)}
+                      >
+                        <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
-                        <Phone className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <MessageCircle className="h-3 w-3" />
-                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => setEditingClient(client)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Client
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Send Email
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <PhoneCall className="h-4 w-4 mr-2" />
+                            Call Client
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Send className="h-4 w-4 mr-2" />
+                            Send Assessment
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleStatusChange(client.id, 'lead')}>
+                            Mark as Lead
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusChange(client.id, 'prospect')}>
+                            Mark as Prospect
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusChange(client.id, 'customer')}>
+                            Mark as Customer
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDeleteClient(client.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Client
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {client.currentAssessment 
-                        ? formatTimeAgo(client.currentAssessment.lastActivity)
-                        : new Date(client.lastContact).toLocaleDateString()
-                      }
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
-          </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {filteredClients.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No clients found matching your criteria</p>
+            </div>
+          )}
+        </div>
+      </div>
 
-          {/* Client Details */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">Client Details</h2>
+      {/* Client Details Modal */}
+      {selectedClient && (
+        <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-medium">
+                    {selectedClient.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </span>
+                </div>
+                {selectedClient.name}
+                {selectedClient.isLive && (
+                  <Badge className="bg-green-100 text-green-800">LIVE</Badge>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                View detailed information and assessment history
+              </DialogDescription>
+            </DialogHeader>
             
-            {selectedClient ? (
-              <Card className="p-6">
-                <div className="space-y-6">
-                  {/* Client Info */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium text-gray-900">{selectedClient.name}</h3>
-                      {selectedClient.isLive && (
-                        <Badge className="bg-red-100 text-red-800 animate-pulse">
-                          <Zap className="h-3 w-3 mr-1" />
-                          TAKING ASSESSMENT NOW
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Email:</span>
-                        <span className="ml-2">{selectedClient.email}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Phone:</span>
-                        <span className="ml-2">{selectedClient.phone}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Status:</span>
-                        <Badge className={`ml-2 ${getStatusColor(selectedClient.status)}`}>
-                          {selectedClient.status}
-                        </Badge>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Value:</span>
-                        <span className="ml-2 font-medium">${selectedClient.value}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Source:</span>
-                        <span className="ml-2">{selectedClient.source}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Priority:</span>
-                        <span className="ml-2 flex items-center gap-1">
-                          {getPriorityIcon(selectedClient.priority)}
-                          {selectedClient.priority}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+            <div className="space-y-6">
+              {/* Client Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Email</Label>
+                  <p className="text-sm text-gray-900">{selectedClient.email}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Phone</Label>
+                  <p className="text-sm text-gray-900">{selectedClient.phone}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Status</Label>
+                  <Badge className={getStatusColor(selectedClient.status)} variant="secondary">
+                    {selectedClient.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Priority</Label>
+                  <Badge className={getPriorityColor(selectedClient.priority)} variant="secondary">
+                    {selectedClient.priority}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Source</Label>
+                  <p className="text-sm text-gray-900">{selectedClient.source}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Value</Label>
+                  <p className="text-sm text-gray-900">${selectedClient.value}</p>
+                </div>
+              </div>
 
-                  {/* Current Assessment */}
-                  {selectedClient.currentAssessment && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Current Assessment</h4>
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <div className="grid grid-cols-2 gap-4 text-sm mb-3">
-                          <div>
-                            <span className="text-gray-600">Status:</span>
-                            <Badge className={`ml-2 ${getAssessmentStatusColor(selectedClient.currentAssessment.status)}`}>
-                              {selectedClient.currentAssessment.status.replace('_', ' ')}
-                            </Badge>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Progress:</span>
-                            <span className="ml-2 font-medium">{Math.round(selectedClient.currentAssessment.progress)}%</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Started:</span>
-                            <span className="ml-2">{new Date(selectedClient.currentAssessment.startTime).toLocaleString()}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Last Activity:</span>
-                            <span className="ml-2">{formatTimeAgo(selectedClient.currentAssessment.lastActivity)}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="w-full bg-blue-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${selectedClient.currentAssessment.progress}%` }}
-                          ></div>
-                        </div>
-                      </div>
+              {/* Current Assessment */}
+              {selectedClient.currentAssessment && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Current Assessment</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-blue-700">Progress:</span>
+                      <span className="text-sm font-medium text-blue-900">
+                        {selectedClient.currentAssessment.progress}%
+                      </span>
                     </div>
-                  )}
-
-                  {/* Assessment History */}
-                  {selectedClient.assessmentHistory.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Assessment History</h4>
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {selectedClient.assessmentHistory.map((session, index) => (
-                          <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <Badge className={getAssessmentStatusColor(session.status)}>
-                                {session.status.replace('_', ' ')}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {new Date(session.startTime).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              Progress: {Math.round(session.progress)}%
-                              {session.score && ` • Score: ${session.score}%`}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-blue-700">Status:</span>
+                      <span className="text-sm font-medium text-blue-900">
+                        {selectedClient.currentAssessment.status}
+                      </span>
                     </div>
-                  )}
-
-                  {/* Interests */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Interests</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedClient.interests.map((interest, index) => (
-                        <Badge key={index} variant="outline">
-                          {interest}
-                        </Badge>
-                      ))}
+                    <div className="flex justify-between">
+                      <span className="text-sm text-blue-700">Started:</span>
+                      <span className="text-sm font-medium text-blue-900">
+                        {new Date(selectedClient.currentAssessment.startTime).toLocaleString()}
+                      </span>
                     </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button className="flex-1">
-                      <Mail className="h-4 w-4 mr-2" />
-                      Email
-                    </Button>
-                    <Button variant="outline" className="flex-1">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call
-                    </Button>
-                    <Button variant="outline" className="flex-1">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Message
-                    </Button>
                   </div>
                 </div>
-              </Card>
-            ) : (
-              <Card className="p-8 text-center">
-                <Eye className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Select a client</h3>
-                <p className="text-gray-600">Click on a client to view detailed information and assessment history</p>
-              </Card>
-            )}
-          </div>
-        </div>
-      </Card>
+              )}
+
+              {/* Assessment History */}
+              {selectedClient.assessmentHistory.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Assessment History</h4>
+                  <div className="space-y-2">
+                    {selectedClient.assessmentHistory.map((session, index) => (
+                      <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              Assessment {index + 1}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(session.startTime).toLocaleString()}
+                            </p>
+                          </div>
+                          <Badge 
+                            className={
+                              session.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              session.status === 'abandoned' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }
+                            variant="secondary"
+                          >
+                            {session.status}
+                          </Badge>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-600">
+                          Progress: {session.progress}%
+                          {session.score && ` • Score: ${session.score}`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

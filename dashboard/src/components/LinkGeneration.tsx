@@ -20,7 +20,7 @@ import {
 // SimpleAssessment removed - now using Premium Mobile Assessment Tool
 
 export function LinkGeneration() {
-  const [activeTab, setActiveTab] = useState('campaign');
+  const [activeTab, setActiveTab] = useState('customer');
   // Preview state removed - now opens Premium Mobile Assessment Tool directly
   
   // Campaign link state
@@ -164,18 +164,18 @@ export function LinkGeneration() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 h-auto">
-          <TabsTrigger value="campaign" className="py-3 px-6">
-            <Globe className="h-5 w-5 mr-3" />
-            <div className="text-left">
-              <div className="font-medium">Campaign Link</div>
-              <div className="text-xs text-gray-500">Public sharing</div>
-            </div>
-          </TabsTrigger>
           <TabsTrigger value="customer" className="py-3 px-6">
             <User className="h-5 w-5 mr-3" />
             <div className="text-left">
               <div className="font-medium">Personal Link</div>
               <div className="text-xs text-gray-500">1-on-1 outreach</div>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="campaign" className="py-3 px-6">
+            <Globe className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <div className="font-medium">Campaign Link</div>
+              <div className="text-xs text-gray-500">Public sharing</div>
             </div>
           </TabsTrigger>
         </TabsList>
