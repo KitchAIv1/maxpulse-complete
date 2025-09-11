@@ -140,7 +140,7 @@ export function ResultsDashboard({
             <div className="text-2xl font-bold">{results.correctAnswers}</div>
             <div className="text-sm text-muted-foreground">Correct Answers</div>
             <div className="text-xs text-muted-foreground mt-1">
-              {((results.correctAnswers / results.totalQuestions) * 100).toFixed(1)}% accuracy
+              {Math.round((results.correctAnswers / results.totalQuestions) * 100)}% accuracy
             </div>
           </CardContent>
         </Card>

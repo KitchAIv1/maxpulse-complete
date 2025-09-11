@@ -282,10 +282,10 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                     <Button 
                       key={index}
                       variant="outline" 
-                      className="h-16 lg:h-20 flex flex-col items-center justify-center space-y-1 lg:space-y-2"
+                      className="h-16 lg:h-20 flex flex-col items-center justify-center space-y-1 lg:space-y-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors"
                       onClick={() => handleQuickAction(action.action)}
                     >
-                      <action.icon className="h-5 w-5 lg:h-6 lg:w-6" />
+                      <action.icon className="h-5 w-5 lg:h-6 lg:w-6 text-red-600" />
                       <span className="text-xs lg:text-sm text-center leading-tight">{action.label}</span>
                     </Button>
                   ))}
