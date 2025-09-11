@@ -26,7 +26,9 @@ import {
   CheckCircle2,
   Award,
   UserPlus,
-  TrendingDown
+  Activity,
+  TrendingDown,
+  RefreshCw
 } from 'lucide-react';
 
 interface DistributorDashboardProps {
@@ -37,6 +39,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   // Check if this is the user's first time logging in
   useEffect(() => {
@@ -52,6 +55,171 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
     }
   }, [user]);
 
+  // Load real-time activity data from assessment tracking
+  const loadRecentActivity = () => {
+    try {
+      const trackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+      
+      // Convert tracking events to activity items
+      const activities = trackingData
+        .slice(-10) // Get last 10 events
+        .reverse() // Show newest first
+        .map((event: any, index: number) => {
+          const timeAgo = Math.floor((Date.now() - event.timestamp) / (60 * 1000));
+          let timeText = '';
+          if (timeAgo < 1) timeText = 'Just now';
+          else if (timeAgo < 60) timeText = `${timeAgo} minute${timeAgo > 1 ? 's' : ''} ago`;
+          else if (timeAgo < 1440) timeText = `${Math.floor(timeAgo / 60)} hour${Math.floor(timeAgo / 60) > 1 ? 's' : ''} ago`;
+          else timeText = `${Math.floor(timeAgo / 1440)} day${Math.floor(timeAgo / 1440) > 1 ? 's' : ''} ago`;
+
+          let message = '';
+          let icon = Activity;
+          let color = 'text-blue-600';
+          let bgColor = 'bg-blue-50';
+          let priority = 'normal';
+
+          switch (event.event) {
+            case 'priority_selected':
+              message = `${event.customerName || 'Client'} started ${event.priority} assessment`;
+              icon = Target;
+              color = 'text-purple-600';
+              bgColor = 'bg-purple-50';
+              priority = 'high';
+              break;
+            case 'question_answered':
+              message = `${event.customerName || 'Client'} answered question ${event.questionNumber}/${event.totalQuestions}`;
+              icon = CheckCircle2;
+              color = 'text-green-600';
+              bgColor = 'bg-green-50';
+              break;
+            case 'assessment_completed':
+              message = `${event.customerName || 'Client'} completed assessment with ${event.score || 'N/A'} score`;
+              icon = Award;
+              color = 'text-yellow-600';
+              bgColor = 'bg-yellow-50';
+              priority = 'high';
+              break;
+            case 'link_generated':
+              message = `Assessment link generated for ${event.customerName || 'general outreach'}`;
+              icon = ArrowUpRight;
+              color = 'text-blue-600';
+              bgColor = 'bg-blue-50';
+              break;
+            case 'commission_earned':
+              message = `Commission earned: $${event.amount} (${event.source || 'Assessment'})`;
+              icon = DollarSign;
+              color = 'text-green-600';
+              bgColor = 'bg-green-50';
+              priority = 'high';
+              break;
+            case 'subscription_purchased':
+              message = `${event.customerName || 'Client'} purchased ${event.subscriptionType || 'Premium'} subscription`;
+              icon = UserPlus;
+              color = 'text-blue-600';
+              bgColor = 'bg-blue-50';
+              priority = 'high';
+              break;
+            case 'product_purchased':
+              message = `${event.customerName || 'Client'} purchased ${event.productName || 'product'}`;
+              icon = DollarSign;
+              color = 'text-green-600';
+              bgColor = 'bg-green-50';
+              priority = 'high';
+              break;
+            case 'achievement_unlocked':
+              message = `Achievement unlocked: ${event.achievementName || 'New milestone reached'}!`;
+              icon = Award;
+              color = 'text-yellow-600';
+              bgColor = 'bg-yellow-50';
+              priority = 'high';
+              break;
+            case 'level_progression':
+              message = `Congratulations! You reached ${event.newLevel || 'next level'}!`;
+              icon = TrendingUp;
+              color = 'text-purple-600';
+              bgColor = 'bg-purple-50';
+              priority = 'high';
+              break;
+            case 'client_status_change':
+              message = `${event.customerName || 'Client'} status changed to ${event.newStatus || 'updated'}`;
+              icon = Users;
+              color = 'text-blue-600';
+              bgColor = 'bg-blue-50';
+              break;
+            default:
+              message = `${event.customerName || 'Client'} - ${event.event}`;
+              break;
+          }
+
+          return {
+            id: `activity-${event.timestamp}-${index}`,
+            type: event.event,
+            message,
+            time: timeText,
+            priority,
+            icon,
+            color,
+            bgColor,
+            customerEmail: event.customerEmail
+          };
+        });
+
+      setRecentActivity(activities);
+      console.log('📊 Dashboard loaded recent activity:', activities.length, 'items', activities);
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+      setRecentActivity([]);
+    }
+  };
+
+  // Load recent activity and set up real-time listeners
+  useEffect(() => {
+    loadRecentActivity();
+    
+    // Set up real-time listeners similar to ClientHub
+    let broadcastChannel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      broadcastChannel = new BroadcastChannel('maxpulse-tracking');
+      broadcastChannel.onmessage = (event) => {
+        if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
+          console.log('📊 Dashboard received real-time update:', event.data.data);
+          setTimeout(loadRecentActivity, 500); // Small delay to ensure localStorage is updated
+        }
+      };
+    }
+    
+    // postMessage listener
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
+        console.log('📊 Dashboard received real-time update (postMessage):', event.data.data);
+        setTimeout(loadRecentActivity, 500);
+      }
+    };
+    
+    // localStorage event listener
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'assessment-tracking' && event.newValue) {
+        console.log('📊 Dashboard received real-time update (localStorage event)');
+        loadRecentActivity();
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Refresh every 30 seconds as backup
+    const interval = setInterval(loadRecentActivity, 30000);
+    
+    return () => {
+      if (broadcastChannel) {
+        broadcastChannel.close();
+      }
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   const handleCloseWelcomeModal = () => {
     setShowWelcomeModal(false);
     // Mark welcome as seen for this user
@@ -60,6 +228,63 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
 
   const handleShowWelcomeModal = () => {
     setShowWelcomeModal(true);
+  };
+
+  // Add mock revenue and achievement activities for testing
+  const addMockBusinessActivities = () => {
+    const mockActivities = [
+      {
+        event: 'commission_earned',
+        timestamp: Date.now() - 300000, // 5 minutes ago
+        customerName: 'Sarah Johnson',
+        amount: 125,
+        source: 'Health Subscription'
+      },
+      {
+        event: 'subscription_purchased',
+        timestamp: Date.now() - 600000, // 10 minutes ago
+        customerName: 'Mark Thompson',
+        subscriptionType: 'Premium Health Plan'
+      },
+      {
+        event: 'achievement_unlocked',
+        timestamp: Date.now() - 900000, // 15 minutes ago
+        achievementName: 'Weekly Warrior',
+        reward: 100
+      },
+      {
+        event: 'level_progression',
+        timestamp: Date.now() - 1200000, // 20 minutes ago
+        newLevel: 'Gold Elite'
+      },
+      {
+        event: 'product_purchased',
+        timestamp: Date.now() - 1500000, // 25 minutes ago
+        customerName: 'Jennifer Martinez',
+        productName: 'Nutrition Starter Kit'
+      }
+    ];
+
+    // Add to tracking data
+    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+    mockActivities.forEach(activity => {
+      existingTracking.push(activity);
+    });
+    localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
+
+    // Broadcast the updates
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('maxpulse-tracking');
+      mockActivities.forEach(activity => {
+        channel.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: activity });
+      });
+      channel.close();
+    }
+
+    // Refresh the activity display
+    loadRecentActivity();
+    
+    console.log('💰 Added mock business activities:', mockActivities.length, 'items');
   };
 
   // Mock data for dashboard
@@ -298,16 +523,36 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                   <div className="flex items-center gap-2">
                     <h3 className="text-base lg:text-lg">Recent Activity</h3>
                     <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary text-xs px-2 py-1">
-                      {dashboardData.recentActivity.length} new
+                      {recentActivity.length} new
                     </Badge>
                   </div>
-                  <Button variant="ghost" size="sm" className="hover:bg-brand-primary/5 hover:text-brand-primary transition-colors">
-                    <Eye className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">View All</span>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={loadRecentActivity}
+                      className="hover:bg-brand-primary/5 hover:text-brand-primary transition-colors"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Refresh</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={addMockBusinessActivities}
+                      className="hover:bg-green-50 hover:text-green-700 transition-colors"
+                    >
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">Test Revenue</span>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="hover:bg-brand-primary/5 hover:text-brand-primary transition-colors">
+                      <Eye className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">View All</span>
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2 lg:space-y-3">
-                  {dashboardData.recentActivity.map((activity, index) => (
+                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
                     <div 
                       key={activity.id} 
                       className={`group relative flex items-start justify-between p-3 lg:p-4 ${activity.bgColor} border border-gray-100 rounded-lg gap-3 hover:shadow-sm transition-all duration-200 hover:border-brand-primary/20`}
@@ -352,9 +597,15 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                       </div>
                       
                       {/* Subtle gradient overlay for depth */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">                      </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-center py-8">
+                      <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500 text-sm">No recent activity</p>
+                      <p className="text-gray-400 text-xs mt-1">Assessment activity will appear here in real-time</p>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Quick Action Footer */}

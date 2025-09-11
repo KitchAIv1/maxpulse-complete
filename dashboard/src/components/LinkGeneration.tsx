@@ -65,6 +65,31 @@ export function LinkGeneration() {
     setCampaignCode(code);
     setCampaignUrl(directUrl);
     setCampaignLink(shareableText);
+
+    // Track campaign link generation activity
+    const linkActivity = {
+      event: 'link_generated',
+      timestamp: Date.now(),
+      campaignName: campaignDetails.name,
+      audience: campaignDetails.audience,
+      code: code,
+      linkType: 'campaign'
+    };
+
+    // Add to tracking data
+    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+    existingTracking.push(linkActivity);
+    localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
+
+    // Broadcast the update
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('maxpulse-tracking');
+      channel.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity });
+      channel.close();
+    }
+    
+    // Also use postMessage for cross-window communication
+    window.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity }, '*');
     
     console.log('🔗 Generated unique campaign link:', { 
       campaign: campaignDetails.name, 
@@ -103,6 +128,31 @@ export function LinkGeneration() {
       sessionId, 
       url: directUrl 
     });
+
+    // Track link generation activity
+    const linkActivity = {
+      event: 'link_generated',
+      timestamp: Date.now(),
+      customerName: customerDetails.name,
+      customerEmail: customerDetails.email,
+      code: code,
+      linkType: 'personalized'
+    };
+
+    // Add to tracking data
+    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+    existingTracking.push(linkActivity);
+    localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
+
+    // Broadcast the update
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('maxpulse-tracking');
+      channel.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity });
+      channel.close();
+    }
+    
+    // Also use postMessage for cross-window communication
+    window.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity }, '*');
   };
 
   const copyToClipboard = (text: string) => {

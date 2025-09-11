@@ -23,7 +23,7 @@ export const hybridEducationalSlides: HybridEducationalSlideData[] = [
     title: 'The Power of Awareness',
     subtitle: 'Consciousness Creates Your Financial Reality',
     content: 'Your awareness shapes your financial destiny. By consciously directing your thoughts toward abundance, you begin to influence your financial reality.',
-    video: '/awareness.mp4',
+    video: './awareness.mp4',
     triggerAfterQuestion: 'w2', // After expense tracking question
     ctaText: 'Continue Your Journey',
     theme: 'purple',
@@ -41,7 +41,7 @@ export const hybridEducationalSlides: HybridEducationalSlideData[] = [
     subtitle: 'Your Foundation for Health & Wealth',
     fact: 'Quality sleep improves decision-making by 50% and increases earning potential by optimizing cognitive performance.',
     source: 'Harvard Medical School Sleep Studies',
-    video: '/sleeping2.mp4',
+    video: './sleeping2.mp4',
     triggerAfterQuestion: 'w4', // After debt situation question
     ctaText: 'Continue Assessment',
     theme: 'blue'
@@ -53,7 +53,7 @@ export const hybridEducationalSlides: HybridEducationalSlideData[] = [
     title: 'The Power of YOU as the Ultimate Asset',
     subtitle: 'Your Health & Skills Are Your Greatest Investment',
     content: 'You are your most valuable investment. Your health, energy, skills, and mindset are the foundation of all wealth creation and life satisfaction.',
-    video: '/poweryou.mp4',
+    video: './poweryou.mp4',
     triggerAfterQuestion: 'w6', // After compound interest question
     ctaText: 'Unlock Your Potential',
     theme: 'gold',
@@ -71,7 +71,7 @@ export const hybridEducationalSlides: HybridEducationalSlideData[] = [
     subtitle: 'How Physical Activity Boosts Performance',
     fact: 'Regular movement increases productivity by 23% and reduces stress hormones that impair financial decision-making.',
     source: 'Journal of Occupational Health Psychology',
-    video: '/walking.mp4',
+    video: './walking.mp4',
     triggerAfterQuestion: 'w8', // After income diversification question
     ctaText: 'Keep Moving Forward',
     theme: 'green'
@@ -83,7 +83,7 @@ export const hybridEducationalSlides: HybridEducationalSlideData[] = [
     title: 'The Power of Now',
     subtitle: 'Creating Your Integrated Future',
     content: 'True success is created in the present moment. When you act with presence and awareness, you align with the natural flow of both health and abundance.',
-    video: '/change.mp4',
+    video: './change.mp4',
     triggerAfterQuestion: 'hy4', // After success definition question
     ctaText: 'Transform Now',
     theme: 'blue',
