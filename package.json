@@ -1,0 +1,22 @@
+{
+  "name": "maxpulse-complete",
+  "version": "1.0.0",
+  "description": "MAXPULSE Platform - Complete Monorepo with Dashboard and Assessment Tool",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:dashboard && npm run build:assessment",
+    "build:dashboard": "cd dashboard && npm install && npm run build",
+    "build:assessment": "cd assessment && npm install && npm run build",
+    "dev": "concurrently \"npm run dev:dashboard\" \"npm run dev:assessment\"",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "dev:assessment": "cd assessment && npm run dev",
+    "install:all": "npm install && cd dashboard && npm install && cd ../assessment && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "dashboard",
+    "assessment"
+  ]
+}
