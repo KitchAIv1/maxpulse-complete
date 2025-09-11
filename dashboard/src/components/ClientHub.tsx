@@ -179,10 +179,67 @@ export function ClientHub() {
   const loadClientData = () => {
     setIsLoading(true);
     
-    try {
-      // Load real-time tracking data from localStorage
-      const trackingData = localStorage.getItem('maxpulse_assessment_tracking');
-      const sessions: Record<string, AssessmentSession> = trackingData ? JSON.parse(trackingData) : {};
+    // Simulate API delay (ORIGINAL WORKING LOGIC - CRITICAL!)
+    setTimeout(() => {
+      try {
+      // Load real-time tracking data from localStorage (ORIGINAL WORKING LOGIC)
+      const trackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]') as TrackingEvent[];
+      
+      console.log('📊 Loading tracking data from localStorage:', trackingData.length, 'events');
+      
+      // Group events by assessment code (ORIGINAL WORKING LOGIC)
+      const clientMap = new Map<string, AssessmentSession>();
+      
+      trackingData.forEach(event => {
+        if (!clientMap.has(event.code)) {
+          clientMap.set(event.code, {
+            code: event.code,
+            status: 'started',
+            progress: 0,
+            priority: event.priority,
+            startTime: event.timestamp,
+            lastActivity: event.timestamp,
+            events: []
+          });
+        }
+        
+        const client = clientMap.get(event.code)!;
+        client.events.push(event);
+        client.lastActivity = Math.max(client.lastActivity, event.timestamp);
+        
+        // Update status and progress based on events (ORIGINAL WORKING LOGIC)
+        if (event.event === 'priority_selected') {
+          client.priority = event.priority;
+          client.status = 'in_progress';
+        } else if (event.event === 'question_answered') {
+          client.status = 'in_progress';
+          // ORIGINAL WORKING PROGRESS CALCULATION
+          if (event.questionNumber && event.totalQuestions) {
+            client.progress = (event.questionNumber / event.totalQuestions) * 100;
+          }
+        } else if (event.event === 'assessment_completed') {
+          client.status = 'completed';
+          client.progress = 100;
+          client.completionTime = event.timestamp;
+          client.score = event.score;
+        }
+      });
+      
+      // Check for abandoned assessments (no activity in last 30 minutes) - ORIGINAL LOGIC
+      const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
+      clientMap.forEach(client => {
+        if (client.status !== 'completed' && client.lastActivity < thirtyMinutesAgo) {
+          client.status = 'abandoned';
+        }
+      });
+      
+      // Convert Map to sessions object for existing UI code
+      const sessions: Record<string, AssessmentSession> = {};
+      Array.from(clientMap.values()).forEach(client => {
+        sessions[client.code] = client;
+      });
+      
+      console.log('📊 Processed client summaries:', Object.keys(sessions).length, 'clients');
       
       // Merge base client data with real-time assessment data
       const unifiedClients: UnifiedClient[] = baseClients.map(baseClient => {
@@ -242,28 +299,81 @@ export function ClientHub() {
         }
       });
       
-      setClients(unifiedClients);
-    } catch (error) {
-      console.error('Error loading client data:', error);
-      // Fallback to base clients without assessment data
-      setClients(baseClients.map(client => ({
-        ...client,
-        assessmentHistory: [],
-        isLive: false
-      })));
-    } finally {
+        setClients(unifiedClients);
+      } catch (error) {
+        console.error('Error loading client data:', error);
+        // Fallback to base clients without assessment data
+        setClients(baseClients.map(client => ({
+          ...client,
+          assessmentHistory: [],
+          isLive: false
+        })));
+      }
+      
       setIsLoading(false);
-    }
+    }, 500);  // ← ORIGINAL WORKING DELAY - ESSENTIAL!
   };
 
-  // Load data on component mount and set up refresh interval
+  // Load data on component mount and set up real-time listeners (ORIGINAL WORKING LOGIC)
   useEffect(() => {
     loadClientData();
     
-    // Refresh every 30 seconds for real-time updates
+    // Method 1: BroadcastChannel listener (modern browsers) - ORIGINAL WORKING LOGIC
+    let broadcastChannel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      broadcastChannel = new BroadcastChannel('maxpulse-tracking');
+      broadcastChannel.onmessage = (event) => {
+        if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
+          console.log('📊 Received real-time tracking update (BroadcastChannel):', event.data.data);
+          
+          // Add the new tracking event to localStorage - ORIGINAL WORKING LOGIC
+          const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+          existingTracking.push(event.data.data);
+          localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
+          
+          // Immediately refresh the dashboard
+          loadClientData();
+        }
+      };
+    }
+    
+    // Method 2: postMessage listener (for opener/opened windows) - ORIGINAL WORKING LOGIC
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
+        console.log('📊 Received real-time tracking update (postMessage):', event.data.data);
+        
+        // Add the new tracking event to localStorage - ORIGINAL WORKING LOGIC
+        const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+        existingTracking.push(event.data.data);
+        localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
+        
+        // Immediately refresh the dashboard
+        loadClientData();
+      }
+    };
+    
+    // Method 3: localStorage event listener (fallback) - ORIGINAL WORKING LOGIC
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'assessment-tracking' && event.newValue) {
+        console.log('📊 Received real-time tracking update (localStorage event)');
+        loadClientData();
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Refresh every 30 seconds as backup
     const interval = setInterval(loadClientData, 30000);
     
-    return () => clearInterval(interval);
+    return () => {
+      if (broadcastChannel) {
+        broadcastChannel.close();
+      }
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, []);
 
   // Filter and sort clients
@@ -629,79 +739,104 @@ export function ClientHub() {
       {/* Client Details Modal */}
       {selectedClient && (
         <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-medium">
+          <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto bg-white">
+            <DialogHeader className="pb-4 border-b bg-white">
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 font-medium text-lg">
                     {selectedClient.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </span>
                 </div>
-                {selectedClient.name}
-                {selectedClient.isLive && (
-                  <Badge className="bg-green-100 text-green-800">LIVE</Badge>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="truncate">{selectedClient.name}</span>
+                    {selectedClient.isLive && (
+                      <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        LIVE
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-base">
                 View detailed information and assessment history
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-6">
+            <div className="space-y-6 pt-4 bg-white">
               {/* Client Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Email</Label>
-                  <p className="text-sm text-gray-900">{selectedClient.email}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Phone</Label>
-                  <p className="text-sm text-gray-900">{selectedClient.phone}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Status</Label>
-                  <Badge className={getStatusColor(selectedClient.status)} variant="secondary">
-                    {selectedClient.status}
-                  </Badge>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Priority</Label>
-                  <Badge className={getPriorityColor(selectedClient.priority)} variant="secondary">
-                    {selectedClient.priority}
-                  </Badge>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Source</Label>
-                  <p className="text-sm text-gray-900">{selectedClient.source}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Value</Label>
-                  <p className="text-sm text-gray-900">${selectedClient.value}</p>
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-gray-700">Email</Label>
+                    <p className="text-sm text-gray-900 break-all">{selectedClient.email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-gray-700">Phone</Label>
+                    <p className="text-sm text-gray-900">{selectedClient.phone}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-gray-700">Status</Label>
+                    <div>
+                      <Badge className={getStatusColor(selectedClient.status)} variant="secondary">
+                        {selectedClient.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-gray-700">Priority</Label>
+                    <div>
+                      <Badge className={getPriorityColor(selectedClient.priority)} variant="secondary">
+                        {selectedClient.priority}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-gray-700">Source</Label>
+                    <p className="text-sm text-gray-900">{selectedClient.source}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-gray-700">Value</Label>
+                    <p className="text-sm text-gray-900 font-semibold">${selectedClient.value}</p>
+                  </div>
                 </div>
               </div>
 
               {/* Current Assessment */}
               {selectedClient.currentAssessment && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Current Assessment</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-blue-700">Progress:</span>
-                      <span className="text-sm font-medium text-blue-900">
-                        {selectedClient.currentAssessment.progress}%
-                      </span>
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-blue-900">Current Assessment</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-blue-700">Progress</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-blue-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${selectedClient.currentAssessment.progress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium text-blue-900">
+                          {selectedClient.currentAssessment.progress}%
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-blue-700">Status:</span>
-                      <span className="text-sm font-medium text-blue-900">
-                        {selectedClient.currentAssessment.status}
-                      </span>
+                    <div className="space-y-1">
+                      <span className="text-sm text-blue-700">Status</span>
+                      <p className="text-sm font-medium text-blue-900 capitalize">
+                        {selectedClient.currentAssessment.status.replace('_', ' ')}
+                      </p>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-blue-700">Started:</span>
-                      <span className="text-sm font-medium text-blue-900">
+                    <div className="space-y-1">
+                      <span className="text-sm text-blue-700">Started</span>
+                      <p className="text-sm font-medium text-blue-900">
                         {new Date(selectedClient.currentAssessment.startTime).toLocaleString()}
-                      </span>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -709,40 +844,99 @@ export function ClientHub() {
 
               {/* Assessment History */}
               {selectedClient.assessmentHistory.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Assessment History</h4>
-                  <div className="space-y-2">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Clock className="h-5 w-5 text-gray-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Assessment History</h3>
+                    <Badge variant="secondary" className="ml-auto">
+                      {selectedClient.assessmentHistory.length} assessment{selectedClient.assessmentHistory.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
                     {selectedClient.assessmentHistory.map((session, index) => (
-                      <div key={index} className="bg-gray-50 p-3 rounded-lg">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              Assessment {index + 1}
-                            </p>
+                      <div key={index} className="bg-gray-50 border border-gray-200 p-4 rounded-lg hover:shadow-sm transition-shadow">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                Assessment {index + 1}
+                              </p>
+                              <Badge 
+                                className={
+                                  session.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  session.status === 'abandoned' ? 'bg-red-100 text-red-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }
+                                variant="secondary"
+                              >
+                                {session.status}
+                              </Badge>
+                            </div>
                             <p className="text-xs text-gray-500">
                               {new Date(session.startTime).toLocaleString()}
                             </p>
                           </div>
-                          <Badge 
-                            className={
-                              session.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              session.status === 'abandoned' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }
-                            variant="secondary"
-                          >
-                            {session.status}
-                          </Badge>
                         </div>
-                        <div className="mt-2 text-sm text-gray-600">
-                          Progress: {session.progress}%
-                          {session.score && ` • Score: ${session.score}`}
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Progress:</span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                                <div 
+                                  className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                                  style={{ width: `${session.progress}%` }}
+                                ></div>
+                              </div>
+                              <span className="font-medium text-gray-900">{session.progress}%</span>
+                            </div>
+                          </div>
+                          {session.score && (
+                            <div>
+                              <span className="text-gray-600">Score:</span>
+                              <p className="font-medium text-gray-900 mt-1">{session.score}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+              {/* Quick Actions */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center gap-3 px-4 py-3 h-auto min-h-[44px] text-sm font-medium whitespace-nowrap border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors"
+                  >
+                    <Mail className="h-4 w-4 flex-shrink-0 text-red-600" />
+                    <span className="truncate">Send Email</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center gap-3 px-4 py-3 h-auto min-h-[44px] text-sm font-medium whitespace-nowrap border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors"
+                  >
+                    <PhoneCall className="h-4 w-4 flex-shrink-0 text-red-600" />
+                    <span className="truncate">Call Client</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center gap-3 px-4 py-3 h-auto min-h-[44px] text-sm font-medium whitespace-nowrap border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors"
+                  >
+                    <Send className="h-4 w-4 flex-shrink-0 text-red-600" />
+                    <span className="truncate">Send Assessment</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center justify-center gap-3 px-4 py-3 h-auto min-h-[44px] text-sm font-medium whitespace-nowrap border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors"
+                    onClick={() => setEditingClient(selectedClient)}
+                  >
+                    <Edit className="h-4 w-4 flex-shrink-0 text-red-600" />
+                    <span className="truncate">Edit Client</span>
+                  </Button>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
