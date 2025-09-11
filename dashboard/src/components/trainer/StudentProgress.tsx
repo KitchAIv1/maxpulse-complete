@@ -503,7 +503,7 @@ export function StudentProgress() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg">
                           <DropdownMenuItem>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details

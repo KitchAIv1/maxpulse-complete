@@ -19,7 +19,7 @@ export const educationalSlides: EducationalSlideData[] = [
     author: 'Matthew Walker, 2017',
     icon: 'sleep',
     triggerAfterQuestion: 'h3',
-    video: '/sleeping2.mp4',
+    video: './sleeping2.mp4',
     image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' // Fallback image
   },
   {
@@ -29,7 +29,7 @@ export const educationalSlides: EducationalSlideData[] = [
     source: 'Harvard Health Research',
     icon: 'hydration',
     triggerAfterQuestion: 'h4',
-    video: '/Hydration.mp4',
+    video: './Hydration.mp4',
     image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' // Fallback image
   },
   {
@@ -39,7 +39,7 @@ export const educationalSlides: EducationalSlideData[] = [
     source: 'Exercise Psychology Research',
     icon: 'energy',
     triggerAfterQuestion: 'h7',
-    video: '/walking.mp4',
+    video: './walking.mp4',
     image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' // Fallback image
   },
   {
@@ -50,7 +50,7 @@ export const educationalSlides: EducationalSlideData[] = [
     author: 'James Clear',
     icon: 'habits',
     triggerAfterQuestion: 'h13', // After question 13
-    video: '/habits.mp4',
+    video: './habits.mp4',
     image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080' // Fallback image
   }
 ];

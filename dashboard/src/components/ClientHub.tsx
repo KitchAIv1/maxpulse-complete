@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -176,7 +176,7 @@ export function ClientHub() {
   ];
 
   // Load and merge client data with real-time assessment data
-  const loadClientData = () => {
+  const loadClientData = useCallback(() => {
     setIsLoading(true);
     
     // Simulate API delay (ORIGINAL WORKING LOGIC - CRITICAL!)
@@ -241,6 +241,15 @@ export function ClientHub() {
       
       console.log('📊 Processed client summaries:', Object.keys(sessions).length, 'clients');
       
+      // Debug LIVE detection
+      const now = Date.now();
+      const fiveMinutesAgo = now - (5 * 60 * 1000);
+      console.log('🔴 LIVE Detection Debug:', {
+        currentTime: new Date(now).toLocaleTimeString(),
+        fiveMinutesAgo: new Date(fiveMinutesAgo).toLocaleTimeString(),
+        sessionsWithRecentActivity: Object.values(sessions).filter(s => s.lastActivity > fiveMinutesAgo).length
+      });
+      
       // Merge base client data with real-time assessment data
       const unifiedClients: UnifiedClient[] = baseClients.map(baseClient => {
         // Find assessment sessions for this client
@@ -257,8 +266,23 @@ export function ClientHub() {
         );
         
         // Check if client is currently live (active in last 5 minutes)
-        const isLive = currentAssessment ? 
-          (Date.now() - currentAssessment.lastActivity) < 5 * 60 * 1000 : false;
+        // Check all sessions, not just current assessment
+        const isLive = clientSessions.some(session => 
+          (Date.now() - session.lastActivity) < 5 * 60 * 1000
+        );
+        
+        // Debug individual client LIVE status
+        if (clientSessions.length > 0) {
+          console.log(`🔴 Client ${baseClient.name} LIVE check:`, {
+            sessionsCount: clientSessions.length,
+            isLive,
+            lastActivities: clientSessions.map(s => ({
+              code: s.code,
+              lastActivity: new Date(s.lastActivity).toLocaleTimeString(),
+              minutesAgo: Math.round((Date.now() - s.lastActivity) / (60 * 1000))
+            }))
+          });
+        }
         
         return {
           ...baseClient,
@@ -299,6 +323,14 @@ export function ClientHub() {
         }
       });
       
+        // Debug final LIVE count
+        const liveClients = unifiedClients.filter(c => c.isLive);
+        console.log('🔴 Final LIVE Detection Results:', {
+          totalClients: unifiedClients.length,
+          liveClients: liveClients.length,
+          liveClientNames: liveClients.map(c => c.name)
+        });
+        
         setClients(unifiedClients);
       } catch (error) {
         console.error('Error loading client data:', error);
@@ -312,7 +344,7 @@ export function ClientHub() {
       
       setIsLoading(false);
     }, 500);  // ← ORIGINAL WORKING DELAY - ESSENTIAL!
-  };
+  }, []);
 
   // Load data on component mount and set up real-time listeners (ORIGINAL WORKING LOGIC)
   useEffect(() => {
@@ -374,7 +406,7 @@ export function ClientHub() {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, []);
+  }, [loadClientData]);
 
   // Filter and sort clients
   const filteredClients = clients
@@ -450,6 +482,30 @@ export function ClientHub() {
     ));
   };
 
+  // Test function to simulate LIVE tracking data
+  const addTestLiveData = () => {
+    const testTrackingData = [
+      {
+        distributorId: 'SJ2024',
+        code: 'SJ2024-test-live-client-' + Date.now().toString(36),
+        customerName: 'Jennifer Martinez',
+        customerEmail: 'jennifer.m@email.com',
+        event: 'question_answered',
+        timestamp: Date.now() - (2 * 60 * 1000), // 2 minutes ago
+        priority: 'health',
+        questionNumber: 3,
+        totalQuestions: 10
+      }
+    ];
+    
+    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+    const updatedTracking = [...existingTracking, ...testTrackingData];
+    localStorage.setItem('assessment-tracking', JSON.stringify(updatedTracking));
+    
+    console.log('🔴 Added test LIVE data:', testTrackingData);
+    loadClientData(); // Refresh the data
+  };
+
   return (
     <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -473,6 +529,15 @@ export function ClientHub() {
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
+          </Button>
+          <Button 
+            onClick={addTestLiveData} 
+            variant="outline" 
+            size="sm"
+            className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+          >
+            <Activity className="h-4 w-4 mr-2" />
+            Test LIVE
           </Button>
           <Button onClick={() => setShowAddClient(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
@@ -547,7 +612,7 @@ export function ClientHub() {
                   Filter: {selectedFilter === 'all' ? 'All' : selectedFilter}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg">
                 <DropdownMenuItem onClick={() => setSelectedFilter('all')}>All Clients</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSelectedFilter('live')}>Live Now</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSelectedFilter('assessment')}>In Assessment</DropdownMenuItem>
@@ -565,7 +630,7 @@ export function ClientHub() {
                   Sort
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg">
                 <DropdownMenuItem onClick={() => setSortBy('lastContact')}>Last Contact</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSortBy('name')}>Name</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSortBy('status')}>Status</DropdownMenuItem>
@@ -681,7 +746,7 @@ export function ClientHub() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => setEditingClient(client)}>
                             <Edit className="h-4 w-4 mr-2" />

@@ -47,7 +47,7 @@ export function Header({ user, onLogout }: HeaderProps) {
                   <span className="hidden md:block">{user.name}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
                 <DropdownMenuItem>
                   <User className="h-4 w-4 mr-2" />
                   Profile Settings
