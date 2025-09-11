@@ -1,29 +1,16 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "dashboard/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "assessment/package.json", 
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm run install:all",
   "rewrites": [
     {
       "source": "/dashboard/(.*)",
-      "destination": "/dashboard/index.html"
+      "destination": "/dashboard/$1"
     },
     {
-      "source": "/assessment/(.*)",
-      "destination": "/assessment/index.html"
+      "source": "/assessment/(.*)", 
+      "destination": "/assessment/$1"
     },
     {
       "source": "/dashboard",
@@ -40,10 +27,19 @@
   ],
   "headers": [
     {
-      "source": "/assets/(.*)",
+      "source": "/dashboard/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assessment/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control", 
           "value": "public, max-age=31536000, immutable"
         }
       ]

@@ -4,9 +4,10 @@
   "description": "MAXPULSE Platform - Complete Monorepo with Dashboard and Assessment Tool",
   "private": true,
   "scripts": {
-    "build": "npm run build:dashboard && npm run build:assessment",
+    "build": "npm run build:dashboard && npm run build:assessment && npm run copy:builds",
     "build:dashboard": "cd dashboard && npm install && npm run build",
-    "build:assessment": "cd assessment && npm install && npm run build",
+    "build:assessment": "cd assessment && npm install && npm run build", 
+    "copy:builds": "mkdir -p dist && cp -r dashboard/dist dist/dashboard && cp -r assessment/dist dist/assessment",
     "dev": "concurrently \"npm run dev:dashboard\" \"npm run dev:assessment\"",
     "dev:dashboard": "cd dashboard && npm run dev",
     "dev:assessment": "cd assessment && npm run dev",
