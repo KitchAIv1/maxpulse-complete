@@ -3,8 +3,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { DistributorSidebar } from './DistributorSidebar';
-import { ClientManagement } from './ClientManagement';
-import { ClientProgress } from './ClientProgress';
+import { ClientHub } from './ClientHub';
 import { LinkGeneration } from './LinkGeneration';
 import { RevenueAnalytics } from './RevenueAnalytics';
 import { TrainingCenter } from './TrainingCenter';
@@ -376,8 +375,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
           )}
 
           {activeTab === 'announcements' && <CompanyAnnouncements />}
-          {activeTab === 'clients' && <ClientManagement />}
-          {activeTab === 'client-progress' && <ClientProgress />}
+        {activeTab === 'clients' && <ClientHub />}
           {activeTab === 'link-generator' && <LinkGeneration />}
           {activeTab === 'analytics' && <RevenueAnalytics />}
           {activeTab === 'training' && <TrainingCenter />}
