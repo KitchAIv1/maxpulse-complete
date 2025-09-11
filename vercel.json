@@ -16,28 +16,6 @@
       }
     }
   ],
-  "routes": [
-    {
-      "src": "/dashboard/(.*)",
-      "dest": "/dashboard/$1"
-    },
-    {
-      "src": "/assessment/(.*)",
-      "dest": "/assessment/$1"
-    },
-    {
-      "src": "/dashboard",
-      "dest": "/dashboard/index.html"
-    },
-    {
-      "src": "/assessment",
-      "dest": "/assessment/index.html"
-    },
-    {
-      "src": "/",
-      "dest": "/dashboard/index.html"
-    }
-  ],
   "rewrites": [
     {
       "source": "/dashboard/(.*)",
@@ -46,11 +24,23 @@
     {
       "source": "/assessment/(.*)",
       "destination": "/assessment/index.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard/index.html"
+    },
+    {
+      "source": "/assessment",
+      "destination": "/assessment/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/dashboard/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
