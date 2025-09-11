@@ -25,8 +25,7 @@ export function DistributorSidebar({ activeTab, onTabChange, onShowWelcome }: Di
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Home, badge: null },
     { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: '2' },
-    { id: 'clients', label: 'Client Management', icon: Users, badge: '12' },
-    { id: 'client-progress', label: 'Assessment Progress', icon: Activity, badge: 'NEW' },
+    { id: 'clients', label: 'Client Hub', icon: Users, badge: 'NEW' },
     { id: 'link-generator', label: 'Link Generator', icon: Plus, badge: 'V2' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
     { id: 'training', label: 'Training Center', icon: GraduationCap, badge: '3' },
