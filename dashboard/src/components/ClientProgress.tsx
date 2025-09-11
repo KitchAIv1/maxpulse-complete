@@ -240,31 +240,11 @@ export function ClientProgress() {
             Client Assessment Progress
           </h1>
           <p className="text-gray-600 mt-1">Track your clients' assessment journey in real-time</p>
-          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700">
-              💡 <strong>How to track assessments:</strong> After clients complete assessments, click "Sync Now" to see their progress. 
-              For real-time updates, keep this tab open and refresh periodically.
-            </p>
-            <details className="mt-2">
-              <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
-                🔧 Advanced: Manual Data Import (for cross-domain issues)
-              </summary>
-              <div className="mt-2 text-xs text-blue-600">
-                If tracking isn't working automatically, you can manually import data from the assessment tool's localStorage.
-                <br />
-                <strong>Steps:</strong> Open assessment tool → F12 → Console → Type: <code className="bg-blue-100 px-1 rounded">localStorage.getItem('assessment-tracking')</code> → Copy result → Paste here and click Import.
-              </div>
-            </details>
-          </div>
         </div>
         <div className="flex gap-2">
           <Button onClick={loadTrackingData} disabled={isLoading} variant="outline">
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
-          </Button>
-          <Button onClick={loadTrackingData} variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100">
-            <Activity className="h-4 w-4 mr-2" />
-            Sync Now
           </Button>
         </div>
       </div>
