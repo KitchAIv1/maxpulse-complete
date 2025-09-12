@@ -501,17 +501,16 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
 
               {/* Quick Actions */}
               <Card className="p-4 lg:p-6">
-                <h3 className="text-base lg:text-lg mb-4">Quick Actions</h3>
+                <h3 className="text-base lg:text-lg mb-4 text-gray-900">Quick Actions</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                   {dashboardData.quickActions.map((action, index) => (
                     <Button 
                       key={index}
-                      variant="outline" 
-                      className="h-16 lg:h-20 flex flex-col items-center justify-center space-y-1 lg:space-y-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors"
+                      className="h-16 lg:h-20 flex flex-col items-center justify-center space-y-1 lg:space-y-2 bg-red-600 hover:bg-red-700 text-white border-0 transition-colors"
                       onClick={() => handleQuickAction(action.action)}
                     >
-                      <action.icon className="h-5 w-5 lg:h-6 lg:w-6 text-red-600" />
-                      <span className="text-xs lg:text-sm text-center leading-tight">{action.label}</span>
+                      <action.icon className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
+                      <span className="text-xs lg:text-sm text-center leading-tight text-white">{action.label}</span>
                     </Button>
                   ))}
                 </div>

@@ -17,13 +17,25 @@ import {
   Users,
   Target,
   TrendingUp,
-  MessageCircle
+  MessageCircle,
+  Search,
+  Filter,
+  Bookmark,
+  Eye,
+  ThumbsUp,
+  Zap,
+  Trophy,
+  Flame,
+  Crown
 } from 'lucide-react';
 
 export function TrainingCenter() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showLearningModule, setShowLearningModule] = useState(false);
   const [selectedPathId, setSelectedPathId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [levelFilter, setLevelFilter] = useState('All');
+  const [bookmarkedCourses, setBookmarkedCourses] = useState<number[]>([]);
 
   const handleContinueLearning = (pathId: number) => {
     setSelectedPathId(pathId);
@@ -35,6 +47,14 @@ export function TrainingCenter() {
     setSelectedPathId(null);
   };
 
+  const toggleBookmark = (courseId: number) => {
+    setBookmarkedCourses(prev => 
+      prev.includes(courseId) 
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
+
   if (showLearningModule && selectedPathId) {
     return <LearningModule pathId={selectedPathId} onBack={handleBackToTrainingCenter} />;
   }
@@ -43,37 +63,72 @@ export function TrainingCenter() {
     {
       id: 1,
       title: 'MAXPULSE Foundations',
-      description: 'Master the basics of health and wealth building',
+      description: 'Master the basics of health and wealth building with comprehensive training modules',
       level: 'Beginner',
+      levelColor: 'bg-green-100 text-green-800 border-green-200',
       duration: '2 hours',
       progress: 75,
       modules: 8,
       completed: 6,
-      badge: 'Foundation Certified'
+      badge: 'Foundation Certified',
+      instructor: 'Dr. Sarah Johnson',
+      rating: 4.9,
+      students: 1247,
+      isRecommended: true,
+      isPopular: false,
+      thumbnail: '🎯',
+      skills: ['Assessment Basics', 'Client Communication', 'Product Knowledge'],
+      nextModule: 'Module 7: Advanced Techniques'
     },
     {
       id: 2,
       title: 'Advanced Sales Strategies',
-      description: 'Learn proven techniques for higher conversions',
+      description: 'Learn proven techniques for higher conversions and closing deals effectively',
       level: 'Advanced',
+      levelColor: 'bg-red-100 text-red-800 border-red-200',
       duration: '3 hours',
       progress: 40,
       modules: 12,
       completed: 5,
-      badge: 'Sales Master'
+      badge: 'Sales Master',
+      instructor: 'Michael Chen',
+      rating: 4.8,
+      students: 892,
+      isRecommended: false,
+      isPopular: true,
+      thumbnail: '💼',
+      skills: ['Objection Handling', 'Closing Techniques', 'Follow-up Strategies'],
+      nextModule: 'Module 6: Psychological Triggers'
     },
     {
       id: 3,
       title: 'Digital Marketing Mastery',
-      description: 'Social media and online marketing strategies',
+      description: 'Social media and online marketing strategies for modern distributors',
       level: 'Intermediate',
+      levelColor: 'bg-blue-100 text-blue-800 border-blue-200',
       duration: '4 hours',
       progress: 90,
       modules: 15,
       completed: 14,
-      badge: 'Digital Expert'
+      badge: 'Digital Expert',
+      instructor: 'Lisa Rodriguez',
+      rating: 4.9,
+      students: 2156,
+      isRecommended: true,
+      isPopular: true,
+      thumbnail: '📱',
+      skills: ['Social Media', 'Content Creation', 'Lead Generation'],
+      nextModule: 'Module 15: Advanced Analytics'
     }
   ];
+
+  const filteredPaths = learningPaths.filter(path => {
+    const matchesSearch = path.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         path.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         path.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesLevel = levelFilter === 'All' || path.level === levelFilter;
+    return matchesSearch && matchesLevel;
+  });
 
   const recentTraining = [
     {
@@ -148,12 +203,50 @@ export function TrainingCenter() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl text-gray-900">Training Center</h1>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Award className="h-4 w-4 mr-2" />
-          View Certifications
-        </Button>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl text-gray-900 truncate">Training Center</h1>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1">Accelerate your success with expert-led training</p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
+          <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 text-sm">
+            <Trophy className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span className="hidden sm:inline">Leaderboard</span>
+            <span className="sm:hidden">Board</span>
+          </Button>
+          <Button className="bg-red-600 hover:bg-red-700 text-white text-sm">
+            <Award className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span className="hidden sm:inline">View Certifications</span>
+            <span className="sm:hidden">Certificates</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search courses, skills, or instructors..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-gray-400" />
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+          >
+            <option value="All">All Levels</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </div>
       </div>
 
       {/* Progress Overview */}
@@ -208,44 +301,145 @@ export function TrainingCenter() {
         </TabsList>
 
         <TabsContent value="courses">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Learning Paths */}
             <div className="space-y-4">
-              <h3 className="text-lg">Recommended Learning Paths</h3>
-              {learningPaths.map((path) => (
-                <Card key={path.id} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h4 className="text-lg mb-2">{path.title}</h4>
-                      <p className="text-gray-600 text-sm mb-3">{path.description}</p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <Badge variant="outline">{path.level}</Badge>
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {path.duration}
-                        </span>
-                        <span>{path.completed}/{path.modules} modules</span>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg">Learning Paths</h3>
+                <span className="text-sm text-gray-500">{filteredPaths.length} courses</span>
+              </div>
+              
+              {filteredPaths.map((path) => (
+                <Card key={path.id} className="p-4 sm:p-6 hover:shadow-lg transition-all duration-200 border-l-4 border-l-red-500">
+                  {/* Header with badges */}
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3">
+                    <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                      <div className="text-2xl sm:text-3xl flex-shrink-0">{path.thumbnail}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                          <h4 className="text-base sm:text-lg font-semibold truncate pr-2">{path.title}</h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {path.isRecommended && (
+                              <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">
+                                <Crown className="h-3 w-3 mr-1" />
+                                <span className="hidden sm:inline">Recommended</span>
+                                <span className="sm:hidden">Rec</span>
+                              </Badge>
+                            )}
+                            {path.isPopular && (
+                              <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs">
+                                <Flame className="h-3 w-3 mr-1" />
+                                <span className="hidden sm:inline">Popular</span>
+                                <span className="sm:hidden">Pop</span>
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-3">{path.description}</p>
+                        
+                        {/* Course metadata */}
+                        <div className="flex items-center flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-3">
+                          <Badge variant="outline" className={`${path.levelColor} text-xs`}>{path.level}</Badge>
+                          <span className="flex items-center whitespace-nowrap">
+                            <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                            {path.duration}
+                          </span>
+                          <span className="flex items-center whitespace-nowrap">
+                            <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                            <span className="hidden sm:inline">{path.completed}/{path.modules} modules</span>
+                            <span className="sm:hidden">{path.completed}/{path.modules}</span>
+                          </span>
+                          <span className="hidden md:flex items-center whitespace-nowrap">
+                            <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                            {path.students.toLocaleString()}
+                          </span>
+                          <span className="flex items-center whitespace-nowrap">
+                            <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-yellow-500 flex-shrink-0" />
+                            {path.rating}
+                          </span>
+                        </div>
+
+                        {/* Skills tags */}
+                        <div className="flex items-start gap-2 mb-3 overflow-hidden">
+                          <span className="text-xs text-gray-500 flex-shrink-0 mt-1">Skills:</span>
+                          <div className="flex flex-wrap gap-1 min-w-0">
+                            {path.skills.slice(0, 3).map((skill, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs whitespace-nowrap">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {path.skills.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{path.skills.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Instructor */}
+                        <p className="text-xs text-gray-500 truncate">
+                          Instructor: <span className="font-medium">{path.instructor}</span>
+                        </p>
                       </div>
                     </div>
-                    <Award className="h-6 w-6 text-yellow-600" />
+                    
+                    <div className="flex sm:flex-col items-center sm:items-end gap-2 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleBookmark(path.id)}
+                        className={`${bookmarkedCourses.includes(path.id) ? 'text-red-600' : 'text-gray-400'} p-2`}
+                      >
+                        <Bookmark className="h-4 w-4" />
+                      </Button>
+                      <Award className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+                    </div>
                   </div>
                   
+                  {/* Progress section */}
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-sm mb-2">
-                      <span>Progress</span>
-                      <span>{path.progress}%</span>
+                      <span className="font-medium">Progress</span>
+                      <span className="text-red-600 font-semibold">{path.progress}%</span>
                     </div>
-                    <Progress value={path.progress} className="h-2" />
+                    
+                    {/* Custom Progress Bar */}
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${path.progress}%` }}
+                      />
+                    </div>
+                    
+                    {path.progress > 0 && path.progress < 100 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Next: {path.nextModule}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      Badge: {path.badge}
-                    </span>
-                    <Button size="sm" onClick={() => handleContinueLearning(path.id)}>
-                      <Play className="h-4 w-4 mr-2" />
-                      Continue
-                    </Button>
+                  {/* Action buttons */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs sm:text-sm text-gray-600 truncate">
+                        🏆 {path.badge}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                        <span className="hidden sm:inline">Preview</span>
+                        <span className="sm:hidden">View</span>
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleContinueLearning(path.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm"
+                      >
+                        <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                        {path.progress > 0 ? 'Continue' : 'Start'}
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
