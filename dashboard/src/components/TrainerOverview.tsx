@@ -357,21 +357,21 @@ export function TrainerOverview({ user }: TrainerOverviewProps) {
         <Card className="p-6">
           <h3 className="text-lg text-gray-900 mb-6">Quick Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2 px-4 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors">
-              <Plus className="h-6 w-6 text-red-600 flex-shrink-0" />
-              <span className="text-sm text-center truncate w-full">New Course</span>
+            <Button className="h-20 flex flex-col items-center justify-center space-y-2 px-4 bg-red-600 hover:bg-red-700 text-white border-0 transition-colors">
+              <Plus className="h-6 w-6 text-white flex-shrink-0" />
+              <span className="text-sm text-center truncate w-full text-white">New Course</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2 px-4 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors">
-              <Play className="h-6 w-6 text-red-600 flex-shrink-0" />
-              <span className="text-sm text-center truncate w-full">Add Module</span>
+            <Button className="h-20 flex flex-col items-center justify-center space-y-2 px-4 bg-red-600 hover:bg-red-700 text-white border-0 transition-colors">
+              <Play className="h-6 w-6 text-white flex-shrink-0" />
+              <span className="text-sm text-center truncate w-full text-white">Add Module</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2 px-4 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors">
-              <FileQuestion className="h-6 w-6 text-red-600 flex-shrink-0" />
-              <span className="text-sm text-center truncate w-full">Create Quiz</span>
+            <Button className="h-20 flex flex-col items-center justify-center space-y-2 px-4 bg-red-600 hover:bg-red-700 text-white border-0 transition-colors">
+              <FileQuestion className="h-6 w-6 text-white flex-shrink-0" />
+              <span className="text-sm text-center truncate w-full text-white">Create Quiz</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2 px-4 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800 transition-colors">
-              <TrendingUp className="h-6 w-6 text-red-600 flex-shrink-0" />
-              <span className="text-sm text-center truncate w-full">View Analytics</span>
+            <Button className="h-20 flex flex-col items-center justify-center space-y-2 px-4 bg-red-600 hover:bg-red-700 text-white border-0 transition-colors">
+              <TrendingUp className="h-6 w-6 text-white flex-shrink-0" />
+              <span className="text-sm text-center truncate w-full text-white">View Analytics</span>
             </Button>
           </div>
         </Card>
