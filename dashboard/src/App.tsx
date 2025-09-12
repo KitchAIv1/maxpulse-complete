@@ -10,10 +10,14 @@ import { HomePage } from './components/HomePage';
 import { AboutPage } from './components/AboutPage';
 import { HowItWorksPage } from './components/HowItWorksPage';
 import { SuccessStoriesPage } from './components/SuccessStoriesPage';
+import { ProfileSettings } from './components/ProfileSettings';
+import { AccountSettings } from './components/AccountSettings';
 
 function App() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'distributor' | 'admin' | 'trainer' | null>(null);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
 
   const handleLogin = (userData: any, role: 'distributor' | 'admin' | 'trainer') => {
     setUser(userData);
@@ -23,6 +27,32 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     setUserRole(null);
+  };
+
+  const handleShowProfile = () => {
+    setShowProfileSettings(true);
+  };
+
+  const handleShowAccountSettings = () => {
+    setShowAccountSettings(true);
+  };
+
+  const handleCloseProfile = () => {
+    setShowProfileSettings(false);
+  };
+
+  const handleCloseAccountSettings = () => {
+    setShowAccountSettings(false);
+  };
+
+  const handleSaveProfile = (userData: any) => {
+    setUser({ ...user, ...userData });
+    setShowProfileSettings(false);
+  };
+
+  const handleSaveAccountSettings = (settings: any) => {
+    setUser({ ...user, ...settings });
+    setShowAccountSettings(false);
   };
 
   // Debug logging and prevent server requests in iframe environment
@@ -200,7 +230,12 @@ function App() {
             element={
               user && userRole === 'distributor' ? (
                 <>
-                  <Header user={user} onLogout={handleLogout} />
+                  <Header 
+                    user={user} 
+                    onLogout={handleLogout}
+                    onShowProfile={handleShowProfile}
+                    onShowAccountSettings={handleShowAccountSettings}
+                  />
                   <DistributorDashboard user={user} />
                 </>
               ) : (
@@ -217,7 +252,12 @@ function App() {
             element={
               user && userRole === 'trainer' ? (
                 <>
-                  <Header user={user} onLogout={handleLogout} />
+                  <Header 
+                    user={user} 
+                    onLogout={handleLogout}
+                    onShowProfile={handleShowProfile}
+                    onShowAccountSettings={handleShowAccountSettings}
+                  />
                   <TrainerDashboard user={user} />
                 </>
               ) : (
@@ -234,7 +274,12 @@ function App() {
             element={
               user && userRole === 'admin' ? (
                 <>
-                  <Header user={user} onLogout={handleLogout} />
+                  <Header 
+                    user={user} 
+                    onLogout={handleLogout}
+                    onShowProfile={handleShowProfile}
+                    onShowAccountSettings={handleShowAccountSettings}
+                  />
                   <AdminDashboard user={user} />
                 </>
               ) : (
@@ -249,6 +294,24 @@ function App() {
           {/* Catch-all for unknown routes - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+
+        {/* Profile Settings Modal */}
+        {showProfileSettings && user && (
+          <ProfileSettings
+            user={user}
+            onClose={handleCloseProfile}
+            onSave={handleSaveProfile}
+          />
+        )}
+
+        {/* Account Settings Modal */}
+        {showAccountSettings && user && (
+          <AccountSettings
+            user={user}
+            onClose={handleCloseAccountSettings}
+            onSave={handleSaveAccountSettings}
+          />
+        )}
       </div>
     </HashRouter>
   );

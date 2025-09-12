@@ -414,9 +414,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
       
       <div className="flex-1 overflow-auto">
         {/* Mobile Header Space */}
-        <div className="lg:hidden h-16 bg-white border-b border-gray-200 flex items-center px-16">
-          <h1 className="text-lg font-medium text-gray-900">MAXPULSE Dashboard</h1>
-        </div>
+        <div className="lg:hidden h-16 bg-white border-b border-gray-200"></div>
         
         <div className="p-4 lg:p-6">
           {activeTab === 'overview' && (
