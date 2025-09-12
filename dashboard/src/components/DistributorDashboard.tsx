@@ -413,9 +413,6 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
       </Sheet>
       
       <div className="flex-1 overflow-auto">
-        {/* Mobile Header Space */}
-        <div className="lg:hidden h-16 bg-white border-b border-gray-200"></div>
-        
         <div className="p-4 lg:p-6">
           {activeTab === 'overview' && (
             <div className="space-y-6">
