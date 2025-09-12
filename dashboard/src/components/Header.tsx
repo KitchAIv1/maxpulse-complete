@@ -7,9 +7,11 @@ import { Badge } from './ui/badge';
 interface HeaderProps {
   user: any;
   onLogout: () => void;
+  onShowProfile?: () => void;
+  onShowAccountSettings?: () => void;
 }
 
-export function Header({ user, onLogout }: HeaderProps) {
+export function Header({ user, onLogout, onShowProfile, onShowAccountSettings }: HeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -48,11 +50,11 @@ export function Header({ user, onLogout }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={onShowProfile}>
                   <User className="h-4 w-4 mr-2" />
                   Profile Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={onShowAccountSettings}>
                   <Settings className="h-4 w-4 mr-2" />
                   Account Settings
                 </DropdownMenuItem>
