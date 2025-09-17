@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
@@ -26,7 +26,55 @@ import {
 } from 'lucide-react';
 import aiRobotImage from 'figma:asset/b8f0486b85e63e46a398309656e7e70a0ff0418f.png';
 
+// Hero video path - place your video file in the public folder
+const heroBackgroundVideo = "/dashboard/hero-video.mp4";
+// Fallback image for when video fails to load
+const heroBackgroundImage = "https://images.unsplash.com/photo-1673862451708-1e70ba22557f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMGJ1c2luZXNzJTIwc3VjY2VzcyUyMHBob25lfGVufDF8fHx8MTc1NTkwNjUyNnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
+
+// Custom hook to detect mobile devices (same pattern as assessment)
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const checkIsMobile = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const width = window.innerWidth;
+        const userAgent = navigator.userAgent;
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        
+        // Hysteresis: different thresholds for switching directions
+        const shouldUseMobile = isMobileDevice || 
+          (isMobile ? width <= 800 : width <= 750); // Buffer zone prevents rapid switching
+        
+        setIsMobile(shouldUseMobile);
+      }, 300); // Longer debounce for smoother transitions
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => {
+      window.removeEventListener('resize', checkIsMobile);
+      clearTimeout(timeoutId);
+    };
+  }, [isMobile]); // Include isMobile in dependency for hysteresis
+
+  return isMobile;
+};
+
 export function HomePage() {
+  const isMobile = useIsMobile();
+  const [videoError, setVideoError] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🏠 HomePage mounted');
+    console.log('📹 Video path:', heroBackgroundVideo);
+    console.log('📱 Is mobile:', isMobile);
+  }, [isMobile]);
+
   const features = [
     {
       icon: Bot,
@@ -80,28 +128,58 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Background Image */}
-      <section 
-        className="relative bg-gradient-to-br from-red-800 via-red-900 to-amber-700 text-white overflow-hidden bg-cover bg-no-repeat"
-        style={{
-          backgroundImage: `linear-gradient(rgba(139, 21, 56, 0.65), rgba(180, 83, 9, 0.65)), url('https://images.unsplash.com/photo-1673862451708-1e70ba22557f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMGJ1c2luZXNzJTIwc3VjY2VzcyUyMHBob25lfGVufDF8fHx8MTc1NTkwNjUyNnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral')`,
-          backgroundPosition: 'center top', // Default for mobile - shows full person
-        }}
-      >
-        {/* Desktop-specific background positioning */}
+      {/* Hero Section with Video Background */}
+      <section className="relative text-white overflow-hidden">
+        {/* Video/Image Background */}
+        <div className="absolute inset-0" style={{ zIndex: 1 }}>
+          {!videoError ? (
+            <video
+              key="hero-video"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ zIndex: 1 }}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              onCanPlay={(e) => {
+                console.log('✅ Hero video loaded successfully!');
+                e.target.play().catch(err => console.log('Hero video play failed:', err));
+              }}
+              onError={(e) => {
+                console.error('❌ Hero video error:', e.target.error);
+                console.error('Video src:', heroBackgroundVideo);
+                setVideoError(true);
+              }}
+              onLoadStart={() => {
+                console.log('🎬 Hero video loading started...', heroBackgroundVideo);
+              }}
+            >
+              <source src={heroBackgroundVideo} type="video/mp4" />
+            </video>
+          ) : (
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ 
+                backgroundImage: `url(${heroBackgroundImage})`,
+                backgroundPosition: isMobile ? 'center top' : 'center 20%',
+                zIndex: 1
+              }}
+            />
+          )}
+        </div>
+
+        {/* Red Gradient Overlay - maintained on top of video */}
         <div 
-          className="absolute inset-0 hidden md:block bg-cover bg-no-repeat"
-          style={{
-            backgroundImage: `linear-gradient(rgba(139, 21, 56, 0.65), rgba(180, 83, 9, 0.65)), url('https://images.unsplash.com/photo-1673862451708-1e70ba22557f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMGJ1c2luZXNzJTIwc3VjY2VzcyUyMHBob25lfGVufDF8fHx8MTc1NTkwNjUyNnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral')`,
-            backgroundPosition: 'center 20%', // Shows head/upper body area for desktop
-          }}
+          className="absolute inset-0 bg-gradient-to-br from-red-800/65 via-red-900/65 to-amber-700/65"
+          style={{ zIndex: 2 }}
         ></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative" style={{ zIndex: 3 }}>
           <div className="text-center">
             <div className="mb-6">
-              <span className="inline-flex items-center px-4 py-2 bg-white bg-opacity-90 rounded-full text-sm font-medium text-gray-900 mb-4 shadow-lg border border-white border-opacity-20">
-                <Sparkles className="h-4 w-4 mr-2 text-red-800" />
+              <span className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-sm font-medium text-white mb-4 shadow-lg border border-white/30 hover:bg-white/30 transition-all duration-300">
+                <Sparkles className="h-4 w-4 mr-2 text-amber-300" />
                 Industry First AI Tool for Network Marketing
               </span>
             </div>
@@ -132,8 +210,8 @@ export function HomePage() {
         </div>
         
         {/* Subtle decorative overlay elements */}
-        <div className="absolute inset-0 bg-gradient-to-t from-red-900 via-transparent to-transparent opacity-30"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-red-800 to-transparent opacity-40"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-red-900 via-transparent to-transparent opacity-30" style={{ zIndex: 2 }}></div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-red-800 to-transparent opacity-40" style={{ zIndex: 2 }}></div>
       </section>
 
       {/* AI Revolution Section - Split Layout */}
