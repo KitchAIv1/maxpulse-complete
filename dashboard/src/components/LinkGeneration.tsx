@@ -202,445 +202,510 @@ export function LinkGeneration() {
   // Preview functionality removed - now opens Premium Mobile Assessment Tool directly
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl lg:text-3xl text-gray-900 flex items-center justify-center gap-3 mb-2">
-          <Link className="h-8 w-8 text-red-600" />
-          Assessment Link Generator
-        </h1>
-        <p className="text-gray-600">Create assessment invitations that open the Premium Mobile Assessment Tool</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Floating Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 via-amber-500/5 to-red-500/5"></div>
+        <div className="relative max-w-4xl mx-auto px-4 lg:px-6 py-8 lg:py-12">
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg shadow-red-500/10 mb-4">
+              <Link className="h-8 w-8 text-red-600" />
+            </div>
+            <h1 className="text-3xl lg:text-4xl font-light text-gray-900 tracking-tight">
+              Assessment Link Generator
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Create personalized assessment invitations that connect directly to your Premium Mobile Assessment Tool
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-auto">
-          <TabsTrigger value="customer" className="py-3 px-6">
-            <User className="h-5 w-5 mr-3" />
-            <div className="text-left">
-              <div className="font-medium">Personal Link</div>
-              <div className="text-xs text-gray-500">1-on-1 outreach</div>
-            </div>
-          </TabsTrigger>
-          <TabsTrigger value="campaign" className="py-3 px-6">
-            <Globe className="h-5 w-5 mr-3" />
-            <div className="text-left">
-              <div className="font-medium">Campaign Link</div>
-              <div className="text-xs text-gray-500">Public sharing</div>
-            </div>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Campaign Link Tab */}
-        <TabsContent value="campaign" className="space-y-6">
-          <Card className="p-6 lg:p-8">
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-                  <Globe className="h-8 w-8 text-purple-600" />
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 lg:px-6 pb-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Floating Tab Navigation */}
+          <div className="flex justify-center mb-8">
+            <TabsList className="bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-lg shadow-gray-900/5 rounded-2xl p-2 h-auto">
+              <TabsTrigger 
+                value="customer" 
+                className="rounded-xl px-6 py-4 data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-600/25 transition-all duration-300"
+              >
+                <User className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <div className="font-medium">Personal Link</div>
+                  <div className="text-xs opacity-70">1-on-1 outreach</div>
                 </div>
-                <h3 className="text-xl font-medium">Campaign Assessment Link</h3>
-                <p className="text-gray-600 max-w-md mx-auto">
-                  Create a trackable campaign link for social media, groups, and public sharing with anonymous client collection.
-                </p>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="campaign" 
+                className="rounded-xl px-6 py-4 data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-red-600/25 transition-all duration-300"
+              >
+                <Globe className="h-5 w-5 mr-3" />
+                <div className="text-left">
+                  <div className="font-medium">Campaign Link</div>
+                  <div className="text-xs opacity-70">Public sharing</div>
+                </div>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Campaign Link Tab */}
+          <TabsContent value="campaign" className="space-y-8">
+            {/* Section Header */}
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-500 to-amber-500 rounded-3xl shadow-lg shadow-red-500/25 mb-6">
+                <Globe className="h-10 w-10 text-white" />
               </div>
+              <h2 className="text-2xl font-light text-gray-900">Campaign Assessment Link</h2>
+              <p className="text-gray-600 max-w-lg mx-auto leading-relaxed">
+                Create trackable campaign links perfect for social media, groups, and public sharing
+              </p>
+            </div>
 
-              {!campaignLink ? (
-                <div className="max-w-md mx-auto space-y-4">
-                  <div>
-                    <Label htmlFor="campaignName">Campaign Name *</Label>
-                    <Input
-                      id="campaignName"
-                      placeholder="e.g., Health & Wellness January"
-                      value={campaignDetails.name}
-                      onChange={(e) => setCampaignDetails(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="targetAudience">Target Audience *</Label>
-                    <Input
-                      id="targetAudience"
-                      placeholder="e.g., Fitness enthusiasts, Working professionals"
-                      value={campaignDetails.audience}
-                      onChange={(e) => setCampaignDetails(prev => ({ ...prev, audience: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="focusArea">Focus Area</Label>
-                    <select 
-                      id="focusArea"
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                      value={campaignDetails.focusArea}
-                      onChange={(e) => setCampaignDetails(prev => ({ ...prev, focusArea: e.target.value }))}
-                    >
-                      <option value="both">Health & Wealth (Both)</option>
-                      <option value="health">Health Focus</option>
-                      <option value="wealth">Wealth Focus</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="campaignNotes">Campaign Notes</Label>
-                    <textarea
-                      id="campaignNotes"
-                      placeholder="e.g., Facebook fitness groups campaign, Instagram health influencer collaboration"
-                      className="w-full p-2 border border-gray-300 rounded-md h-20 resize-none"
-                      value={campaignDetails.notes}
-                      onChange={(e) => setCampaignDetails(prev => ({ ...prev, notes: e.target.value }))}
-                    />
-                  </div>
+            {!campaignLink ? (
+              <div className="max-w-lg mx-auto">
+                {/* Form Container */}
+                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-8 shadow-xl shadow-gray-900/5">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="campaignName" className="text-gray-700 font-medium">Campaign Name</Label>
+                      <Input
+                        id="campaignName"
+                        placeholder="Health & Wellness January"
+                        value={campaignDetails.name}
+                        onChange={(e) => setCampaignDetails(prev => ({ ...prev, name: e.target.value }))}
+                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-red-500/20 transition-all duration-200"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="targetAudience" className="text-gray-700 font-medium">Target Audience</Label>
+                      <Input
+                        id="targetAudience"
+                        placeholder="Fitness enthusiasts, Working professionals"
+                        value={campaignDetails.audience}
+                        onChange={(e) => setCampaignDetails(prev => ({ ...prev, audience: e.target.value }))}
+                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-red-500/20 transition-all duration-200"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="focusArea" className="text-gray-700 font-medium">Focus Area</Label>
+                      <select 
+                        id="focusArea"
+                        className="w-full border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-red-500/20 transition-all duration-200"
+                        value={campaignDetails.focusArea}
+                        onChange={(e) => setCampaignDetails(prev => ({ ...prev, focusArea: e.target.value }))}
+                      >
+                        <option value="both">Health & Wealth (Both)</option>
+                        <option value="health">Health Focus</option>
+                        <option value="wealth">Wealth Focus</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="campaignNotes" className="text-gray-700 font-medium">Campaign Notes</Label>
+                      <textarea
+                        id="campaignNotes"
+                        placeholder="Facebook fitness groups, Instagram collaboration..."
+                        className="w-full border-0 bg-gray-50/50 rounded-xl px-4 py-3 h-24 resize-none focus:bg-white focus:ring-2 focus:ring-red-500/20 transition-all duration-200"
+                        value={campaignDetails.notes}
+                        onChange={(e) => setCampaignDetails(prev => ({ ...prev, notes: e.target.value }))}
+                      />
+                    </div>
 
-                  {/* Campaign Link Benefits */}
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
-                    <h4 className="font-medium text-purple-800 mb-2">🌐 Campaign Link Features:</h4>
-                    <ul className="text-sm text-purple-700 space-y-1">
-                      <li>• ✅ Perfect for social media sharing</li>
-                      <li>• ✅ Anonymous client experience</li>
-                      <li>• ✅ Collects client info after priority selection</li>
-                      <li>• ✅ Trackable campaign performance</li>
-                      <li>• ✅ No relationship building required</li>
-                    </ul>
-                  </div>
+                    {/* Features List */}
+                    <div className="bg-gradient-to-r from-red-50 to-amber-50 rounded-2xl p-6 border border-red-100/50">
+                      <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-amber-500" />
+                        Campaign Features
+                      </h4>
+                      <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Perfect for social media sharing
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Anonymous client experience
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Trackable campaign performance
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="pt-4">
                     <Button 
                       onClick={generateCampaignLink}
                       disabled={!campaignDetails.name || !campaignDetails.audience}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-xl py-4 shadow-lg shadow-red-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Globe className="h-5 w-5 mr-2" />
                       Generate Campaign Link
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Success Message */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <span className="text-green-800 font-medium">Campaign link created successfully!</span>
-                        <p className="text-green-700 text-sm">Campaign: {campaignDetails.name}</p>
+              </div>
+            ) : (
+              <div className="max-w-2xl mx-auto space-y-8">
+                {/* Success Header */}
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg shadow-emerald-500/25 mb-4">
+                    <CheckCircle className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">Campaign Link Created!</h3>
+                  <p className="text-gray-600">{campaignDetails.name}</p>
+                </div>
+
+                {/* Campaign Details */}
+                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg shadow-gray-900/5">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Audience</span>
+                      <p className="font-medium text-gray-900">{campaignDetails.audience}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Focus</span>
+                      <p className="font-medium text-gray-900">
+                        {campaignDetails.focusArea === 'both' ? 'Health & Wealth' : 
+                         campaignDetails.focusArea === 'health' ? 'Health Focus' : 'Wealth Focus'}
+                      </p>
+                    </div>
+                  </div>
+                  {campaignDetails.notes && (
+                    <div className="mt-4 pt-4 border-t border-gray-200/50">
+                      <span className="text-gray-500 text-sm">Notes</span>
+                      <p className="text-gray-700 text-sm mt-1">{campaignDetails.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* URL Display */}
+                <div className="bg-gradient-to-r from-red-50 to-amber-50 rounded-2xl p-6 border border-red-100/50">
+                  <Label className="text-gray-700 font-medium mb-3 block flex items-center gap-2">
+                    <Link className="h-4 w-4 text-red-600" />
+                    Campaign Assessment URL
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <code className="flex-1 text-sm bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-white/50 break-all text-gray-700">
+                      {campaignUrl}
+                    </code>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => copyToClipboard(campaignUrl)}
+                      className="shrink-0 hover:bg-white/50"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Message Preview */}
+                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg shadow-gray-900/5">
+                  <Label className="text-gray-700 font-medium mb-3 block flex items-center gap-2">
+                    <Share2 className="h-4 w-4 text-gray-600" />
+                    Ready-to-Share Message
+                  </Label>
+                  <div className="bg-gray-50/50 rounded-xl p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {campaignLink}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Button 
+                    onClick={() => copyToClipboard(campaignLink)} 
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-xl border-gray-200 hover:bg-gray-50"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy Message
+                  </Button>
+                  <Button 
+                    onClick={() => openDirectUrl(campaignUrl)} 
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Test Link
+                  </Button>
+                  <Button 
+                    onClick={() => downloadQR(campaignUrl, `assessment-${campaignCode}`)} 
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-xl border-gray-200 hover:bg-gray-50"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    QR Code
+                  </Button>
+                </div>
+
+                {/* Best Practices */}
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100/50">
+                  <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-amber-500" />
+                    Best Practices
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      Social media posts & stories
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      Group chats & communities
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      Email newsletters
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      Track in analytics
+                    </div>
+                  </div>
+                </div>
+
+                {/* Create Another */}
+                <div className="text-center">
+                  <Button 
+                    onClick={() => {
+                      setCampaignLink('');
+                      setCampaignCode('');
+                      setCampaignUrl('');
+                      setCampaignDetails({ name: '', audience: '', focusArea: 'both', notes: '' });
+                    }}
+                    variant="ghost"
+                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+                  >
+                    Create Another Campaign Link
+                  </Button>
+                </div>
+              </div>
+              )}
+          </TabsContent>
+
+          {/* Personal Link Tab */}
+          <TabsContent value="customer" className="space-y-8">
+            {/* Section Header */}
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl shadow-lg shadow-gray-800/25 mb-6">
+                <User className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-light text-gray-900">Personal Assessment Link</h2>
+              <p className="text-gray-600 max-w-lg mx-auto leading-relaxed">
+                Create personalized links for 1-on-1 outreach with pre-filled client information
+              </p>
+            </div>
+
+            {!customerLink ? (
+              <div className="max-w-lg mx-auto">
+                {/* Form Container */}
+                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-8 shadow-xl shadow-gray-900/5">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="customerName" className="text-gray-700 font-medium">Client Full Name</Label>
+                      <Input
+                        id="customerName"
+                        placeholder="Jennifer Martinez"
+                        value={customerDetails.name}
+                        onChange={(e) => setCustomerDetails(prev => ({ ...prev, name: e.target.value }))}
+                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-gray-800/20 transition-all duration-200"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="customerEmail" className="text-gray-700 font-medium">Client Email Address</Label>
+                      <Input
+                        id="customerEmail"
+                        type="email"
+                        placeholder="jennifer.martinez@email.com"
+                        value={customerDetails.email}
+                        onChange={(e) => setCustomerDetails(prev => ({ ...prev, email: e.target.value }))}
+                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-gray-800/20 transition-all duration-200"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="customerPhone" className="text-gray-700 font-medium">Client Phone Number</Label>
+                      <Input
+                        id="customerPhone"
+                        type="tel"
+                        placeholder="(555) 123-4567"
+                        value={customerDetails.phone}
+                        onChange={(e) => setCustomerDetails(prev => ({ ...prev, phone: e.target.value }))}
+                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-gray-800/20 transition-all duration-200"
+                      />
+                    </div>
+
+                    {/* Features List */}
+                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200/50">
+                      <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                        <User className="h-5 w-5 text-gray-600" />
+                        Personal Features
+                      </h4>
+                      <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Pre-filled client information
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Perfect for relationship building
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Direct follow-up capability
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Campaign Info */}
-                  <div className="bg-purple-50 rounded-lg p-4">
-                    <h4 className="font-medium text-purple-800 mb-2">Campaign Details</h4>
-                    <div className="space-y-1 text-sm text-purple-700">
-                      <div><span className="font-medium">Name:</span> {campaignDetails.name}</div>
-                      <div><span className="font-medium">Audience:</span> {campaignDetails.audience}</div>
-                      <div><span className="font-medium">Focus:</span> {campaignDetails.focusArea === 'both' ? 'Health & Wealth' : campaignDetails.focusArea === 'health' ? 'Health Focus' : 'Wealth Focus'}</div>
-                      {campaignDetails.notes && (
-                        <div><span className="font-medium">Notes:</span> {campaignDetails.notes}</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Direct URL */}
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <Label className="text-sm text-blue-800 font-medium mb-2 block">🔗 Campaign Assessment URL</Label>
-                    <div className="flex items-center gap-3">
-                      <code className="flex-1 text-sm bg-white p-3 rounded border break-all text-blue-700">
-                        {campaignUrl}
-                      </code>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => copyToClipboard(campaignUrl)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Generated Message Display */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <Label className="text-sm text-gray-600 mb-2 block">📱 Campaign Message</Label>
-                    <div className="bg-white p-4 rounded border text-sm whitespace-pre-wrap">
-                      {campaignLink}
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                    <Button 
-                      onClick={() => copyToClipboard(campaignUrl)} 
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy URL
-                    </Button>
-                    <Button 
-                      onClick={() => copyToClipboard(campaignLink)} 
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy Message
-                    </Button>
-                    <Button 
-                      onClick={() => openDirectUrl(campaignUrl)} 
-                      variant="outline"
-                      className="flex items-center gap-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Test Link
-                    </Button>
-                    <Button 
-                      onClick={() => previewAssessment(campaignUrl)} 
-                      variant="outline"
-                      className="flex items-center gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Preview
-                    </Button>
-                    <Button 
-                      onClick={() => downloadQR(campaignUrl, `assessment-${campaignCode}`)} 
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <QrCode className="h-4 w-4" />
-                      QR Code
-                    </Button>
-                  </div>
-
-                  {/* Campaign Usage Guidelines */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <h4 className="font-medium text-amber-800 mb-2">📊 Campaign Link Best Practices:</h4>
-                    <ul className="text-sm text-amber-700 space-y-1">
-                      <li>• 📱 Perfect for social media posts and stories</li>
-                      <li>• 💬 Great for group chats and community sharing</li>
-                      <li>• 📧 Use in email newsletters and broadcasts</li>
-                      <li>• 📈 Track performance in analytics dashboard</li>
-                      <li>• ⚠️ Do NOT use for 1-on-1 personal outreach</li>
-                    </ul>
-                  </div>
-
-                  {/* Generate Another */}
-                  <div className="pt-4 border-t">
-                    <Button 
-                      onClick={() => {
-                        setCampaignLink('');
-                        setCampaignCode('');
-                        setCampaignUrl('');
-                        setCampaignDetails({ name: '', audience: '', focusArea: 'both', notes: '' });
-                      }}
-                      variant="ghost"
-                      className="w-full"
-                    >
-                      Create Another Campaign Link
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* Personal Link Tab */}
-        <TabsContent value="customer" className="space-y-6">
-          <Card className="p-6 lg:p-8">
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                  <User className="h-8 w-8 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-medium">Personal Assessment Link</h3>
-                <p className="text-gray-600 max-w-md mx-auto">
-                  Create a personalized assessment link for 1-on-1 outreach with pre-filled client information and relationship building.
-                </p>
-              </div>
-
-              {!customerLink ? (
-                <div className="max-w-md mx-auto space-y-4">
-                  <div>
-                    <Label htmlFor="customerName">Client Full Name *</Label>
-                    <Input
-                      id="customerName"
-                      placeholder="e.g., Jennifer Martinez"
-                      value={customerDetails.name}
-                      onChange={(e) => setCustomerDetails(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="customerEmail">Client Email Address *</Label>
-                    <Input
-                      id="customerEmail"
-                      type="email"
-                      placeholder="e.g., jennifer.martinez@email.com"
-                      value={customerDetails.email}
-                      onChange={(e) => setCustomerDetails(prev => ({ ...prev, email: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="customerPhone">Client Phone Number</Label>
-                    <Input
-                      id="customerPhone"
-                      type="tel"
-                      placeholder="e.g., (555) 123-4567"
-                      value={customerDetails.phone}
-                      onChange={(e) => setCustomerDetails(prev => ({ ...prev, phone: e.target.value }))}
-                    />
-                  </div>
-
-                  {/* Personal Link Benefits */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                    <h4 className="font-medium text-blue-800 mb-2">👤 Personal Link Features:</h4>
-                    <ul className="text-sm text-blue-700 space-y-1">
-                      <li>• ✅ Pre-filled with client information</li>
-                      <li>• ✅ Personalized assessment experience</li>
-                      <li>• ✅ Perfect for 1-on-1 relationship building</li>
-                      <li>• ✅ Direct follow-up capability</li>
-                      <li>• ⚠️ Do NOT share publicly or on social media</li>
-                    </ul>
-                  </div>
-
-                  <div className="pt-4">
                     <Button 
                       onClick={generateCustomerLink}
                       disabled={!customerDetails.name || !customerDetails.email}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      className="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-900 hover:to-gray-800 text-white rounded-xl py-4 shadow-lg shadow-gray-800/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <User className="h-5 w-5 mr-2" />
                       Generate Personal Link
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Success Message */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <span className="text-green-800 font-medium">Personal link created!</span>
-                        <p className="text-green-700 text-sm">For {customerDetails.name} ({customerDetails.email})</p>
+              </div>
+            ) : (
+              <div className="max-w-2xl mx-auto space-y-8">
+                {/* Success Header */}
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg shadow-emerald-500/25 mb-4">
+                    <CheckCircle className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">Personal Link Created!</h3>
+                  <p className="text-gray-600">For {customerDetails.name}</p>
+                </div>
+
+                {/* Client Details */}
+                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg shadow-gray-900/5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Name</span>
+                      <p className="font-medium text-gray-900">{customerDetails.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Email</span>
+                      <p className="font-medium text-gray-900">{customerDetails.email}</p>
+                    </div>
+                    {customerDetails.phone && (
+                      <div className="md:col-span-2">
+                        <span className="text-gray-500">Phone</span>
+                        <p className="font-medium text-gray-900">{customerDetails.phone}</p>
                       </div>
-                    </div>
+                    )}
                   </div>
+                </div>
 
-                  {/* Client Info */}
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 mb-2">Client Details</h4>
-                    <div className="space-y-1 text-sm text-blue-700">
-                      <div><span className="font-medium">Name:</span> {customerDetails.name}</div>
-                      <div><span className="font-medium">Email:</span> {customerDetails.email}</div>
-                      {customerDetails.phone && (
-                        <div><span className="font-medium">Phone:</span> {customerDetails.phone}</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Direct URL */}
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <Label className="text-sm text-blue-800 font-medium mb-2 block">🔗 Personal Assessment URL</Label>
-                    <div className="flex items-center gap-3">
-                      <code className="flex-1 text-sm bg-white p-3 rounded border break-all text-blue-700">
-                        {customerUrl}
-                      </code>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => copyToClipboard(customerUrl)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-
-                  {/* Generated Message Display */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <Label className="text-sm text-gray-600 mb-2 block">📱 Personal Message</Label>
-                    <div className="bg-white p-4 rounded border text-sm whitespace-pre-wrap">
-                      {customerLink}
-                    </div>
-                  </div>
-
-                  {/* Personal Link Security Warning */}
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h4 className="font-medium text-red-800 mb-2">⚠️ Personal Link Security:</h4>
-                    <ul className="text-sm text-red-700 space-y-1">
-                      <li>• 🚫 This link is ONLY for {customerDetails.name}</li>
-                      <li>• 🚫 Do NOT share on social media or publicly</li>
-                      <li>• 🚫 Do NOT use for multiple clients</li>
-                      <li>• ✅ Perfect for direct messaging or email</li>
-                      <li>• ✅ Use for relationship building and follow-up</li>
-                    </ul>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                {/* URL Display */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200/50">
+                  <Label className="text-gray-700 font-medium mb-3 block flex items-center gap-2">
+                    <Link className="h-4 w-4 text-gray-600" />
+                    Personal Assessment URL
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <code className="flex-1 text-sm bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-white/50 break-all text-gray-700">
+                      {customerUrl}
+                    </code>
                     <Button 
-                      onClick={() => copyToClipboard(customerUrl)} 
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy URL
-                    </Button>
-                    <Button 
-                      onClick={() => copyToClipboard(customerLink)} 
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy Message
-                    </Button>
-                    <Button 
-                      onClick={() => openDirectUrl(customerUrl)} 
-                      variant="outline"
-                      className="flex items-center gap-2 bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Test Link
-                    </Button>
-                    <Button 
-                      onClick={() => previewAssessment(customerUrl)} 
-                      variant="outline"
-                      className="flex items-center gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Preview
-                    </Button>
-                    <Button 
-                      onClick={() => downloadQR(customerUrl, `assessment-${customerCode}`)} 
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <QrCode className="h-4 w-4" />
-                      QR Code
-                    </Button>
-                  </div>
-
-                  {/* Generate Another */}
-                  <div className="pt-4 border-t">
-                    <Button 
-                      onClick={() => {
-                        setCustomerLink('');
-                        setCustomerCode('');
-                        setCustomerUrl('');
-                        setCustomerDetails({ name: '', email: '', phone: '' });
-                      }}
+                      size="sm" 
                       variant="ghost"
-                      className="w-full"
+                      onClick={() => copyToClipboard(customerUrl)}
+                      className="shrink-0 hover:bg-white/50"
                     >
-                      Create Another Personal Link
+                      <Copy className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
+
+                {/* Message Preview */}
+                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg shadow-gray-900/5">
+                  <Label className="text-gray-700 font-medium mb-3 block flex items-center gap-2">
+                    <Share2 className="h-4 w-4 text-gray-600" />
+                    Personal Message
+                  </Label>
+                  <div className="bg-gray-50/50 rounded-xl p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {customerLink}
+                  </div>
+                </div>
+
+                {/* Security Notice */}
+                <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100/50">
+                  <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                    <User className="h-5 w-5 text-red-500" />
+                    Security Notice
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      Perfect for direct messaging
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                      Use for relationship building
+                    </div>
+                    <div className="flex items-center gap-2 text-red-600">
+                      <ExternalLink className="h-4 w-4 shrink-0" />
+                      Do NOT share publicly
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Button 
+                    onClick={() => copyToClipboard(customerLink)} 
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-xl border-gray-200 hover:bg-gray-50"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy Message
+                  </Button>
+                  <Button 
+                    onClick={() => openDirectUrl(customerUrl)} 
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Test Link
+                  </Button>
+                  <Button 
+                    onClick={() => downloadQR(customerUrl, `assessment-${customerCode}`)} 
+                    variant="outline"
+                    className="flex items-center gap-2 rounded-xl border-gray-200 hover:bg-gray-50"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    QR Code
+                  </Button>
+                </div>
+
+                {/* Create Another */}
+                <div className="text-center">
+                  <Button 
+                    onClick={() => {
+                      setCustomerLink('');
+                      setCustomerCode('');
+                      setCustomerUrl('');
+                      setCustomerDetails({ name: '', email: '', phone: '' });
+                    }}
+                    variant="ghost"
+                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+                  >
+                    Create Another Personal Link
+                  </Button>
+                </div>
+              </div>
               )}
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
