@@ -10,10 +10,8 @@ import {
   TrendingUp,
   Target,
   Download,
-  Calendar,
   BarChart3,
-  PieChart as PieChartIcon,
-  LineChart as LineChartIcon
+  PieChart as PieChartIcon
 } from 'lucide-react';
 
 interface AdminAnalyticsProps {
@@ -57,17 +55,6 @@ export function AdminAnalytics({ user }: AdminAnalyticsProps) {
     { name: 'Mobile', value: 68, color: '#8B1538' },
     { name: 'Desktop', value: 25, color: '#B45309' },
     { name: 'Tablet', value: 7, color: '#8B5CF6' }
-  ];
-
-  const revenueBySource = [
-    { month: 'Jan', health: 15000, business: 8000, products: 5000 },
-    { month: 'Feb', health: 17000, business: 9500, products: 5500 },
-    { month: 'Mar', health: 16000, business: 8500, products: 5200 },
-    { month: 'Apr', health: 20000, business: 11000, products: 6500 },
-    { month: 'May', health: 22000, business: 12500, products: 7000 },
-    { month: 'Jun', health: 21000, business: 11800, products: 6800 },
-    { month: 'Jul', health: 25000, business: 14000, products: 8000 },
-    { month: 'Aug', health: 27000, business: 15500, products: 8500 }
   ];
 
   const geographicData = [
@@ -155,7 +142,7 @@ export function AdminAnalytics({ user }: AdminAnalyticsProps) {
       </div>
 
       <Tabs defaultValue="assessments" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="assessments" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Assessments
@@ -163,10 +150,6 @@ export function AdminAnalytics({ user }: AdminAnalyticsProps) {
           <TabsTrigger value="engagement" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Engagement
-          </TabsTrigger>
-          <TabsTrigger value="revenue" className="flex items-center gap-2">
-            <LineChartIcon className="h-4 w-4" />
-            Revenue
           </TabsTrigger>
           <TabsTrigger value="demographics" className="flex items-center gap-2">
             <PieChartIcon className="h-4 w-4" />
@@ -260,50 +243,6 @@ export function AdminAnalytics({ user }: AdminAnalyticsProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="revenue">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h3 className="text-lg mb-4">Revenue by Source</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={revenueBySource}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(value as number)} />
-                  <Bar dataKey="health" fill="#8B1538" name="Health Subscriptions" />
-                  <Bar dataKey="business" fill="#B45309" name="Business Packages" />
-                  <Bar dataKey="products" fill="#8B5CF6" name="Product Sales" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-lg mb-4">Revenue Analytics</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Monthly Recurring Revenue</span>
-                  <span className="text-xl font-medium text-brand-primary">$51,000</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Average Revenue Per User</span>
-                  <span className="text-xl font-medium">$147</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Customer Lifetime Value</span>
-                  <span className="text-xl font-medium">$2,340</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Churn Rate</span>
-                  <span className="text-xl font-medium text-red-600">2.4%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Growth Rate (MoM)</span>
-                  <span className="text-xl font-medium text-green-600">+15.7%</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </TabsContent>
 
         <TabsContent value="demographics">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

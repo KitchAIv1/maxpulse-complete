@@ -14,7 +14,8 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle,
-  TrendingUp
+  TrendingUp,
+  DollarSign
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -60,6 +61,13 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       icon: BarChart3, 
       badge: null,
       path: 'analytics'
+    },
+    { 
+      id: 'revenue', 
+      label: 'Revenue Details', 
+      icon: DollarSign, 
+      badge: null,
+      path: 'revenue'
     },
   ];
 

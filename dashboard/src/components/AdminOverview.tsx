@@ -11,7 +11,12 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle,
-  Settings
+  Settings,
+  CreditCard,
+  Wallet,
+  PiggyBank,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
 
 interface AdminOverviewProps {
@@ -27,6 +32,18 @@ export function AdminOverview({ user }: AdminOverviewProps) {
     totalRevenue: 156780,
     conversionRate: 11.8,
     systemUptime: 99.7
+  };
+
+  // Enhanced revenue metrics
+  const revenueMetrics = {
+    totalRevenue: 156780,
+    monthlyRevenue: 51000,
+    dailyRevenue: 1700,
+    pendingCommissions: 23400,
+    paidCommissions: 89200,
+    revenueGrowth: 15.7,
+    commissionRate: 12.5,
+    averageOrderValue: 147
   };
 
   const revenueData = [
@@ -105,7 +122,11 @@ export function AdminOverview({ user }: AdminOverviewProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs lg:text-sm text-gray-700">Total Revenue</p>
-              <p className="text-lg lg:text-2xl text-gray-900">${platformStats.totalRevenue.toLocaleString()}</p>
+              <p className="text-lg lg:text-2xl text-gray-900">${revenueMetrics.totalRevenue.toLocaleString()}</p>
+              <div className="flex items-center mt-1">
+                <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                <p className="text-xs text-green-600">+{revenueMetrics.revenueGrowth}% MoM</p>
+              </div>
             </div>
             <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-green-600" />
           </div>
@@ -132,10 +153,41 @@ export function AdminOverview({ user }: AdminOverviewProps) {
         </Card>
       </div>
 
+      {/* Quick Revenue Summary - Simplified */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4 lg:p-6 glass-card-brand glass-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs lg:text-sm text-gray-700">Monthly Revenue</p>
+              <p className="text-lg lg:text-2xl text-gray-900">${revenueMetrics.monthlyRevenue.toLocaleString()}</p>
+              <p className="text-xs text-gray-600">Current month</p>
+            </div>
+            <Wallet className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" />
+          </div>
+        </Card>
+
+        <Card className="p-4 lg:p-6 glass-card-brand glass-hover">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs lg:text-sm text-gray-700">Pending Commissions</p>
+              <p className="text-lg lg:text-2xl text-gray-900">${revenueMetrics.pendingCommissions.toLocaleString()}</p>
+              <p className="text-xs text-orange-600">Awaiting payment</p>
+            </div>
+            <PiggyBank className="h-6 w-6 lg:h-8 lg:w-8 text-orange-600" />
+          </div>
+        </Card>
+      </div>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <Card className="p-4 lg:p-6">
-          <h3 className="text-base lg:text-lg mb-4">Platform Revenue Growth</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base lg:text-lg">Platform Revenue Growth</h3>
+            <Button variant="outline" size="sm" onClick={() => window.location.hash = '#/admin/revenue'}>
+              <TrendingUp className="h-4 w-4 mr-2" />
+              View Details
+            </Button>
+          </div>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" />

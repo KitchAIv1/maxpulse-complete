@@ -5,6 +5,7 @@ import { AdminOverview } from './AdminOverview';
 import { AnnouncementEditor } from './AnnouncementEditor';
 import { AdminDistributors } from './AdminDistributors';
 import { AdminAnalytics } from './AdminAnalytics';
+import { RevenueDetails } from './RevenueDetails';
 
 interface AdminDashboardProps {
   user: any;
@@ -24,6 +25,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           <Route path="/announcements" element={<AnnouncementEditor />} />
           <Route path="/distributors" element={<AdminDistributors user={user} />} />
           <Route path="/analytics" element={<AdminAnalytics user={user} />} />
+          <Route path="/revenue" element={<RevenueDetails user={user} />} />
           {/* Future admin routes can be added here */}
           <Route path="/settings" element={<div className="p-6"><h1>Settings Coming Soon</h1></div>} />
           <Route path="/security" element={<div className="p-6"><h1>Security Coming Soon</h1></div>} />
