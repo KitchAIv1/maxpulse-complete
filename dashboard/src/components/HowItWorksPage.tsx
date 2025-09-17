@@ -24,26 +24,26 @@ export function HowItWorksPage() {
   const steps = [
     {
       number: '01',
-      title: 'M88 Distributor Gets Personalized Link',
-      description: 'Every Maximum 88 distributor receives their unique MAXPULSE assessment link, branded with M88 and tracking their specific performance.',
+      title: 'M88 Distributor Gets Assessment Link Generator',
+      description: 'Every Maximum 88 distributor receives their unique MAXPULSE assessment link generator, branded with M88 and tracking their specific performance.',
       icon: Link2,
       details: [
-        'Personalized for each M88 distributor',
-        'Branded with Maximum 88 wellness focus',
-        'Tracks all M88 product line performance',
+        'Professional and beautiful interface and design',
+        'Levels up distributor process',
+        'Tracks all client assessment progress',
         'Integrates with M88 compensation plan'
       ]
     },
     {
       number: '02',
-      title: 'Prospect Takes M88-Focused Assessment',
-      description: 'Intelligent assessment specifically designed around Maximum 88\'s wellness and beauty ecosystem, evaluating prospect fit for M88 opportunities.',
+      title: 'Prospect Takes MaxPulse Assessment',
+      description: 'A structured wellness and opportunity assessment designed to reveal client priorities and fit within M88.',
       icon: Brain,
       details: [
-        'Questions tailored to M88\'s product categories',
-        'Wellness and beauty preference profiling',
-        'M88 business opportunity assessment',
-        'Mobile-optimized for maximum engagement'
+        'Balanced questions on wellness goals and entrepreneurial interest',
+        'Highlights client priorities for a tailored M88 experience',
+        'Dual focus: wellness product recommendations and business opportunity fit',
+        'Mobile-friendly interface for quick and easy completion'
       ]
     },
     {
@@ -52,8 +52,8 @@ export function HowItWorksPage() {
       description: 'Proprietary algorithms trained on M88 data automatically direct prospects to the most suitable Maximum 88 product line or business opportunity.',
       icon: Target,
       details: [
+        'Provides AI analysis and recommendations based on answers',
         'M88 wellness products for health-focused prospects',
-        'M88 beauty solutions for skincare enthusiasts',
         'M88 business opportunity for entrepreneurs',
         'Personalized follow-up sequences for each path'
       ]
@@ -67,7 +67,7 @@ export function HowItWorksPage() {
         'M88-specific lead scoring and prioritization',
         'Automated follow-up for M88 products',
         'Performance analytics across M88 business lines',
-        'Revenue tracking for all M88 income streams'
+        'Revenue tracking for all M88 income streams in MaxPulse'
       ]
     }
   ];
@@ -75,24 +75,24 @@ export function HowItWorksPage() {
   const m88Pathways = [
     {
       title: 'M88 Wellness Products',
-      description: 'For prospects focused on health and nutritional wellness',
+      description: 'For prospects focused on health, nutrition, and daily lifestyle improvement.',
       icon: Heart,
       color: 'from-green-600 to-emerald-700',
-      features: ['Premium nutritional supplements', 'Wellness coaching programs', 'Health tracking tools', 'M88 wellness community access']
+      features: ['Premium nutritional supplements designed for everyday balance', 'Guided wellness coaching programs', 'Lifestyle and health tracking through the MaxPulse app', 'Access to the M88 wellness community for support and rewards']
     },
     {
-      title: 'M88 Beauty Solutions',
-      description: 'For prospects interested in skincare and beauty enhancement',
+      title: 'M88 Lifestyle Rewards & Community',
+      description: 'For prospects seeking motivation, accountability, and recognition in their health journey.',
       icon: ShoppingBag,
       color: 'from-pink-600 to-rose-700',
-      features: ['Advanced skincare products', 'Beauty consultation services', 'Product education resources', 'M88 beauty rewards program']
+      features: ['Daily habit tracking: steps, hydration, and sleep via the MaxPulse app', 'Lifestyle challenges and milestone achievements', 'Reward system for consistent healthy living', 'Community leaderboard and peer recognition']
     },
     {
-      title: 'M88 Business Opportunity',
-      description: 'For prospects interested in building an M88 distributor business',
+      title: 'M88 AI-Powered Business Opportunity',
+      description: 'For prospects motivated to build with Maximum 88\'s new AI-driven division.',
       icon: Building2,
       color: 'from-red-800 to-amber-700',
-      features: ['M88 distributor training program', 'Dedicated M88 mentor assignment', 'M88 business starter packages', 'Maximum 88 compensation plan']
+      features: ['MaxPulse Lifestyle Builder App as the core business tool', 'AI-powered assessment links for lead generation', 'Intelligent distributor dashboards with tracking & analytics', 'Access to M88\'s AI product suite and compensation plan']
     }
   ];
 
