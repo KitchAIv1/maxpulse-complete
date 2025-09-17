@@ -67,6 +67,66 @@ const useIsMobile = () => {
 export function HomePage() {
   const isMobile = useIsMobile();
   const [videoError, setVideoError] = useState(false);
+  
+  // Carousel state management
+  const [maxpulseImageIndex, setMaxpulseImageIndex] = useState(0);
+  const [assessmentImageIndex, setAssessmentImageIndex] = useState(0);
+  const [maxpulseAutoPlay, setMaxpulseAutoPlay] = useState(true);
+  const [assessmentAutoPlay, setAssessmentAutoPlay] = useState(true);
+  
+  // MAXPULSE App images
+  const maxpulseImages = [
+    { src: "/dashboard/images/products/1.png", alt: "MAXPULSE App Interface 1" },
+    { src: "/dashboard/images/products/2.png", alt: "MAXPULSE App Interface 2" }
+  ];
+  
+  // AI Assessment images
+  const assessmentImages = [
+    { src: "/dashboard/images/products/1a.png", alt: "AI Assessment Interface 1" },
+    { src: "/dashboard/images/products/2a.png", alt: "AI Assessment Interface 2" },
+    { src: "/dashboard/images/products/3a.png", alt: "AI Assessment Interface 3" }
+  ];
+
+  // Auto-slider for MAXPULSE carousel
+  useEffect(() => {
+    if (!maxpulseAutoPlay) return;
+    
+    const interval = setInterval(() => {
+      setMaxpulseImageIndex((prevIndex) => 
+        (prevIndex + 1) % maxpulseImages.length
+      );
+    }, 4000); // Change image every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [maxpulseAutoPlay, maxpulseImages.length]);
+
+  // Auto-slider for Assessment carousel
+  useEffect(() => {
+    if (!assessmentAutoPlay) return;
+    
+    const interval = setInterval(() => {
+      setAssessmentImageIndex((prevIndex) => 
+        (prevIndex + 1) % assessmentImages.length
+      );
+    }, 4500); // Slightly different timing to avoid sync
+
+    return () => clearInterval(interval);
+  }, [assessmentAutoPlay, assessmentImages.length]);
+
+  // Manual click handlers that pause auto-play temporarily
+  const handleMaxpulseImageClick = (index) => {
+    setMaxpulseImageIndex(index);
+    setMaxpulseAutoPlay(false);
+    // Resume auto-play after 8 seconds of manual interaction
+    setTimeout(() => setMaxpulseAutoPlay(true), 8000);
+  };
+
+  const handleAssessmentImageClick = (index) => {
+    setAssessmentImageIndex(index);
+    setAssessmentAutoPlay(false);
+    // Resume auto-play after 8 seconds of manual interaction
+    setTimeout(() => setAssessmentAutoPlay(true), 8000);
+  };
 
   // Debug logging
   useEffect(() => {
@@ -327,13 +387,9 @@ export function HomePage() {
       </section>
 
       {/* MAXPULSE Products Showcase */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center px-4 py-2 text-white rounded-full text-sm font-medium mb-6 shadow-lg" style={{background: 'linear-gradient(135deg, #8B1538 0%, #B45309 100%)'}}>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Southeast Asia's First AI-Integrated MLM Platform
-            </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               The Dawn of AI-Powered MLM Revolution
             </h2>
@@ -342,171 +398,213 @@ export function HomePage() {
             </p>
           </div>
 
-          {/* Two Products Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Products Carousel Layout */}
+          <div className="space-y-16">
             
             {/* Product 1: MAXPULSE App */}
-            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all bg-white overflow-hidden">
-              <CardContent className="p-0">
-                {/* Header with gradient background */}
-                <div className="bg-gradient-to-r from-red-800 to-red-600 p-8 text-white relative overflow-hidden" style={{background: 'linear-gradient(135deg, #8B1538 0%, #A91D47 100%)'}}>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
-                  <div className="relative z-10">
-                    <Smartphone className="h-12 w-12 mb-4" />
-                    <h3 className="text-2xl font-bold mb-2">The MAXPULSE App</h3>
-                    <p className="text-red-100">Your Science-Backed Lifestyle Architect</p>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+              {/* Image Carousel - Left Side */}
+              <div className="lg:col-span-3">
+                <div className="relative bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-8 shadow-xl">
+                  <div className="relative">
+                    {/* Main Image Display */}
+                    <div className="aspect-[4/3] bg-white rounded-xl shadow-lg overflow-hidden">
+                      <img 
+                        src={maxpulseImages[maxpulseImageIndex].src}
+                        alt={maxpulseImages[maxpulseImageIndex].alt}
+                        className={`w-full h-full transition-opacity duration-300 ${
+                          maxpulseImageIndex === 1 ? 'object-cover object-top' : 'object-cover'
+                        }`}
+                        onError={(e) => {
+                          console.log('Image failed to load:', e.currentTarget.src);
+                          // Fallback to first image if current image fails
+                          if (maxpulseImageIndex !== 0) {
+                            setMaxpulseImageIndex(0);
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Navigation Dots */}
+                    <div className="flex justify-center mt-6 space-x-2">
+                      {maxpulseImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleMaxpulseImageClick(index)}
+                          className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                            index === maxpulseImageIndex 
+                              ? 'bg-red-600 scale-110' 
+                              : 'bg-red-200 hover:bg-red-400 hover:scale-105'
+                          }`}
+                          aria-label={`View MAXPULSE App image ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Floating Badge */}
+                    <div className="absolute -top-4 -right-4 bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                      <Smartphone className="h-4 w-4 inline mr-2" />
+                      Mobile App
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Product Details - Right Side */}
+              <div className="lg:col-span-2 space-y-6">
+                <div>
+                  <div className="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium mb-4">
+                    <Heart className="h-4 w-4 mr-2" />
+                    Lifestyle Engineering
+                  </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-3">The MAXPULSE App</h3>
+                  <p className="text-xl text-red-600 font-medium mb-4">Your Science-Backed Lifestyle Architect</p>
+                  <p className="text-gray-600 leading-relaxed mb-6">
+                    Transform health through the <strong>3 Pillars of Proven Wellness</strong> – scientifically validated foundations for human vitality.
+                  </p>
+                </div>
+                
+                {/* Key Features - Simplified */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                      <Activity className="h-4 w-4 text-red-600" />
+                    </div>
+                    <span className="font-medium text-gray-900">Walking, Hydration & Sleep Tracking</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                      <Brain className="h-4 w-4 text-red-600" />
+                    </div>
+                    <span className="font-medium text-gray-900">Personal AI Health Coach</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                      <Target className="h-4 w-4 text-red-600" />
+                    </div>
+                    <span className="font-medium text-gray-900">Lifestyle Transformation Tools</span>
                   </div>
                 </div>
                 
-                {/* Content */}
-                <div className="p-8">
-                  <div className="mb-6">
-                    <div className="inline-flex items-center px-3 py-1 bg-red-50 text-red-800 rounded-full text-sm font-medium mb-4">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Beyond products. Beyond supplements. This is lifestyle engineering.
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                    Transform health through the <strong>3 Pillars of Proven Wellness</strong> – the scientifically validated foundation that supports every aspect of human vitality.
-                  </p>
-                  
-                  {/* 3 Pillars */}
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <Activity className="h-5 w-5 text-red-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">WALKING</p>
-                        <p className="text-sm text-gray-600">The miracle medicine hiding in plain sight</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                        <Droplets className="h-5 w-5 text-red-700" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">HYDRATION</p>
-                        <p className="text-sm text-gray-600">Your body's most critical fuel system</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <Moon className="h-5 w-5 text-red-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">SLEEP</p>
-                        <p className="text-sm text-gray-600">The ultimate recovery and regeneration protocol</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* AI Coach Feature */}
-                  <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4 mb-6">
-                    <div className="flex items-center mb-2">
-                      <Brain className="h-5 w-5 text-red-600 mr-2" />
-                      <p className="font-medium text-red-900">Personal AI Health Coach</p>
-                    </div>
-                    <p className="text-sm text-red-700">
-                      An intelligent companion that learns your patterns, understands your symptoms, and provides personalized recommendations 24/7.
-                    </p>
-                  </div>
-                  
-                  {/* For Distributors */}
-                  <div className="border-l-4 border-red-600 pl-4">
-                    <p className="text-sm font-medium text-gray-900 mb-1">For Distributors:</p>
-                    <p className="text-sm text-gray-600">
-                      Become a catalyst for complete lifestyle transformation. When you help someone build a healthy lifestyle, product sales become the natural byproduct of genuine value creation.
-                    </p>
-                  </div>
+                {/* CTA */}
+                <div className="pt-4">
+                  <button className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl font-medium hover:from-red-700 hover:to-red-800 transition-all shadow-lg hover:shadow-xl">
+                    Explore the App
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Product 2: AI Assessment Tool */}
-            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all bg-white overflow-hidden">
-              <CardContent className="p-0">
-                {/* Header with gradient background */}
-                <div className="bg-gradient-to-r from-amber-600 to-orange-600 p-8 text-white relative overflow-hidden" style={{background: 'linear-gradient(135deg, #B45309 0%, #D97706 100%)'}}>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
-                  <div className="relative z-10">
-                    <Search className="h-12 w-12 mb-4" />
-                    <h3 className="text-2xl font-bold mb-2">The AI Assessment Tool</h3>
-                    <p className="text-amber-100">The Mind-Opening Experience</p>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+              {/* Product Details - Left Side */}
+              <div className="lg:col-span-2 space-y-6 lg:order-1 order-2">
+                <div>
+                  <div className="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium mb-4">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Psychological Discovery
+                  </div>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-3">The AI Assessment Tool</h3>
+                  <p className="text-xl text-amber-600 font-medium mb-4">The Mind-Opening Experience</p>
+                  <p className="text-gray-600 leading-relaxed mb-6">
+                    A <strong>psychological excavation tool</strong> designed to help people discover what they didn't even know they needed.
+                  </p>
+                </div>
+                
+                {/* Key Features - Simplified */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <Brain className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <span className="font-medium text-gray-900">Science of Self-Discovery</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <Zap className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <span className="font-medium text-gray-900">AI-Powered Engagement</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <Lightbulb className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <span className="font-medium text-gray-900">Precision Recommendations</span>
                   </div>
                 </div>
                 
-                {/* Content */}
-                <div className="p-8">
-                  <div className="mb-6">
-                    <div className="inline-flex items-center px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-sm font-medium mb-4">
-                      <Eye className="h-4 w-4 mr-2" />
-                      What happens when science meets psychology meets AI?
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                    This isn't your typical questionnaire. The MAXPULSE Assessment is a <strong>psychological excavation tool</strong> designed to help people discover what they didn't even know they needed.
-                  </p>
-                  
-                  {/* Key Features */}
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mt-1">
-                        <Brain className="h-5 w-5 text-amber-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Science of Self-Discovery</p>
-                        <p className="text-sm text-gray-600">Research-backed questions that bypass surface-level responses and access deeper insights</p>
-                      </div>
+                {/* CTA */}
+                <div className="pt-4">
+                  <button className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-xl font-medium hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl">
+                    Try Assessment
+                  </button>
+                </div>
+              </div>
+              
+              {/* Image Carousel - Right Side */}
+              <div className="lg:col-span-3 lg:order-2 order-1">
+                <div className="relative bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-8 shadow-xl">
+                  <div className="relative">
+                    {/* Main Image Display */}
+                    <div className="aspect-[4/3] bg-white rounded-xl shadow-lg overflow-hidden relative">
+                      <img 
+                        src={assessmentImages[assessmentImageIndex].src}
+                        alt={assessmentImages[assessmentImageIndex].alt}
+                        className={`w-full h-full transition-opacity duration-300 ${
+                          assessmentImageIndex === 0 || assessmentImageIndex === 1 ? 'object-cover object-top' : 'object-cover'
+                        }`}
+                        onError={(e) => {
+                          console.log('Assessment image failed to load:', e.currentTarget.src);
+                          // Fallback to first image if current image fails
+                          if (assessmentImageIndex !== 0) {
+                            setAssessmentImageIndex(0);
+                          }
+                        }}
+                      />
+                      
+                      {/* Hero-Style Text Overlays */}
+                      {assessmentImageIndex === 0 && (
+                        <div className="absolute inset-0 flex items-end justify-center pb-16">
+                          <h2 className="text-white text-3xl lg:text-4xl font-bold text-center tracking-wide drop-shadow-2xl">
+                            Everyone. Everywhere. Seamless
+                          </h2>
+                        </div>
+                      )}
+                      
+                      {assessmentImageIndex === 1 && (
+                        <div className="absolute top-1/3 right-16 lg:right-20 transform -translate-y-1/2">
+                          <h3 className="text-white text-2xl lg:text-3xl xl:text-4xl font-bold drop-shadow-lg shadow-gray-300/50">
+                            New Presentation<br />Experience
+                          </h3>
+                        </div>
+                      )}
                     </div>
                     
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mt-1">
-                        <Zap className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">AI-Powered Engagement</p>
-                        <p className="text-sm text-gray-600">Dynamic visual storytelling with personalized content and real-time analysis</p>
-                      </div>
+                    {/* Navigation Dots */}
+                    <div className="flex justify-center mt-6 space-x-2">
+                      {assessmentImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleAssessmentImageClick(index)}
+                          className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                            index === assessmentImageIndex 
+                              ? 'bg-amber-600 scale-110' 
+                              : 'bg-amber-200 hover:bg-amber-400 hover:scale-105'
+                          }`}
+                          aria-label={`View AI Assessment image ${index + 1}`}
+                        />
+                      ))}
                     </div>
                     
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center mt-1">
-                        <Lightbulb className="h-5 w-5 text-amber-700" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">The Awakening Moment</p>
-                        <p className="text-sm text-gray-600">That instant when prospects realize their current approach isn't aligned with their deeper goals</p>
-                      </div>
+                    {/* Floating Badge */}
+                    <div className="absolute -top-4 -right-4 bg-amber-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                      <Search className="h-4 w-4 inline mr-2" />
+                      AI Assessment
                     </div>
-                  </div>
-                  
-                  {/* Psychological Breakthrough */}
-                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 mb-6">
-                    <div className="flex items-center mb-2">
-                      <Target className="h-5 w-5 text-amber-600 mr-2" />
-                      <p className="font-medium text-amber-900">Precision Recommendations</p>
-                    </div>
-                    <p className="text-sm text-amber-700">
-                      They don't just get recommendations; they get clarity, direction, and most importantly, the motivation to act.
-                    </p>
-                  </div>
-                  
-                  {/* For Distributors */}
-                  <div className="border-l-4 border-amber-600 pl-4">
-                    <p className="text-sm font-medium text-gray-900 mb-1">For Distributors:</p>
-                    <p className="text-sm text-gray-600">
-                      You're not pitching products or opportunities. You're facilitating breakthrough moments. The assessment becomes your most powerful tool for creating genuine connections.
-                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
+              </div>
+            </div>
           </div>
 
           {/* Bottom CTA */}
