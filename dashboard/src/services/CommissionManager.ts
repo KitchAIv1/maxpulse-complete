@@ -7,18 +7,22 @@ export interface Commission {
   id: string;
   distributorId: string;
   productId: string;
+  productName: string;
+  productType: 'product' | 'app' | 'package';
   clientName: string;
   clientEmail?: string;
   saleAmount: number;
-  commissionAmount: number;
+  amount: number; // Commission amount (for compatibility)
+  commissionAmount: number; // Same as amount
   commissionRate: number;
-  status: 'pending' | 'confirmed' | 'paid';
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
   purchaseDate: Date;
-  assessmentSessionId: string;
-  productName: string;
-  productType: 'product' | 'app' | 'package';
-  createdAt: Date;
+  createdAt: string; // ISO string for compatibility
   updatedAt: Date;
+  approvedAt?: string; // ISO string
+  paidAt?: string; // ISO string
+  assessmentSessionId: string;
+  purchaseId: string; // For tracking
 }
 
 export interface CommissionSummary {
@@ -45,7 +49,7 @@ export class CommissionManager {
       return commissions.map((c: any) => ({
         ...c,
         purchaseDate: new Date(c.purchaseDate),
-        createdAt: new Date(c.createdAt),
+        createdAt: c.createdAt, // Keep as string for compatibility
         updatedAt: new Date(c.updatedAt)
       }));
     } catch (error) {
@@ -72,7 +76,7 @@ export class CommissionManager {
       .filter(c => c.status === 'pending')
       .reduce((sum, c) => sum + c.commissionAmount, 0);
     const totalPaid = commissions
-      .filter(c => c.status === 'paid')
+      .filter(c => c.status === 'approved' || c.status === 'paid')
       .reduce((sum, c) => sum + c.commissionAmount, 0);
     
     // For demo: assume no withdrawals yet
@@ -103,14 +107,18 @@ export class CommissionManager {
     assessmentSessionId: string;
     productName: string;
     productType: 'product' | 'app' | 'package';
+    purchaseId?: string;
   }): Commission {
+    const now = new Date();
     const newCommission: Commission = {
       id: this.generateCommissionId(),
       ...data,
+      amount: data.commissionAmount, // For compatibility
       status: 'pending',
-      purchaseDate: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date()
+      purchaseDate: now,
+      createdAt: now.toISOString(), // ISO string for compatibility
+      updatedAt: now,
+      purchaseId: data.purchaseId || `purchase_${Date.now()}`
     };
 
     const commissions = this.getAllCommissions();
@@ -151,7 +159,7 @@ export class CommissionManager {
    */
   getRecentCommissions(distributorId: string, limit: number = 10): Commission[] {
     return this.getDistributorCommissions(distributorId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, limit);
   }
 
@@ -185,6 +193,51 @@ export class CommissionManager {
     });
 
     return stats;
+  }
+
+  /**
+   * Get all pending commissions (for admin approval)
+   */
+  getPendingCommissions(): Commission[] {
+    const commissions = this.getAllCommissions();
+    return commissions.filter(c => c.status === 'pending');
+  }
+
+  /**
+   * Get all approved commissions
+   */
+  getApprovedCommissions(): Commission[] {
+    const commissions = this.getAllCommissions();
+    return commissions.filter(c => c.status === 'approved');
+  }
+
+  /**
+   * Approve a pending commission
+   */
+  approveCommission(commissionId: string): { success: boolean; error?: string } {
+    try {
+      const commissions = this.getAllCommissions();
+      const commission = commissions.find(c => c.id === commissionId);
+      
+      if (!commission) {
+        return { success: false, error: 'Commission not found' };
+      }
+      
+      if (commission.status !== 'pending') {
+        return { success: false, error: 'Commission is not pending' };
+      }
+      
+      // Update commission status
+      commission.status = 'approved';
+      commission.approvedAt = new Date().toISOString();
+      
+      this.saveCommissions(commissions);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error approving commission:', error);
+      return { success: false, error: 'Failed to approve commission' };
+    }
   }
 
   /**

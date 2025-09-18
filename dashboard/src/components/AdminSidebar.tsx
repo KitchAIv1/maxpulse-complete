@@ -77,6 +77,13 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       badge: null,
       path: 'products'
     },
+    { 
+      id: 'commissions', 
+      label: 'Commission Approval', 
+      icon: CheckCircle, 
+      badge: null,
+      path: 'commissions'
+    },
   ];
 
   const systemTools = [
