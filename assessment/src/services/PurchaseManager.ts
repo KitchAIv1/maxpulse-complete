@@ -134,6 +134,15 @@ export class PurchaseManager {
         commissionRate: 35,
         category: 'Business Opportunity',
         description: 'Complete business starter package with training and tools'
+      },
+      {
+        id: 'prod_wellness_001',
+        name: 'Wellness Coaching Program',
+        type: 'package' as const,
+        price: 149.99,
+        commissionRate: 20,
+        category: 'Coaching & Support',
+        description: '3-month personalized wellness coaching program'
       }
     ];
   }

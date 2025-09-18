@@ -613,6 +613,20 @@ export default function App() {
     setAppState('results'); // Keep results as final fallback
   }, [distributorInfo, trackProgress, selectedPriority]);
 
+  // Back navigation from CTA to Results
+  const handleBackToResults = useCallback(() => {
+    // Navigate back based on priority
+    if (selectedPriority === 'health') {
+      setAppState('health-insights');
+    } else if (selectedPriority === 'wealth') {
+      setAppState('wealth-results');
+    } else if (selectedPriority === 'both') {
+      setAppState('hybrid-results');
+    } else {
+      setAppState('results'); // Fallback
+    }
+  }, [selectedPriority]);
+
   // Optimized transition variants for smoother animations with GPU acceleration
   const pageTransition = {
     initial: { opacity: 0, scale: 0.98, y: 10 },
@@ -928,6 +942,7 @@ export default function App() {
                   onCompletePersonalizedPlan={handleCompletePersonalizedPlan}
                   onCompleteWealthPlan={handleCompleteWealthPlan}
                   onCompleteHybridPlan={handleCompleteHybridPlan}
+                  onBackToResults={handleBackToResults}
                   distributorInfo={distributorInfo}
                   trackProgress={trackProgress}
                 />
