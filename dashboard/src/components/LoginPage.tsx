@@ -40,157 +40,214 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="bg-red-800 text-white p-3 rounded-full mr-3">
-                <Brain className="h-8 w-8" />
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-6">
+              <div className="bg-gradient-to-br from-red-800 to-red-900 text-white p-4 rounded-2xl mr-4 shadow-lg">
+                <Brain className="h-10 w-10" />
               </div>
-              <h1 className="text-3xl text-red-900">MAXPULSE</h1>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-red-900 via-red-800 to-amber-700 bg-clip-text text-transparent">
+                  MAXPULSE
+                </h1>
+                <div className="h-0.5 bg-gradient-to-r from-red-800 to-amber-600 rounded-full mt-1"></div>
+              </div>
             </div>
-            <p className="text-gray-600">Access your dashboard</p>
+            <p className="text-lg text-gray-700 font-medium tracking-wide">
+              Access your dashboard
+            </p>
           </div>
 
-          <Card className="p-6 bg-white/90 backdrop-blur">
+          <Card className="p-8 bg-white/80 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl hover:shadow-3xl hover:bg-white/85 transition-all duration-500 relative overflow-hidden group">
+            {/* Border Gradient Overlay */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-red-500/20 via-transparent to-amber-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            
+            {/* Content */}
+            <div className="relative z-10">
             <Tabs defaultValue="distributor" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="distributor" className="flex items-center">
+              <TabsList className="grid w-full grid-cols-3 mb-8 bg-gray-100/80 backdrop-blur-sm rounded-2xl p-1 border border-gray-200/50">
+                <TabsTrigger value="distributor" className="flex items-center font-semibold text-sm rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-red-800">
                   <Users className="h-4 w-4 mr-2" />
                   Distributor
                 </TabsTrigger>
-                <TabsTrigger value="trainer" className="flex items-center">
+                <TabsTrigger value="trainer" className="flex items-center font-semibold text-sm rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-blue-700">
                   <GraduationCap className="h-4 w-4 mr-2" />
                   Trainer
                 </TabsTrigger>
-                <TabsTrigger value="admin" className="flex items-center">
+                <TabsTrigger value="admin" className="flex items-center font-semibold text-sm rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-amber-700">
                   <Shield className="h-4 w-4 mr-2" />
                   Admin
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="distributor">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="distributor-email">Email</Label>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="distributor-email" className="text-sm font-semibold text-gray-700">Email Address</Label>
                     <Input
                       id="distributor-email"
                       type="email"
                       placeholder="sarah@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 rounded-xl border-gray-200/60 bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-400/20 transition-all duration-300"
                     />
                   </div>
                   
-                  <div>
-                    <Label htmlFor="distributor-password">Password</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="distributor-password" className="text-sm font-semibold text-gray-700">Password</Label>
                     <Input
                       id="distributor-password"
                       type="password"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 rounded-xl border-gray-200/60 bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-400/20 transition-all duration-300"
                     />
                   </div>
 
                   <Button 
-                    className="w-full bg-red-800 hover:bg-red-900"
+                    className="w-full h-12 bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
                     onClick={() => handleLogin('distributor')}
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Signing In...' : 'Sign In to Dashboard'}
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Signing In...
+                      </div>
+                    ) : (
+                      'Sign In to Dashboard'
+                    )}
                   </Button>
 
-                  <div className="text-center text-sm text-gray-600">
-                    <p>Demo Account: sarah@maxpulse.com / demo123</p>
+                  <div className="text-center">
+                    <div className="inline-flex items-center px-4 py-2 bg-gray-100/80 backdrop-blur-sm rounded-xl border border-gray-200/50">
+                      <p className="text-sm text-gray-600 font-medium">
+                        Demo: <span className="text-red-700 font-semibold">sarah@maxpulse.com</span> / <span className="text-red-700 font-semibold">demo123</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="trainer">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="trainer-email">Trainer Email</Label>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="trainer-email" className="text-sm font-semibold text-gray-700">Trainer Email</Label>
                     <Input
                       id="trainer-email"
                       type="email"
                       placeholder="trainer@maxpulse.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 rounded-xl border-gray-200/60 bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
                     />
                   </div>
                   
-                  <div>
-                    <Label htmlFor="trainer-password">Password</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="trainer-password" className="text-sm font-semibold text-gray-700">Password</Label>
                     <Input
                       id="trainer-password"
                       type="password"
                       placeholder="Enter trainer password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 rounded-xl border-gray-200/60 bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
                     />
                   </div>
 
                   <Button 
-                    className="w-full bg-blue-700 hover:bg-blue-800"
+                    className="w-full h-12 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
                     onClick={() => handleLogin('trainer')}
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Signing In...' : 'Trainer Sign In'}
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Signing In...
+                      </div>
+                    ) : (
+                      'Trainer Sign In'
+                    )}
                   </Button>
 
-                  <div className="text-center text-sm text-gray-600">
-                    <p>Demo Account: trainer@maxpulse.com / trainer123</p>
+                  <div className="text-center">
+                    <div className="inline-flex items-center px-4 py-2 bg-gray-100/80 backdrop-blur-sm rounded-xl border border-gray-200/50">
+                      <p className="text-sm text-gray-600 font-medium">
+                        Demo: <span className="text-blue-700 font-semibold">trainer@maxpulse.com</span> / <span className="text-blue-700 font-semibold">trainer123</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="admin">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="admin-email">Admin Email</Label>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-email" className="text-sm font-semibold text-gray-700">Admin Email</Label>
                     <Input
                       id="admin-email"
                       type="email"
                       placeholder="admin@maxpulse.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="h-12 rounded-xl border-gray-200/60 bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all duration-300"
                     />
                   </div>
                   
-                  <div>
-                    <Label htmlFor="admin-password">Password</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="admin-password" className="text-sm font-semibold text-gray-700">Password</Label>
                     <Input
                       id="admin-password"
                       type="password"
                       placeholder="Enter admin password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="h-12 rounded-xl border-gray-200/60 bg-gray-50/50 backdrop-blur-sm focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all duration-300"
                     />
                   </div>
 
                   <Button 
-                    className="w-full bg-amber-700 hover:bg-amber-800"
+                    className="w-full h-12 bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
                     onClick={() => handleLogin('admin')}
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Signing In...' : 'Admin Sign In'}
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Signing In...
+                      </div>
+                    ) : (
+                      'Admin Sign In'
+                    )}
                   </Button>
 
-                  <div className="text-center text-sm text-gray-600">
-                    <p>Demo Account: admin@maxpulse.com / admin123</p>
+                  <div className="text-center">
+                    <div className="inline-flex items-center px-4 py-2 bg-gray-100/80 backdrop-blur-sm rounded-xl border border-gray-200/50">
+                      <p className="text-sm text-gray-600 font-medium">
+                        Demo: <span className="text-amber-700 font-semibold">admin@maxpulse.com</span> / <span className="text-amber-700 font-semibold">admin123</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
 
-            <div className="mt-6 text-center">
-              <a href="#" className="text-sm text-red-800 hover:underline">
+            <div className="mt-8 text-center">
+              <a href="#" className="text-sm font-medium text-red-800 hover:text-red-900 hover:underline transition-colors duration-200">
                 Forgot your password?
               </a>
             </div>
+            </div>
           </Card>
 
-          <div className="text-center mt-6 text-sm text-gray-600">
-            <p>Need help? Contact support@maxpulse.com</p>
+          <div className="text-center mt-8">
+            <p className="text-sm text-gray-600 font-medium">
+              Need help? Contact{' '}
+              <a href="mailto:support@maxpulse.com" className="text-red-700 hover:text-red-800 font-semibold hover:underline transition-colors duration-200">
+                support@maxpulse.com
+              </a>
+            </p>
           </div>
         </div>
       </div>

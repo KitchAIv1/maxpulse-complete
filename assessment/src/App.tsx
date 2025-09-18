@@ -12,7 +12,7 @@ import { SectionCompleteCelebration } from './components/SectionCompleteCelebrat
 import { LongevityInsightPage } from './components/LongevityInsightPage';
 import { WealthInsightPage } from './components/WealthInsightPage';
 import { HybridInsightPage } from './components/HybridInsightPage';
-import { ResultsDashboard } from './components/ResultsDashboard';
+import { SmartResultsRouter } from './components/SmartResultsRouter';
 import { AnimatedProgress } from './components/AnimatedProgress';
 import { FloatingButton } from './components/FloatingButton';
 import { Toaster } from './components/ui/sonner';
@@ -382,7 +382,7 @@ export default function App() {
       }, 100);
     } else if (isLastQuestion) {
       // Show appropriate insight page after assessment completion
-      if (selectedPriority === 'health' || selectedPriority === 'wealth') {
+      if (selectedPriority === 'health' || selectedPriority === 'wealth' || selectedPriority === 'both') {
         setAppState('longevity-insight');
       } else {
         setAppState('results');
@@ -441,7 +441,7 @@ export default function App() {
     
     if (isLastQuestion) {
       // Show appropriate insight page after assessment completion
-      if (selectedPriority === 'health' || selectedPriority === 'wealth') {
+      if (selectedPriority === 'health' || selectedPriority === 'wealth' || selectedPriority === 'both') {
         setAppState('longevity-insight');
       } else {
         setAppState('results');
@@ -480,8 +480,17 @@ export default function App() {
   const handleContinueFromLongevityInsight = useCallback(() => {
     if (isTransitioning) return; // Prevent multiple rapid clicks
     
-    setAppState('results');
-  }, [isTransitioning]);
+    // Route to priority-specific results pages
+    if (selectedPriority === 'health') {
+      setAppState('health-insights');
+    } else if (selectedPriority === 'wealth') {
+      setAppState('wealth-results');
+    } else if (selectedPriority === 'both') {
+      setAppState('hybrid-results');
+    } else {
+      setAppState('results'); // Fallback
+    }
+  }, [isTransitioning, selectedPriority]);
 
   const getResults = () => {
     const results = calculateResults(currentQuestions, answers, startTime, userProfile, selectedPriority);
@@ -537,6 +546,48 @@ export default function App() {
     const results = getResults();
     shareResults(results);
   };
+
+  // New handler functions for CTA flows
+  const handleContinueToPersonalizedPlan = useCallback(() => {
+    setAppState('personalized-plan');
+  }, []);
+
+  const handleCompletePersonalizedPlan = useCallback(() => {
+    // Track personalized plan completion
+    if (distributorInfo) {
+      trackProgress('personalized_plan_completed', {
+        priority: selectedPriority,
+        completedFlow: 'health'
+      });
+    }
+    
+    // Could redirect to thank you page or close window
+    setAppState('results'); // Keep results as final fallback
+  }, [distributorInfo, trackProgress, selectedPriority]);
+
+  const handleCompleteWealthPlan = useCallback(() => {
+    // Track wealth plan completion
+    if (distributorInfo) {
+      trackProgress('wealth_plan_completed', {
+        priority: selectedPriority,
+        completedFlow: 'wealth'
+      });
+    }
+    
+    setAppState('results'); // Keep results as final fallback
+  }, [distributorInfo, trackProgress, selectedPriority]);
+
+  const handleCompleteHybridPlan = useCallback(() => {
+    // Track hybrid plan completion
+    if (distributorInfo) {
+      trackProgress('hybrid_plan_completed', {
+        priority: selectedPriority,
+        completedFlow: 'both'
+      });
+    }
+    
+    setAppState('results'); // Keep results as final fallback
+  }, [distributorInfo, trackProgress, selectedPriority]);
 
   // Optimized transition variants for smoother animations with GPU acceleration
   const pageTransition = {
@@ -824,16 +875,22 @@ export default function App() {
               </motion.div>
             )}
 
-            {appState === 'results' && (
+            {(appState === 'results' || appState === 'health-insights' || appState === 'personalized-plan' || appState === 'wealth-results' || appState === 'hybrid-results') && (
               <motion.div
                 key="results"
                 {...pageTransition}
-                className="px-4 py-8"
+                className="px-4 py-8 min-h-screen bg-white dark:bg-gray-900"
               >
-                <ResultsDashboard
+                <SmartResultsRouter
                   results={getResults()}
-                  onRestart={restartAssessment}
-                  onShare={handleShareResults}
+                  selectedPriority={selectedPriority}
+                  appState={appState}
+                  onContinueToPersonalizedPlan={handleContinueToPersonalizedPlan}
+                  onCompletePersonalizedPlan={handleCompletePersonalizedPlan}
+                  onCompleteWealthPlan={handleCompleteWealthPlan}
+                  onCompleteHybridPlan={handleCompleteHybridPlan}
+                  distributorInfo={distributorInfo}
+                  trackProgress={trackProgress}
                 />
               </motion.div>
             )}
