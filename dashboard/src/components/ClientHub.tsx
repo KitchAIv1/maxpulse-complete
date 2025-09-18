@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
+import { useCommissions } from '../hooks/useCommissions';
 import { 
   Search, 
   Users, 
@@ -28,6 +29,7 @@ import {
   Download,
   UserPlus,
   PhoneCall,
+  ShoppingCart,
   Send
 } from 'lucide-react';
 import { 
@@ -105,6 +107,51 @@ export function ClientHub() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortBy, setSortBy] = useState('lastContact');
+  
+  // Add purchase tracking using EXISTING working commission system
+  const { commissions } = useCommissions('SJ2024');
+  
+  
+  // Helper function to get purchase data by session (using existing commission data)
+  const getPurchaseBySession = useCallback((sessionId: string) => {
+    if (!sessionId || !commissions) return null;
+    
+    // Find commission record for this session
+    const commission = commissions.find(c => c.assessmentSessionId === sessionId);
+    if (!commission) return null;
+    
+    // Convert commission to purchase format for display
+    return {
+      sessionId: commission.assessmentSessionId,
+      productName: commission.productName,
+      productType: commission.productType,
+      purchaseAmount: commission.saleAmount,
+      commissionAmount: commission.commissionAmount,
+      timestamp: commission.createdAt,
+      clientName: commission.clientName
+    };
+  }, [commissions]);
+  
+  // Helper function to get purchase data by client name (fallback method)
+  const getPurchaseByClientName = useCallback((clientName: string) => {
+    if (!clientName || !commissions) return null;
+    
+    // Find commission record for this client
+    const commission = commissions.find(c => c.clientName === clientName);
+    if (!commission) return null;
+    
+    // Convert commission to purchase format for display
+    return {
+      sessionId: commission.assessmentSessionId,
+      productName: commission.productName,
+      productType: commission.productType,
+      purchaseAmount: commission.saleAmount,
+      commissionAmount: commission.commissionAmount,
+      timestamp: commission.createdAt,
+      clientName: commission.clientName
+    };
+  }, [commissions]);
+  
   const [selectedClient, setSelectedClient] = useState<UnifiedClient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddClient, setShowAddClient] = useState(false);
@@ -659,8 +706,9 @@ export function ClientHub() {
                 <th className="text-left p-4 font-medium text-gray-900">Client</th>
                 <th className="text-left p-4 font-medium text-gray-900">Status</th>
                 <th className="text-left p-4 font-medium text-gray-900">Assessment</th>
-                <th className="text-left p-4 font-medium text-gray-900">Priority</th>
+                <th className="text-left p-4 font-medium text-gray-900">Purchase/Action</th>
                 <th className="text-left p-4 font-medium text-gray-900">Value</th>
+                <th className="text-left p-4 font-medium text-gray-900">Priority</th>
                 <th className="text-left p-4 font-medium text-gray-900">Last Contact</th>
                 <th className="text-right p-4 font-medium text-gray-900">Actions</th>
               </tr>
@@ -724,14 +772,89 @@ export function ClientHub() {
                     </div>
                   </td>
                   
+                  {/* NEW FEATURE: Purchase/Action Column */}
+                  <td className="p-4">
+                    {(() => {
+                      // Get purchase data for this client's session
+                      const sessionId = client.currentAssessment?.sessionId || 
+                                       (client.assessmentHistory.length > 0 ? client.assessmentHistory[0].sessionId : null);
+                      let purchase = sessionId ? getPurchaseBySession(sessionId) : null;
+                      
+                      // Fallback: try matching by client name if sessionId lookup failed
+                      if (!purchase) {
+                        purchase = getPurchaseByClientName(client.name);
+                      }
+                      
+                      
+                      if (purchase) {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <ShoppingCart className="h-4 w-4 text-green-600" />
+                            <div>
+                              <p className="text-sm font-medium text-green-700">
+                                {purchase.productName}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Purchased
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      } else if (client.assessmentHistory.length > 0) {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-blue-600" />
+                            <div>
+                              <p className="text-sm text-gray-700">Assessment Complete</p>
+                              <p className="text-xs text-gray-500">No purchase</p>
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <p className="text-sm text-gray-500">No action</p>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </td>
+                  
+                  {/* NEW FEATURE: Purchase Value Column */}
+                  <td className="p-4">
+                    {(() => {
+                      const sessionId = client.currentAssessment?.sessionId || 
+                                       (client.assessmentHistory.length > 0 ? client.assessmentHistory[0].sessionId : null);
+                      let purchase = sessionId ? getPurchaseBySession(sessionId) : null;
+                      
+                      // Fallback: try matching by client name if sessionId lookup failed
+                      if (!purchase) {
+                        purchase = getPurchaseByClientName(client.name);
+                      }
+                      
+                      if (purchase) {
+                        return (
+                          <div>
+                            <p className="font-medium text-green-700">${purchase.purchaseAmount.toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">Revenue</p>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div>
+                            <p className="font-medium text-gray-900">${client.value}</p>
+                            <p className="text-xs text-gray-500">Potential</p>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </td>
+                  
                   <td className="p-4">
                     <Badge className={getPriorityColor(client.priority)} variant="secondary">
                       {client.priority}
                     </Badge>
-                  </td>
-                  
-                  <td className="p-4">
-                    <p className="font-medium text-gray-900">${client.value}</p>
                   </td>
                   
                   <td className="p-4">
@@ -975,6 +1098,68 @@ export function ClientHub() {
                   </div>
                 </div>
               )}
+
+              {/* NEW FEATURE: Purchase Information */}
+              {(() => {
+                const sessionId = selectedClient.currentAssessment?.sessionId || 
+                                 (selectedClient.assessmentHistory.length > 0 ? selectedClient.assessmentHistory[0].sessionId : null);
+                let purchase = sessionId ? getPurchaseBySession(sessionId) : null;
+                
+                // Fallback: try matching by client name if sessionId lookup failed
+                if (!purchase) {
+                  purchase = getPurchaseByClientName(selectedClient.name);
+                }
+                
+                if (purchase) {
+                  return (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <ShoppingCart className="h-5 w-5 text-green-600" />
+                        <h3 className="text-lg font-semibold text-green-900">Purchase Information</h3>
+                        <Badge className="bg-green-100 text-green-800 ml-auto">
+                          Purchased
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-green-700">Product</span>
+                            <p className="text-sm font-medium text-green-900">{purchase.productName}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-green-700">Type</span>
+                            <p className="text-sm font-medium text-green-900 capitalize">{purchase.productType}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-green-700">Purchase Date</span>
+                            <p className="text-sm font-medium text-green-900">
+                              {new Date(purchase.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-green-700">Purchase Amount</span>
+                            <p className="text-lg font-bold text-green-900">${purchase.purchaseAmount.toFixed(2)}</p>
+                          </div>
+                          {purchase.commissionAmount && (
+                            <div>
+                              <span className="text-sm text-green-700">Commission Earned</span>
+                              <p className="text-lg font-bold text-green-900">${purchase.commissionAmount.toFixed(2)}</p>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-sm text-green-700">Session ID</span>
+                            <p className="text-xs font-mono text-green-800">{purchase.sessionId}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               {/* Quick Actions */}
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>

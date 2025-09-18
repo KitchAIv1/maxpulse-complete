@@ -13,6 +13,7 @@ interface SmartResultsRouterProps {
   onCompletePersonalizedPlan: () => void;
   onCompleteWealthPlan: () => void;
   onCompleteHybridPlan: () => void;
+  onBackToResults?: () => void; // New back navigation prop
   distributorInfo?: DistributorInfo | null;
   trackProgress?: (event: string, data: any) => void;
 }
@@ -25,6 +26,7 @@ export function SmartResultsRouter({
   onCompletePersonalizedPlan,
   onCompleteWealthPlan,
   onCompleteHybridPlan,
+  onBackToResults,
   distributorInfo,
   trackProgress
 }: SmartResultsRouterProps) {
@@ -46,6 +48,7 @@ export function SmartResultsRouter({
         <PersonalizedHealthPlan
           results={results}
           onCompletePersonalizedPlan={onCompletePersonalizedPlan}
+          onBackToResults={onBackToResults}
           distributorInfo={distributorInfo}
           trackProgress={trackProgress}
         />

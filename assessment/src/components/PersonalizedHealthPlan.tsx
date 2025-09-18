@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, Shield, Clock } from 'lucide-react';
+import { Check, Shield, Clock, ArrowLeft } from 'lucide-react';
 import { PurchaseConfirmation } from './PurchaseConfirmation';
 import { PurchaseManager } from '../services/PurchaseManager';
 import { Button } from './ui/button';
@@ -10,6 +10,7 @@ import { AssessmentResults } from '../types/assessment';
 interface PersonalizedHealthPlanProps {
   results: AssessmentResults;
   onCompletePersonalizedPlan: () => void;
+  onBackToResults?: () => void; // New back navigation prop
   distributorInfo?: any;
   trackProgress?: (event: string, data: any) => void;
 }
@@ -17,6 +18,7 @@ interface PersonalizedHealthPlanProps {
 export function PersonalizedHealthPlan({
   results,
   onCompletePersonalizedPlan,
+  onBackToResults,
   distributorInfo,
   trackProgress
 }: PersonalizedHealthPlanProps) {
@@ -78,8 +80,9 @@ export function PersonalizedHealthPlan({
       });
     }
     
-    // Button is clickable but doesn't navigate anywhere
-    console.log('Start My Plan clicked - tracking completed');
+    // Show purchase modal for main product
+    setSelectedProduct(mainProduct);
+    setShowPurchaseModal(true);
   };
 
   const handleProductClick = (product: any) => {
@@ -109,6 +112,30 @@ export function PersonalizedHealthPlan({
 
   return (
     <div style={{backgroundColor: 'white', padding: '24px', maxWidth: '800px', margin: '0 auto'}}>
+      {/* Back Button */}
+      {onBackToResults && (
+        <div style={{marginBottom: '24px'}}>
+          <button
+            onClick={onBackToResults}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: 'transparent',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              color: 'black',
+              fontSize: '14px'
+            }}
+          >
+            <ArrowLeft style={{width: '16px', height: '16px'}} />
+            Back to Results
+          </button>
+        </div>
+      )}
+
       {/* Simple Header */}
       <div style={{textAlign: 'center', marginBottom: '32px'}}>
         <h1 style={{color: 'black', fontSize: '32px', fontWeight: 'bold', marginBottom: '16px'}}>
@@ -116,7 +143,7 @@ export function PersonalizedHealthPlan({
         </h1>
         
         <p style={{color: 'black', fontSize: '18px'}}>
-          Based on your answers: Focus on sleep + stress balance.
+          Hi {userName}, based on your assessment, here's a plan tailored just for you.
         </p>
       </div>
 

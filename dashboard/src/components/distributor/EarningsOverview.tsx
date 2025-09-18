@@ -20,6 +20,7 @@ export const EarningsOverview: React.FC<EarningsOverviewProps> = ({ distributorI
     getCommissionsByStatus,
     getCommissionStatsByType 
   } = useCommissions(distributorId);
+  
 
   const recentCommissions = getRecentCommissions(10);
   const paidCommissions = getCommissionsByStatus('paid');

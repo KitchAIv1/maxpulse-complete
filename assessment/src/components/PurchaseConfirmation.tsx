@@ -60,6 +60,22 @@ export const PurchaseConfirmation: React.FC<PurchaseConfirmationProps> = ({
       });
 
       if (result.success) {
+        // Track purchase completion for ClientHub display
+        if (window.parent && window.parent.postMessage) {
+          window.parent.postMessage({
+            type: 'PURCHASE_COMPLETED',
+            data: {
+              sessionId: assessmentSessionId,
+              distributorId,
+              clientName,
+              productName: product.name,
+              productType: product.type,
+              purchaseAmount: product.price,
+              timestamp: new Date().toISOString()
+            }
+          }, '*');
+        }
+        
         setSuccess(true);
         setTimeout(() => {
           onSuccess();
@@ -170,18 +186,40 @@ export const PurchaseConfirmation: React.FC<PurchaseConfirmationProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex space-x-3 p-6 border-t">
+        <div style={{display: 'flex', gap: '12px', padding: '24px', borderTop: '1px solid #e5e7eb'}}>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             disabled={loading}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              border: '1px solid #d1d5db',
+              color: '#374151',
+              borderRadius: '8px',
+              backgroundColor: 'white',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.5 : 1,
+              fontSize: '16px',
+              fontWeight: '500'
+            }}
           >
             Cancel
           </button>
           <button
             onClick={handleConfirmPurchase}
             disabled={loading}
-            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              backgroundColor: loading ? '#9ca3af' : '#16a34a',
+              color: 'white',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: '16px',
+              fontWeight: '500',
+              transition: 'background-color 0.2s'
+            }}
           >
             {loading ? 'Processing...' : 'Confirm Purchase'}
           </button>
