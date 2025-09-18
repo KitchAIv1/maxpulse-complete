@@ -12,6 +12,7 @@ import { Goals } from './Goals';
 import { CompanyAnnouncements } from './CompanyAnnouncements';
 import { WelcomeModal } from './WelcomeModal';
 import { DemoDataManager } from '../services/DemoDataManager';
+import { useDashboardStats } from '../hooks/useDashboardStats';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { 
   TrendingUp, 
@@ -41,6 +42,9 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  
+  // Use real dashboard statistics from existing working systems
+  const { stats: dashboardData, loading: statsLoading } = useDashboardStats('SJ2024');
 
   // Initialize demo data for commission system
   useEffect(() => {
@@ -294,14 +298,21 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
     console.log('💰 Added mock business activities:', mockActivities.length, 'items');
   };
 
-  // Mock data for dashboard
-  const dashboardData = {
+  // Real dashboard data now comes from useDashboardStats hook
+  // Fallback mock data for loading state
+  const fallbackData = {
     monthlyStats: {
-      assessments: { current: 147, previous: 123, trend: 19.5 },
-      revenue: { current: 3420, previous: 2890, trend: 18.3 },
-      clients: { current: 43, previous: 38, trend: 13.2 },
-      conversion: { current: 12.4, previous: 10.8, trend: 14.8 }
+      assessments: { current: 0, previous: 0, trend: 0 },
+      revenue: { current: 0, previous: 0, trend: 0 },
+      clients: { current: 0, previous: 0, trend: 0 },
+      conversion: { current: 0, previous: 0, trend: 0 }
     },
+    quickActions: [
+      { icon: 'Link', label: 'Generate Link', action: 'generate-link' },
+      { icon: 'Users', label: 'View Clients', action: 'view-clients' },
+      { icon: 'BarChart3', label: 'Analytics', action: 'view-analytics' },
+      { icon: 'BookOpen', label: 'Training', action: 'view-training' }
+    ],
     recentActivity: [
       {
         id: 1,
@@ -344,12 +355,6 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
         color: 'text-blue-600',
         bgColor: 'bg-blue-50'
       }
-    ],
-    quickActions: [
-      { label: 'Generate Assessment Link', action: 'share', icon: ArrowUpRight },
-      { label: 'Follow Up on Leads', action: 'followup', icon: Clock },
-      { label: 'View Training', action: 'training', icon: Star },
-      { label: 'Check Revenue', action: 'revenue', icon: DollarSign }
     ]
   };
 
@@ -440,14 +445,22 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Monthly Assessments</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">{dashboardData.monthlyStats.assessments.current}</p>
+                      <p className="text-xl lg:text-2xl text-gray-900">
+                        {statsLoading ? '...' : (dashboardData?.monthlyStats.assessments.current || fallbackData.monthlyStats.assessments.current)}
+                      </p>
                     </div>
                     <Target className="h-6 w-6 lg:h-8 lg:w-8 text-brand-primary" />
                   </div>
                   <div className="flex items-center mt-2">
-                    <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
-                    <span className="text-xs lg:text-sm text-green-600">
-                      +{dashboardData.monthlyStats.assessments.trend}%
+                    {!statsLoading && (dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? (
+                      <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 lg:h-4 lg:w-4 text-red-600 mr-1" />
+                    )}
+                    <span className={`text-xs lg:text-sm ${
+                      !statsLoading && (dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {statsLoading ? '...' : `${(dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.assessments.trend || 0}%`}
                     </span>
                   </div>
                 </Card>
@@ -456,14 +469,18 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Total Revenue</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">${dashboardData.monthlyStats.revenue.current}</p>
+                      <p className="text-xl lg:text-2xl text-gray-900">
+                        ${statsLoading ? '...' : (dashboardData?.monthlyStats.revenue.current || fallbackData.monthlyStats.revenue.current)}
+                      </p>
                     </div>
                     <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-brand-primary" />
                   </div>
                   <div className="flex items-center mt-2">
                     <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
-                    <span className="text-xs lg:text-sm text-green-600">
-                      +{dashboardData.monthlyStats.revenue.trend}%
+                    <span className={`text-xs lg:text-sm ${
+                      !statsLoading && (dashboardData?.monthlyStats.revenue.trend || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {statsLoading ? '...' : `${(dashboardData?.monthlyStats.revenue.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.revenue.trend || 0}%`}
                     </span>
                   </div>
                 </Card>
@@ -472,14 +489,16 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Active Clients</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">{dashboardData.monthlyStats.clients.current}</p>
+                      <p className="text-xl lg:text-2xl text-gray-900">
+                        {statsLoading ? '...' : (dashboardData?.monthlyStats.clients.current || fallbackData.monthlyStats.clients.current)}
+                      </p>
                     </div>
                     <Users className="h-6 w-6 lg:h-8 lg:w-8 text-brand-secondary" />
                   </div>
                   <div className="flex items-center mt-2">
                     <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
                     <span className="text-xs lg:text-sm text-green-600">
-                      +{dashboardData.monthlyStats.clients.trend}%
+{statsLoading ? '...' : `${(dashboardData?.monthlyStats.clients.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.clients.trend || 0}%`}
                     </span>
                   </div>
                 </Card>
@@ -488,14 +507,16 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Conversion Rate</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">{dashboardData.monthlyStats.conversion.current}%</p>
+                      <p className="text-xl lg:text-2xl text-gray-900">
+                        {statsLoading ? '...' : `${dashboardData?.monthlyStats.conversion.current || fallbackData.monthlyStats.conversion.current}%`}
+                      </p>
                     </div>
                     <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-orange-600" />
                   </div>
                   <div className="flex items-center mt-2">
                     <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
                     <span className="text-xs lg:text-sm text-green-600">
-                      +{dashboardData.monthlyStats.conversion.trend}%
+{statsLoading ? '...' : `${(dashboardData?.monthlyStats.conversion.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.conversion.trend || 0}%`}
                     </span>
                   </div>
                 </Card>
@@ -505,13 +526,16 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
               <Card className="p-4 lg:p-6">
                 <h3 className="text-base lg:text-lg mb-4 text-gray-900">Quick Actions</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                  {dashboardData.quickActions.map((action, index) => (
+                  {(dashboardData?.quickActions || fallbackData.quickActions || []).map((action, index) => (
                     <Button 
                       key={index}
                       className="h-16 lg:h-20 flex flex-col items-center justify-center space-y-1 lg:space-y-2 bg-red-600 hover:bg-red-700 text-white border-0 transition-colors"
                       onClick={() => handleQuickAction(action.action)}
                     >
-                      <action.icon className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
+                      {action.icon === 'Link' && <ArrowUpRight className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
+                      {action.icon === 'Users' && <Users className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
+                      {action.icon === 'BarChart3' && <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
+                      {action.icon === 'BookOpen' && <Star className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
                       <span className="text-xs lg:text-sm text-center leading-tight text-white">{action.label}</span>
                     </Button>
                   ))}
