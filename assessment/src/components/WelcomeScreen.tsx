@@ -1,7 +1,6 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Sun, Compass, TrendingUp, Clock, Lock, Lightbulb } from 'lucide-react';
 import { Button } from './ui/button';
-import { useState, useEffect } from 'react';
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -11,43 +10,12 @@ interface WelcomeScreenProps {
 }
 
 export function WelcomeScreen({ onStart, isMobile, customerName, distributorId }: WelcomeScreenProps) {
-  const [backgroundImageLoaded, setBackgroundImageLoaded] = useState(false);
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>('');
-
-  // Lazy load background image only for desktop
-  useEffect(() => {
-    if (!isMobile) {
-      // Dynamic import for lazy loading
-      import('figma:asset/ce5ce6019a6fda95c3a63c46fe96e1ea1cb7f568.png')
-        .then((module) => {
-          setBackgroundImageUrl(module.default);
-          setBackgroundImageLoaded(true);
-        })
-        .catch((error) => {
-          console.warn('Failed to load background image:', error);
-        });
-    }
-  }, [isMobile]);
+  // Background is now handled by video in App.tsx for both mobile and desktop
+  // No need for separate image loading logic
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background Image - ONLY show on desktop, NOT on mobile, and only when loaded */}
-      {!isMobile && backgroundImageLoaded && backgroundImageUrl && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500"
-          style={{ backgroundImage: `url(${backgroundImageUrl})` }}
-        >
-          {/* Subtle overlay for better text readability */}
-          <div className="absolute inset-0 bg-black/10" />
-        </div>
-      )}
-
-      {/* Loading placeholder for background */}
-      {!isMobile && !backgroundImageLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-100">
-          <div className="absolute inset-0 bg-black/5" />
-        </div>
-      )}
+      {/* Background is now handled by video in App.tsx - no background needed here */}
 
       {/* Content positioned to avoid overlap with the person */}
       <div className="relative z-10 min-h-screen flex flex-col justify-between p-6 lg:p-12">

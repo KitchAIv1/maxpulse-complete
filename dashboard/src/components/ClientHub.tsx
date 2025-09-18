@@ -214,8 +214,16 @@ export function ClientHub() {
         } else if (event.event === 'question_answered') {
           client.status = 'in_progress';
           // ORIGINAL WORKING PROGRESS CALCULATION
+          console.log('🎯 Dashboard received question_answered event:', {
+            questionNumber: event.questionNumber,
+            totalQuestions: event.totalQuestions,
+            clientName: event.customerName
+          });
           if (event.questionNumber && event.totalQuestions) {
             client.progress = Math.round((event.questionNumber / event.totalQuestions) * 100);
+            console.log('📊 Updated client progress:', client.progress + '%');
+          } else {
+            console.log('❌ Missing questionNumber or totalQuestions in event:', event);
           }
         } else if (event.event === 'assessment_completed') {
           client.status = 'completed';

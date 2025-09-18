@@ -28,9 +28,11 @@ import {
 } from './utils/assessment';
 import { wealthQuestions } from './data/wealthQuestions';
 
+// Import video to ensure it's properly bundled
+import assessmentBackgroundVideoSrc from '/videoversion.mp4?url';
+const assessmentBackgroundVideo = assessmentBackgroundVideoSrc;
+// Fallback image for browsers that don't support video (rare)
 const assessmentBackgroundImage = "https://images.unsplash.com/photo-1668004612106-1c9ec159f21f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzb2Z0JTIwbGFuZHNjYXBlJTIwZ3JhZGllbnQlMjBtb3VudGFpbnN8ZW58MXx8fHwxNzU2MzgyMzg1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
-// Use public path for video to avoid build issues
-const assessmentBackgroundVideo = "/videoversion.mp4";
 
 // Custom hook to detect mobile devices with hysteresis (buffer zone)
 const useIsMobile = () => {
@@ -220,6 +222,18 @@ export default function App() {
 
     // Log for debugging
     console.log('📊 Tracking progress (unique session):', trackingData);
+    
+    // Additional debug for question progress
+    if (event === 'question_answered') {
+      console.log('🎯 Question Progress Event:', {
+        event: trackingData.event,
+        questionNumber: trackingData.questionNumber,
+        totalQuestions: trackingData.totalQuestions,
+        progress: trackingData.questionNumber && trackingData.totalQuestions 
+          ? Math.round((trackingData.questionNumber / trackingData.totalQuestions) * 100) 
+          : 0
+      });
+    }
 
     // Store in session-specific localStorage key to prevent cross-contamination
     const sessionTrackingKey = `assessment-tracking-${sessionId}`;
@@ -493,7 +507,17 @@ export default function App() {
   }, [isTransitioning, selectedPriority]);
 
   const getResults = () => {
+    console.log('getResults called with:', {
+      currentQuestions: currentQuestions.length,
+      answers: Object.keys(answers).length,
+      startTime,
+      userProfile,
+      selectedPriority
+    });
+    
     const results = calculateResults(currentQuestions, answers, startTime, userProfile, selectedPriority);
+    
+    console.log('calculateResults returned:', results);
     
     // Track assessment completion
     if (distributorInfo) {
@@ -697,31 +721,46 @@ export default function App() {
                 className="min-h-screen relative overflow-hidden"
                 {...pageTransition}
               >
-                {/* Background - Clean conditional rendering */}
+                {/* Background - Optimized video for both mobile and desktop */}
                 <div className="absolute inset-0" style={{ zIndex: 1 }}>
-                  {isMobile ? (
-                    <video
-                      key="mobile-video"
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ 
-                        zIndex: 1
-                      }}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      preload="auto"
-                      onCanPlay={(e) => {
-                        e.target.play().catch(err => console.log('Video play failed:', err));
-                      }}
-                      onError={(e) => {
-                        console.error('Video error:', e.target.error);
-                      }}
-                    >
-                      <source src={assessmentBackgroundVideo} type="video/mp4" />
-                      <source src={assessmentBackgroundVideo} type="video/mp4" />
-                    </video>
-                  ) : (
+                  <video
+                    key="welcome-background-video"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ 
+                      zIndex: 1,
+                      willChange: 'transform' // Optimize for animations
+                    }}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload={isMobile ? "metadata" : "auto"} // Optimize for mobile data usage
+                    poster={assessmentBackgroundImage} // Show fallback image while loading
+                    onCanPlay={(e) => {
+                      console.log('Video can play, attempting to start...');
+                      e.target.play().catch(err => console.error('Video play failed:', err));
+                    }}
+                    onError={(e) => {
+                      console.error('Video error:', e.target.error);
+                      console.error('Video src:', assessmentBackgroundVideo);
+                    }}
+                    onLoadStart={() => {
+                      console.log('Video loading started from:', assessmentBackgroundVideo);
+                    }}
+                    onLoadedData={() => {
+                      console.log('Video loaded successfully');
+                    }}
+                    onLoadedMetadata={() => {
+                      console.log('Video metadata loaded');
+                    }}
+                  >
+                    <source src={assessmentBackgroundVideo} type="video/mp4" />
+                    {/* Fallback for browsers that don't support video */}
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {/* CSS-only fallback for very old browsers */}
+                  <noscript>
                     <div 
                       className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                       style={{ 
@@ -729,7 +768,7 @@ export default function App() {
                         zIndex: 1
                       }}
                     />
-                  )}
+                  </noscript>
                 </div>
                 {/* Subtle overlay for glassmorphism enhancement */}
                 <div className="absolute inset-0 bg-black/10 dark:bg-black/20" style={{ zIndex: 2 }} />

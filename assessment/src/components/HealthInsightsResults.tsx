@@ -18,6 +18,16 @@ export function HealthInsightsResults({
   trackProgress
 }: HealthInsightsResultsProps) {
   
+  // Add error handling for missing results
+  if (!results) {
+    return (
+      <div style={{padding: '24px', textAlign: 'center', backgroundColor: 'white'}}>
+        <h2 style={{color: 'black', fontSize: '24px', marginBottom: '16px'}}>Loading Results...</h2>
+        <p style={{color: 'black', fontSize: '16px'}}>Please wait while we process your assessment.</p>
+      </div>
+    );
+  }
+  
   // Extract user name from results, distributorInfo, or use default
   const userName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
   
@@ -97,7 +107,7 @@ export function HealthInsightsResults({
 
       {/* Simple Health Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {Object.entries(healthMetrics).map(([key, metric]) => {
+        {healthMetrics && Object.entries(healthMetrics).map(([key, metric]) => {
           const Icon = metric.icon;
           const isStrength = metric.category === 'Strength';
           

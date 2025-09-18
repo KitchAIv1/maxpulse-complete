@@ -21,7 +21,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     // Simulate API call
     setTimeout(() => {
       const userData = {
-        id: role === 'admin' ? 'admin-1' : role === 'trainer' ? 'trainer-1' : 'distributor-1',
+        id: role === 'admin' ? 'admin-1' : role === 'trainer' ? 'trainer-1' : 'SJ2024',
         name: role === 'admin' ? 'Admin User' : role === 'trainer' ? 'Dr. Michael Chen' : 'Sarah Johnson',
         email: email || (role === 'admin' ? 'admin@maxpulse.com' : role === 'trainer' ? 'trainer@maxpulse.com' : 'sarah@maxpulse.com'),
         level: role === 'admin' ? 'Administrator' : role === 'trainer' ? 'Senior Trainer' : 'Gold Distributor',

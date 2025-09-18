@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Check, Shield, Clock } from 'lucide-react';
+import { PurchaseConfirmation } from './PurchaseConfirmation';
+import { PurchaseManager } from '../services/PurchaseManager';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { AssessmentResults } from '../types/assessment';
@@ -19,13 +21,31 @@ export function PersonalizedHealthPlan({
   trackProgress
 }: PersonalizedHealthPlanProps) {
   
-  // Main product recommendation
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  
+  // Add error handling for missing results
+  if (!results) {
+    return (
+      <div style={{padding: '24px', textAlign: 'center', backgroundColor: 'white'}}>
+        <h2 style={{color: 'black', fontSize: '24px', marginBottom: '16px'}}>Loading Plan...</h2>
+        <p style={{color: 'black', fontSize: '16px'}}>Please wait while we prepare your personalized plan.</p>
+      </div>
+    );
+  }
+  
+  // Extract user name from results, distributorInfo, or use default
+  const userName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
+  
+  const purchaseManager = new PurchaseManager();
+  const availableProducts = purchaseManager.getDefaultProducts();
+  
+  // Main product recommendation (use first available product)
   const mainProduct = {
-    name: 'MaxPulse Sleep Starter',
-    subtitle: 'App + Night Restore',
-    price: 49.99,
-    originalPrice: 60.99,
-    savings: 18,
+    ...availableProducts[0],
+    subtitle: 'Premium Health Solution',
+    originalPrice: availableProducts[0].price + 10,
+    savings: Math.round(((availableProducts[0].price + 10 - availableProducts[0].price) / (availableProducts[0].price + 10)) * 100),
     benefits: [
       'Fall asleep faster',
       'Wake up restored', 
@@ -34,30 +54,12 @@ export function PersonalizedHealthPlan({
     badge: 'PERSONALIZED'
   };
 
-  // Additional product options
-  const additionalProducts = [
-    {
-      name: 'MaxPulse App',
-      description: 'Free tier available',
-      price: 'Free',
-      badge: 'Free tier available',
-      badgeColor: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-    },
-    {
-      name: 'Night Restore',
-      description: 'Sleep support',
-      price: 24.99,
-      badge: 'BEST FOR',
-      badgeColor: 'bg-blue-600 text-white'
-    },
-    {
-      name: 'Daily Energy',
-      description: 'Daytime focus',
-      price: 22.99,
-      badge: 'BEST FOR ENERGY',
-      badgeColor: 'bg-blue-600 text-white'
-    }
-  ];
+  // Additional product options (use remaining available products)
+  const additionalProducts = availableProducts.slice(1).map((product, index) => ({
+    ...product,
+    badge: index === 0 ? 'BEST FOR' : 'POPULAR',
+    badgeColor: index === 0 ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'
+  }));
 
   // Trust indicators
   const trustIndicators = [
@@ -89,6 +91,10 @@ export function PersonalizedHealthPlan({
         description: product.description
       });
     }
+    
+    // Show purchase confirmation modal
+    setSelectedProduct(product);
+    setShowPurchaseModal(true);
   };
 
   React.useEffect(() => {
@@ -255,6 +261,25 @@ export function PersonalizedHealthPlan({
           );
         })}
       </motion.div>
+      
+      {/* Purchase Confirmation Modal */}
+      {showPurchaseModal && selectedProduct && (
+        <PurchaseConfirmation
+          product={selectedProduct}
+          distributorInfo={distributorInfo}
+          clientName={userName}
+          assessmentSessionId={distributorInfo?.sessionId || 'demo-session'}
+          onClose={() => {
+            setShowPurchaseModal(false);
+            setSelectedProduct(null);
+          }}
+          onSuccess={() => {
+            setShowPurchaseModal(false);
+            setSelectedProduct(null);
+            // Could show success message or redirect
+          }}
+        />
+      )}
     </div>
   );
 }
