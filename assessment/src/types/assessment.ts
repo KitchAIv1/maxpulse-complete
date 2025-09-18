@@ -91,5 +91,5 @@ export interface DistributorInfo {
   timestamp: number;
 }
 
-export type AppState = 'welcome' | 'priority' | 'assessment' | 'motivational' | 'educational-slide' | 'section-complete' | 'longevity-insight' | 'results';
+export type AppState = 'welcome' | 'priority' | 'assessment' | 'motivational' | 'educational-slide' | 'section-complete' | 'longevity-insight' | 'health-insights' | 'personalized-plan' | 'wealth-results' | 'hybrid-results' | 'results';
 export type Priority = 'health' | 'wealth' | 'both';

@@ -215,7 +215,7 @@ export function ClientHub() {
           client.status = 'in_progress';
           // ORIGINAL WORKING PROGRESS CALCULATION
           if (event.questionNumber && event.totalQuestions) {
-            client.progress = (event.questionNumber / event.totalQuestions) * 100;
+            client.progress = Math.round((event.questionNumber / event.totalQuestions) * 100);
           }
         } else if (event.event === 'assessment_completed') {
           client.status = 'completed';

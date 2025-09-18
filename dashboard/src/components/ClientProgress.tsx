@@ -91,7 +91,7 @@ export function ClientProgress() {
           } else if (event.event === 'question_answered') {
             client.status = 'in_progress';
             if (event.questionNumber && event.totalQuestions) {
-              client.progress = (event.questionNumber / event.totalQuestions) * 100;
+              client.progress = Math.round((event.questionNumber / event.totalQuestions) * 100);
             }
           } else if (event.event === 'assessment_completed') {
             client.status = 'completed';
