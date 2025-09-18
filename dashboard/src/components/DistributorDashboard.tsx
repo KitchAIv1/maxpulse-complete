@@ -7,10 +7,11 @@ import { ClientHub } from './ClientHub';
 import { LinkGeneration } from './LinkGeneration';
 import { RevenueAnalytics } from './RevenueAnalytics';
 import { TrainingCenter } from './TrainingCenter';
-import { Earnings } from './Earnings';
+import { FinancePage } from './distributor/FinancePage';
 import { Goals } from './Goals';
 import { CompanyAnnouncements } from './CompanyAnnouncements';
 import { WelcomeModal } from './WelcomeModal';
+import { DemoDataManager } from '../services/DemoDataManager';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { 
   TrendingUp, 
@@ -40,6 +41,12 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+
+  // Initialize demo data for commission system
+  useEffect(() => {
+    const demoDataManager = new DemoDataManager();
+    demoDataManager.initializeDemoData();
+  }, []);
 
   // Check if this is the user's first time logging in
   useEffect(() => {
@@ -624,7 +631,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
           {activeTab === 'link-generator' && <LinkGeneration />}
           {activeTab === 'analytics' && <RevenueAnalytics />}
           {activeTab === 'training' && <TrainingCenter />}
-          {activeTab === 'earnings' && <Earnings />}
+          {activeTab === 'earnings' && <FinancePage distributorId={user?.id || 'demo-distributor'} />}
           {activeTab === 'goals' && <Goals />}
         </div>
       </div>
