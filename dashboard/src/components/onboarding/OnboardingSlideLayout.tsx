@@ -83,9 +83,10 @@ export const OnboardingSlideLayout: React.FC<OnboardingSlideLayoutProps> = ({
           <h3 className="text-lg font-semibold text-gray-800 mb-3">
             {language === 'en' ? 'Transcript' : 'Transcript (Taglish)'}
           </h3>
-          <div className="text-gray-700 leading-relaxed text-sm">
-            {currentTranscript}
-          </div>
+          <div 
+            className="text-gray-700 leading-relaxed text-sm"
+            dangerouslySetInnerHTML={{ __html: currentTranscript }}
+          />
         </div>
       </div>
     </div>

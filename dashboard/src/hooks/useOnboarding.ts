@@ -49,10 +49,14 @@ export const useOnboarding = (content: OnboardingContent | null): UseOnboardingR
     setLanguage(settings.language);
     setAutoPlay(settings.autoPlay);
     
-    // Auto-open if not completed and it's first visit
+    // Auto-open only on first visit and if not completed
     const completed = onboardingManager.isCompleted(content.id);
-    if (!completed) {
+    const isFirstVisit = onboardingManager.isFirstVisit(content.id);
+    
+    if (!completed && isFirstVisit) {
       setIsOpen(true);
+      // Mark as visited so it won't auto-open again
+      onboardingManager.markVisited(content.id);
     }
     
     setIsLoading(false);

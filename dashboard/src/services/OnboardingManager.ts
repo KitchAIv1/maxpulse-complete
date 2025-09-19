@@ -25,6 +25,7 @@ export type Language = 'en' | 'tl';
 export class OnboardingManager {
   private readonly STORAGE_KEY = 'maxpulse-onboarding-completed';
   private readonly SETTINGS_KEY = 'maxpulse-onboarding-settings';
+  private readonly FIRST_VISIT_KEY = 'maxpulse-onboarding-first-visit';
 
   /**
    * Check if onboarding is completed for a specific content ID
@@ -119,6 +120,43 @@ export class OnboardingManager {
     } catch (error) {
       console.warn('Failed to get completed onboarding list:', error);
       return [];
+    }
+  }
+
+  /**
+   * Check if this is the user's first visit to a specific onboarding
+   */
+  isFirstVisit(contentId: string): boolean {
+    try {
+      const firstVisits = localStorage.getItem(this.FIRST_VISIT_KEY);
+      if (!firstVisits) return true; // No record means first visit
+      
+      const visitedIds = JSON.parse(firstVisits);
+      return !visitedIds.includes(contentId);
+    } catch (error) {
+      console.warn('Failed to check first visit status:', error);
+      return true; // Default to first visit on error
+    }
+  }
+
+  /**
+   * Mark that user has visited this onboarding (no longer first visit)
+   */
+  markVisited(contentId: string): void {
+    try {
+      const firstVisits = localStorage.getItem(this.FIRST_VISIT_KEY);
+      let visitedIds: string[] = [];
+      
+      if (firstVisits) {
+        visitedIds = JSON.parse(firstVisits);
+      }
+      
+      if (!visitedIds.includes(contentId)) {
+        visitedIds.push(contentId);
+        localStorage.setItem(this.FIRST_VISIT_KEY, JSON.stringify(visitedIds));
+      }
+    } catch (error) {
+      console.warn('Failed to mark onboarding as visited:', error);
     }
   }
 
