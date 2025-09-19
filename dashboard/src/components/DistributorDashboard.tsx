@@ -685,6 +685,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
         currentSlide={onboarding.currentSlide}
         language={onboarding.language}
         autoPlay={onboarding.autoPlay}
+        shouldAutoPlay={onboarding.shouldAutoPlay}
         onClose={onboarding.closeOnboarding}
         onNext={onboarding.nextSlide}
         onPrev={onboarding.prevSlide}
@@ -692,6 +693,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
         onToggleLanguage={onboarding.toggleLanguage}
         onToggleAutoPlay={onboarding.toggleAutoPlay}
         onComplete={onboarding.markCompleted}
+        onAutoPlayTriggered={onboarding.clearAutoPlayTrigger}
       />
     </div>
   );
