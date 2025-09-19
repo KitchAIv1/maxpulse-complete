@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { useDualOnboarding } from '../hooks/useDualOnboarding';
+import { DualOnboardingCarousel } from './onboarding/DualOnboardingCarousel';
+import { linkGenerationOnboardingContent } from '../data/linkGenerationOnboarding';
+import { linkGenerationSalesOnboardingContent } from '../data/linkGenerationSalesOnboarding';
 import { 
   Copy, 
   Share2, 
@@ -15,13 +19,20 @@ import {
   CheckCircle,
   ExternalLink,
   Eye,
-  Globe
+  Globe,
+  HelpCircle
 } from 'lucide-react';
 // SimpleAssessment removed - now using Premium Mobile Assessment Tool
 
 export function LinkGeneration() {
   const [activeTab, setActiveTab] = useState('customer');
   // Preview state removed - now opens Premium Mobile Assessment Tool directly
+  
+  // Dual onboarding system for link generation (technical + sales)
+  const dualOnboarding = useDualOnboarding(
+    linkGenerationOnboardingContent,
+    linkGenerationSalesOnboardingContent
+  );
   
   // Campaign link state
   const [campaignLink, setCampaignLink] = useState('');
@@ -205,11 +216,23 @@ export function LinkGeneration() {
     <div className="bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen">
       {/* Compact Header */}
       <div className="max-w-4xl mx-auto px-4 lg:px-6 pt-6 pb-4">
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="flex items-center justify-center w-10 h-10 bg-white rounded-xl shadow-md shadow-red-500/10">
-            <Link className="h-5 w-5 text-red-600" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-white rounded-xl shadow-md shadow-red-500/10">
+              <Link className="h-5 w-5 text-red-600" />
+            </div>
+            <h1 className="text-xl lg:text-2xl font-medium text-gray-900">Assessment Link Generator</h1>
           </div>
-          <h1 className="text-xl lg:text-2xl font-medium text-gray-900">Assessment Link Generator</h1>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={dualOnboarding.openOnboarding}
+            className="flex items-center gap-2 bg-white hover:bg-gray-50 border-gray-200"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">Tutorial</span>
+          </Button>
         </div>
 
         {/* Integrated Tab Navigation */}
@@ -669,6 +692,29 @@ export function LinkGeneration() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dual Link Generation Onboarding Modal */}
+      <DualOnboardingCarousel
+        technicalContent={linkGenerationOnboardingContent}
+        salesContent={linkGenerationSalesOnboardingContent}
+        isOpen={dualOnboarding.isOpen}
+        currentPhase={dualOnboarding.currentPhase}
+        currentSlide={dualOnboarding.currentSlide}
+        language={dualOnboarding.language}
+        autoPlay={dualOnboarding.autoPlay}
+        technicalCompleted={dualOnboarding.technicalCompleted}
+        salesCompleted={dualOnboarding.salesCompleted}
+        onClose={dualOnboarding.closeOnboarding}
+        onNext={dualOnboarding.nextSlide}
+        onPrev={dualOnboarding.prevSlide}
+        onGoToSlide={dualOnboarding.goToSlide}
+        onToggleLanguage={dualOnboarding.toggleLanguage}
+        onToggleAutoPlay={dualOnboarding.toggleAutoPlay}
+        onCompleteTechnical={dualOnboarding.completeTechnical}
+        onStartSalesTraining={dualOnboarding.startSalesTraining}
+        onSkipSalesTraining={dualOnboarding.skipSalesTraining}
+        onCompleteSales={dualOnboarding.completeSales}
+      />
     </div>
   );
 }
