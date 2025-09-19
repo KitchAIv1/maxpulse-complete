@@ -13,6 +13,9 @@ import { CompanyAnnouncements } from './CompanyAnnouncements';
 import { WelcomeModal } from './WelcomeModal';
 import { DemoDataManager } from '../services/DemoDataManager';
 import { useDashboardStats } from '../hooks/useDashboardStats';
+import { useOnboarding } from '../hooks/useOnboarding';
+import { OnboardingCarousel } from './onboarding/OnboardingCarousel';
+import { distributorOnboardingContent } from '../data/distributorOnboarding';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { 
   TrendingUp, 
@@ -30,7 +33,8 @@ import {
   UserPlus,
   Activity,
   TrendingDown,
-  RefreshCw
+  RefreshCw,
+  HelpCircle
 } from 'lucide-react';
 
 interface DistributorDashboardProps {
@@ -45,6 +49,9 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   
   // Use real dashboard statistics from existing working systems
   const { stats: dashboardData, loading: statsLoading } = useDashboardStats('SJ2024');
+  
+  // Onboarding system
+  const onboarding = useOnboarding(distributorOnboardingContent);
 
   // Initialize demo data for commission system
   useEffect(() => {
@@ -434,9 +441,20 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                   <h1 className="text-xl lg:text-2xl text-gray-900">Welcome back, {user.name}!</h1>
                   <p className="text-gray-600 text-sm lg:text-base">Here's your performance overview for this month</p>
                 </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 self-start sm:self-center">
-                  {user.level}
-                </Badge>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onboarding.openOnboarding}
+                    className="flex items-center gap-2"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    Help Guide
+                  </Button>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    {user.level}
+                  </Badge>
+                </div>
               </div>
 
               {/* Key Metrics */}
@@ -659,6 +677,22 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
           {activeTab === 'goals' && <Goals />}
         </div>
       </div>
+
+      {/* Onboarding Modal */}
+      <OnboardingCarousel
+        content={distributorOnboardingContent}
+        isOpen={onboarding.isOpen}
+        currentSlide={onboarding.currentSlide}
+        language={onboarding.language}
+        autoPlay={onboarding.autoPlay}
+        onClose={onboarding.closeOnboarding}
+        onNext={onboarding.nextSlide}
+        onPrev={onboarding.prevSlide}
+        onGoToSlide={onboarding.goToSlide}
+        onToggleLanguage={onboarding.toggleLanguage}
+        onToggleAutoPlay={onboarding.toggleAutoPlay}
+        onComplete={onboarding.markCompleted}
+      />
     </div>
   );
 }
