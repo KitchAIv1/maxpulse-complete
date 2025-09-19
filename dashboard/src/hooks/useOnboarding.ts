@@ -14,6 +14,7 @@ interface UseOnboardingReturn {
   autoPlay: boolean;
   isCompleted: boolean;
   isLoading: boolean;
+  shouldAutoPlay: boolean;
   
   // Actions
   openOnboarding: () => void;
@@ -25,6 +26,7 @@ interface UseOnboardingReturn {
   toggleAutoPlay: () => void;
   markCompleted: () => void;
   resetOnboarding: () => void;
+  clearAutoPlayTrigger: () => void;
 }
 
 export const useOnboarding = (content: OnboardingContent | null): UseOnboardingReturn => {
@@ -34,6 +36,7 @@ export const useOnboarding = (content: OnboardingContent | null): UseOnboardingR
   const [language, setLanguage] = useState<Language>('en');
   const [autoPlay, setAutoPlay] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
 
   // Initialize settings and check completion status
   useEffect(() => {
@@ -71,7 +74,12 @@ export const useOnboarding = (content: OnboardingContent | null): UseOnboardingR
     
     setCurrentSlide(prev => {
       const next = prev + 1;
-      return next >= content.slides.length ? prev : next;
+      if (next < content.slides.length) {
+        // Trigger auto-play for the next slide
+        setShouldAutoPlay(true);
+        return next;
+      }
+      return prev;
     });
   }, [content]);
 
@@ -113,6 +121,10 @@ export const useOnboarding = (content: OnboardingContent | null): UseOnboardingR
     setCurrentSlide(0);
   }, [content, onboardingManager]);
 
+  const clearAutoPlayTrigger = useCallback(() => {
+    setShouldAutoPlay(false);
+  }, []);
+
   return {
     // State
     isOpen,
@@ -121,6 +133,7 @@ export const useOnboarding = (content: OnboardingContent | null): UseOnboardingR
     autoPlay,
     isCompleted,
     isLoading,
+    shouldAutoPlay,
     
     // Actions
     openOnboarding,
@@ -132,5 +145,6 @@ export const useOnboarding = (content: OnboardingContent | null): UseOnboardingR
     toggleAutoPlay,
     markCompleted,
     resetOnboarding,
+    clearAutoPlayTrigger,
   };
 };

@@ -13,6 +13,7 @@ interface UseDualOnboardingReturn {
   currentSlide: number;
   language: Language;
   autoPlay: boolean;
+  shouldAutoPlay: boolean;
   isLoading: boolean;
   
   // Phase completion status
@@ -31,6 +32,7 @@ interface UseDualOnboardingReturn {
   startSalesTraining: () => void;
   skipSalesTraining: () => void;
   completeSales: () => void;
+  clearAutoPlayTrigger: () => void;
 }
 
 export const useDualOnboarding = (
@@ -43,6 +45,7 @@ export const useDualOnboarding = (
   const [currentSlide, setCurrentSlide] = useState(0);
   const [language, setLanguage] = useState<Language>('en');
   const [autoPlay, setAutoPlay] = useState(false);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize settings and check completion status
@@ -96,7 +99,12 @@ export const useDualOnboarding = (
     
     setCurrentSlide(prev => {
       const next = prev + 1;
-      return next >= content.slides.length ? prev : next;
+      if (next < content.slides.length) {
+        // Trigger auto-play for the next slide
+        setShouldAutoPlay(true);
+        return next;
+      }
+      return prev;
     });
   }, [currentPhase, technicalContent, salesContent]);
 
@@ -149,6 +157,10 @@ export const useDualOnboarding = (
     setIsOpen(false);
   }, [salesContent, onboardingManager]);
 
+  const clearAutoPlayTrigger = useCallback(() => {
+    setShouldAutoPlay(false);
+  }, []);
+
   return {
     // State
     isOpen,
@@ -156,6 +168,7 @@ export const useDualOnboarding = (
     currentSlide,
     language,
     autoPlay,
+    shouldAutoPlay,
     isLoading,
     
     // Phase completion status
@@ -174,5 +187,6 @@ export const useDualOnboarding = (
     startSalesTraining,
     skipSalesTraining,
     completeSales,
+    clearAutoPlayTrigger,
   };
 };

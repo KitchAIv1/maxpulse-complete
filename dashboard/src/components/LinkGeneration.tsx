@@ -702,6 +702,7 @@ export function LinkGeneration() {
         currentSlide={dualOnboarding.currentSlide}
         language={dualOnboarding.language}
         autoPlay={dualOnboarding.autoPlay}
+        shouldAutoPlay={dualOnboarding.shouldAutoPlay}
         technicalCompleted={dualOnboarding.technicalCompleted}
         salesCompleted={dualOnboarding.salesCompleted}
         onClose={dualOnboarding.closeOnboarding}
@@ -714,6 +715,7 @@ export function LinkGeneration() {
         onStartSalesTraining={dualOnboarding.startSalesTraining}
         onSkipSalesTraining={dualOnboarding.skipSalesTraining}
         onCompleteSales={dualOnboarding.completeSales}
+        onAutoPlayTriggered={dualOnboarding.clearAutoPlayTrigger}
       />
     </div>
   );

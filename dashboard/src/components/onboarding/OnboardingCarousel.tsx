@@ -6,7 +6,8 @@
 import React, { useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, SkipForward, HelpCircle } from 'lucide-react';
 import { OnboardingContent, Language } from '../../services/OnboardingManager';
-import { AudioPlayer } from './AudioPlayer';
+import { OnboardingSlideLayout } from './OnboardingSlideLayout';
+import { OnboardingProgressIndicators } from './OnboardingProgressIndicators';
 
 interface OnboardingCarouselProps {
   content: OnboardingContent;
@@ -14,6 +15,7 @@ interface OnboardingCarouselProps {
   currentSlide: number;
   language: Language;
   autoPlay: boolean;
+  shouldAutoPlay?: boolean;
   onClose: () => void;
   onNext: () => void;
   onPrev: () => void;
@@ -21,6 +23,7 @@ interface OnboardingCarouselProps {
   onToggleLanguage: () => void;
   onToggleAutoPlay: () => void;
   onComplete: () => void;
+  onAutoPlayTriggered?: () => void;
 }
 
 export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
@@ -29,6 +32,7 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
   currentSlide,
   language,
   autoPlay,
+  shouldAutoPlay = false,
   onClose,
   onNext,
   onPrev,
@@ -36,6 +40,7 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
   onToggleLanguage,
   onToggleAutoPlay,
   onComplete,
+  onAutoPlayTriggered,
 }) => {
   const slide = content.slides[currentSlide];
   const isLastSlide = currentSlide === content.slides.length - 1;
@@ -142,66 +147,31 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
           </div>
         </div>
         {/* Main Content */}
-        <div className="p-6 space-y-6 max-h-[calc(90vh-200px)] overflow-y-auto">
-          {/* Slide Image */}
-          <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 shadow-lg">
-            <img
-              src={slide.image}
-              alt={slide.title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIyNSIgdmlld0JveD0iMCAwIDQwMCAyMjUiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMjI1IiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTEyLjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pgo8L3N2Zz4K';
-              }}
-            />
-          </div>
-
-          {/* Progress Indicators */}
-          <div className="flex items-center justify-center gap-4">
-            {/* Dots */}
-            <div className="flex gap-2">
-              {content.slides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => onGoToSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    index === currentSlide
-                      ? 'bg-blue-600'
-                      : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
-
-            {/* Step Labels */}
-            <div className="flex gap-2 ml-4">
-              {content.slides.map((slideItem, index) => (
-                <button
-                  key={index}
-                  onClick={() => onGoToSlide(index)}
-                  className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${
-                    index === currentSlide
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                  }`}
-                >
-                  {slideItem.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Audio Player */}
-          <AudioPlayer
-            audioEn={slide.audioEn}
-            audioTl={slide.audioTl}
+        <div className="p-6 max-h-[calc(90vh-200px)] overflow-y-auto">
+          {/* Responsive Slide Layout */}
+          <OnboardingSlideLayout
+            image={slide.image}
+            title={slide.title}
             transcriptEn={slide.transcriptEn}
             transcriptTl={slide.transcriptTl}
+            audioEn={slide.audioEn}
+            audioTl={slide.audioTl}
             language={language}
             autoPlay={autoPlay}
+            shouldAutoPlay={shouldAutoPlay}
             onAudioEnd={handleAudioEnd}
+            onAutoPlayTriggered={onAutoPlayTriggered}
+            isFirstSlide={currentSlide === 0}
           />
+          
+          {/* Progress Indicators */}
+          <div className="mt-6">
+            <OnboardingProgressIndicators
+              slides={content.slides}
+              currentSlide={currentSlide}
+              onGoToSlide={onGoToSlide}
+            />
+          </div>
         </div>
 
         {/* Footer */}

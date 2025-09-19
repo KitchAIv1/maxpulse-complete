@@ -15,8 +15,11 @@ interface AudioPlayerProps {
   language: Language;
   autoPlay: boolean;
   onAudioEnd?: () => void;
+  onAutoPlayTriggered?: () => void;
+  isFirstSlide?: boolean;
   className?: string;
 }
+
 
 export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioEn,
@@ -26,6 +29,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   language,
   autoPlay,
   onAudioEnd,
+  onAutoPlayTriggered,
+  isFirstSlide = false,
   className = '',
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -42,13 +47,31 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const audio = audioRef.current;
     if (!audio || !currentAudio) return;
 
+    // Always reset playing state when switching audio sources
+    const currentSrc = audio.src;
+    const newSrc = currentAudio.startsWith('http') ? currentAudio : `${window.location.origin}${currentAudio}`;
+    if (currentSrc && currentSrc !== newSrc) {
+      console.log('🎵 AudioPlayer: Switching audio source - old:', currentSrc, 'new:', newSrc);
+      if (!audio.paused) {
+        audio.pause();
+      }
+      audio.currentTime = 0; // Reset audio to beginning
+      setIsPlaying(false); // Always reset playing state on navigation
+    }
+
     setIsLoading(true);
     setError(null);
 
     const handleCanPlay = () => {
       console.log('🎵 AudioPlayer: Audio can play, ready state:', audio.readyState);
       setIsLoading(false);
-      // Auto-play is now disabled by default, so we don't auto-play here
+      if (autoPlay) {
+        console.log('🎵 AudioPlayer: Auto-play triggered');
+        setTimeout(() => {
+          playAudio();
+          onAutoPlayTriggered?.();
+        }, 100);
+      }
     };
 
     const handleEnded = () => {
@@ -76,6 +99,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     // Load new audio source
     console.log('🎵 AudioPlayer: Loading audio source:', currentAudio);
     audio.src = currentAudio;
+    audio.currentTime = 0; // Ensure new audio starts from beginning
     audio.load();
 
     return () => {
@@ -83,8 +107,24 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('loadstart', handleLoadStart);
+      
+      // Stop audio when component unmounts or audio source changes
+      if (!audio.paused) {
+        audio.pause();
+      }
     };
   }, [currentAudio]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      const audio = audioRef.current;
+      if (audio && !audio.paused) {
+        audio.pause();
+        setIsPlaying(false);
+      }
+    };
+  }, []);
 
   const playAudio = useCallback(async () => {
     const audio = audioRef.current;
@@ -130,9 +170,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }, []);
 
   const togglePlayPause = useCallback(() => {
+    console.log('🎵 AudioPlayer: Toggle play/pause clicked, isPlaying:', isPlaying);
     if (isPlaying) {
+      console.log('🎵 AudioPlayer: Pausing audio');
       pauseAudio();
     } else {
+      console.log('🎵 AudioPlayer: Playing audio');
       playAudio();
     }
   }, [isPlaying, playAudio, pauseAudio]);
@@ -144,6 +187,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     audio.muted = !audio.muted;
     setIsMuted(audio.muted);
   }, []);
+
+  console.log('🎵 AudioPlayer: Rendering - isFirstSlide:', isFirstSlide, 'isPlaying:', isPlaying, 'isLoading:', isLoading, 'error:', error);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -159,11 +204,25 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         <button
           onClick={togglePlayPause}
           disabled={isLoading || !!error}
-          className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+          className={`flex items-center justify-center transition-colors ${
+            isFirstSlide && !isPlaying
+              ? "px-6 py-2 bg-brand-primary text-white rounded-full hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              : "w-10 h-10 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          }`}
+          aria-label={
+            isFirstSlide && !isPlaying
+              ? "Start training"
+              : isPlaying
+              ? "Pause audio"
+              : "Play audio"
+          }
         >
           {isLoading ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className={`border-2 border-white border-t-transparent rounded-full animate-spin ${
+              isFirstSlide && !isPlaying ? "w-4 h-4 mr-2" : "w-4 h-4"
+            }`} />
+          ) : isFirstSlide && !isPlaying ? (
+            "START TRAINING"
           ) : isPlaying ? (
             <Pause className="w-4 h-4" />
           ) : (
@@ -197,16 +256,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </div>
       </div>
 
-      {/* Transcript */}
-      <div className="p-4 bg-white border rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <Volume2 className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">Transcript</span>
-        </div>
-        <p className="text-gray-800 leading-relaxed">
-          {currentTranscript || 'No transcript available'}
-        </p>
-      </div>
     </div>
   );
 };
