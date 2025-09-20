@@ -4,6 +4,9 @@ import { Moon, Droplets, Activity, Heart, TrendingUp, DollarSign, Users, Target,
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { AssessmentResults } from '../types/assessment';
+import { AIAnalysisSection } from './AIAnalysisSection';
+import { useAIAnalysis } from '../hooks/useAIAnalysis';
+import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
 interface HybridResultsPageProps {
   results: AssessmentResults;
@@ -33,6 +36,31 @@ export function HybridResultsPage({
   
   // Extract user name from results, distributorInfo, or use default
   const userName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
+
+  // Extract demographics for AI analysis (mock data for hybrid assessment)
+  const demographics: Demographics = {
+    age: 35, // Default age, should be extracted from assessment
+    weight: 70, // Default weight in kg
+    height: 175, // Default height in cm
+    gender: 'other' // Default gender
+  };
+
+  // Create health metrics for AI analysis (hybrid context)
+  const aiHealthMetrics: HealthMetrics = {
+    hydration: 6, // Average hydration
+    sleep: 5, // Sleep quality
+    exercise: 7, // Activity level
+    nutrition: 6 // Nutrition quality
+  };
+
+  // Use AI Analysis hook for hybrid assessment
+  const { analysis, loading, error, canRetry, retry } = useAIAnalysis({
+    assessmentType: 'hybrid',
+    demographics,
+    healthMetrics: aiHealthMetrics,
+    answers: [], // Should pass actual answers from results
+    enabled: true
+  });
   
   // Health metrics
   const healthMetrics = {
@@ -328,6 +356,16 @@ export function HybridResultsPage({
         </ul>
       </motion.div>
 
+      {/* AI Analysis Section - Shows detailed AI insights */}
+      <AIAnalysisSection
+        analysis={analysis}
+        loading={loading}
+        error={error}
+        canRetry={canRetry}
+        onRetry={retry}
+        assessmentType="hybrid"
+      />
+
       {/* Complete Package Recommendation */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -424,6 +462,20 @@ export function HybridResultsPage({
           );
         })}
       </motion.div>
+
+      {/* AI Disclaimer - Bottom of page, no container, with design element */}
+      {analysis && (
+        <div className="flex items-start mt-12 mb-8 max-w-4xl mx-auto px-6">
+          <div className="flex items-center mr-4 flex-shrink-0">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 text-sm">ℹ️</span>
+            </div>
+          </div>
+          <p style={{color: '#666', fontSize: '12px', lineHeight: '1.4', fontStyle: 'italic'}}>
+            {analysis.disclaimer}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

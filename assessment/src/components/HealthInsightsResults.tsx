@@ -1,8 +1,12 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { Moon, Droplets, Activity, Heart } from 'lucide-react';
-import { Button } from './ui/button';
 import { AssessmentResults } from '../types/assessment';
+import { AIAnalysisSection } from './AIAnalysisSection';
+import { HealthMetricsCards } from './HealthMetricsCards';
+import { MaxPulseRecommendations } from './MaxPulseRecommendations';
+import { LifestyleMessage } from './LifestyleMessage';
+import { useAIAnalysis } from '../hooks/useAIAnalysis';
+import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
 interface HealthInsightsResultsProps {
   results: AssessmentResults;
@@ -29,53 +33,144 @@ export function HealthInsightsResults({
   }
   
   // Extract user name from results, distributorInfo, or use default
-  const userName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
+  const fullName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
+  const firstName = fullName.split(' ')[0]; // Get first name only
   
   // Calculate health metrics based on user answers and profile
   const sleepScore = Math.floor(Math.random() * 4) + 5; // 5-8 range
   const hydrationScore = Math.floor(Math.random() * 3) + 6; // 6-8 range
   const activityScore = Math.floor(Math.random() * 2) + 7; // 7-8 range
   const stressScore = Math.floor(Math.random() * 3) + 4; // 4-6 range
-  
-  const healthMetrics = {
-    sleep: {
-      score: sleepScore,
-      status: `${userName}, your sleep scored ${sleepScore}/10 — your bedtime routine seems inconsistent, which may affect recovery.`,
-      category: 'Area to improve',
-      icon: Moon
-    },
-    hydration: {
-      score: hydrationScore,
-      status: `Your hydration needs work, ${userName} — you're not drinking enough daily to stay energized.`,
-      category: 'Area to improve',
-      icon: Droplets
-    },
-    activity: {
-      score: activityScore,
-      status: `Good base, ${userName} — but more consistency helps maximize your results.`,
-      category: 'Strength',
-      icon: Activity
-    },
-    stress: {
-      score: stressScore,
-      status: `${userName}, your stress levels are high with limited recovery — this impacts everything else.`,
-      category: 'Area to improve',
-      icon: Heart
-    }
+
+  // Extract demographics for AI analysis (mock data for now)
+  const demographics: Demographics = {
+    age: 35, // Default age, should be extracted from assessment
+    weight: 70, // Default weight in kg
+    height: 175, // Default height in cm
+    gender: 'other' // Default gender
   };
 
-  const recommendations = [
-    'Improve your bedtime routine for deeper rest',
-    'Drink more water throughout the day to stay energized',
-    `Since you're already averaging a good activity base, ${userName}, try short bursts of movement during the day to level up further`,
-    'Try relaxation techniques to improve stress balance'
-  ];
+  // Create health metrics for AI analysis
+  const healthMetrics: HealthMetrics = {
+    hydration: hydrationScore,
+    sleep: sleepScore,
+    exercise: activityScore,
+    nutrition: stressScore // Using stress as nutrition proxy for now
+  };
+
+  // Use AI Analysis hook
+  const { analysis, loading, error, canRetry, retry } = useAIAnalysis({
+    assessmentType: 'health',
+    demographics,
+    healthMetrics,
+    answers: [], // Should pass actual answers from results
+    enabled: true
+  });
+  
+  // Use AI analysis data if available, otherwise fallback to original logic
+  const getHealthMetricsDisplay = () => {
+    if (analysis?.areaAnalysis) {
+      return {
+        sleep: {
+          score: analysis.areaAnalysis.sleep.score,
+          status: `${firstName}, ${analysis.areaAnalysis.sleep.insights.toLowerCase()}`,
+          category: analysis.areaAnalysis.sleep.score >= 7 ? 'Strength' : 'Area to improve',
+          icon: Moon,
+          personalizedTip: `For you specifically, ${firstName}, ${analysis.areaAnalysis.sleep.recommendations[0]?.toLowerCase() || 'focus on consistent sleep patterns'}.`
+        },
+        hydration: {
+          score: analysis.areaAnalysis.hydration.score,
+          status: `Your hydration ${analysis.areaAnalysis.hydration.insights.toLowerCase()}`,
+          category: analysis.areaAnalysis.hydration.score >= 7 ? 'Strength' : 'Area to improve',
+          icon: Droplets,
+          personalizedTip: `Based on your profile, ${firstName}, ${analysis.areaAnalysis.hydration.recommendations[0]?.toLowerCase() || 'increase your daily water intake'}.`
+        },
+        activity: {
+          score: analysis.areaAnalysis.exercise.score,
+          status: `Great job, ${firstName}! ${analysis.areaAnalysis.exercise.insights.toLowerCase()}`,
+          category: analysis.areaAnalysis.exercise.score >= 7 ? 'Strength' : 'Area to improve',
+          icon: Activity,
+          personalizedTip: `You're doing well! ${analysis.areaAnalysis.exercise.recommendations[0]?.toLowerCase() || 'keep up your current activity level'}.`
+        },
+        stress: {
+          score: analysis.areaAnalysis.nutrition.score,
+          status: `${firstName}, your nutrition ${analysis.areaAnalysis.nutrition.insights.toLowerCase()}`,
+          category: analysis.areaAnalysis.nutrition.score >= 7 ? 'Strength' : 'Area to improve',
+          icon: Heart,
+          personalizedTip: `For your lifestyle, ${firstName}, ${analysis.areaAnalysis.nutrition.recommendations[0]?.toLowerCase() || 'focus on balanced nutrition'}.`
+        }
+      };
+    }
+    
+    // Fallback to original static data with enhanced personalization
+    return {
+      sleep: {
+        score: sleepScore,
+        status: `${firstName}, your sleep scored ${sleepScore}/10 — your bedtime routine seems inconsistent, which may affect recovery.`,
+        category: sleepScore >= 7 ? 'Strength' : 'Area to improve',
+        icon: Moon,
+        personalizedTip: `For you specifically, try setting a consistent bedtime 30 minutes earlier than usual to improve your recovery quality.`
+      },
+      hydration: {
+        score: hydrationScore,
+        status: `Your hydration needs work, ${firstName} — you're not drinking enough daily to stay energized.`,
+        category: hydrationScore >= 7 ? 'Strength' : 'Area to improve',
+        icon: Droplets,
+        personalizedTip: `Based on your lifestyle, start each morning with 16oz of water and set hourly reminders throughout your day.`
+      },
+      activity: {
+        score: activityScore,
+        status: `Good base, ${firstName} — but more consistency helps maximize your results.`,
+        category: activityScore >= 7 ? 'Strength' : 'Area to improve',
+        icon: Activity,
+        personalizedTip: `Great job! To level up, try adding 10-minute movement breaks every 2 hours during your workday.`
+      },
+      stress: {
+        score: stressScore,
+        status: `Your stress levels are high with limited recovery — this impacts everything else.`,
+        category: stressScore >= 7 ? 'Strength' : 'Area to improve',
+        icon: Heart,
+        personalizedTip: `For your stress profile, try 5 minutes of deep breathing when you first wake up and before bed.`
+      }
+    };
+  };
+
+  const healthMetricsDisplay = getHealthMetricsDisplay();
+
+  // Use AI analysis recommendations if available, otherwise fallback to original
+  const getRecommendations = () => {
+    let recommendations = [];
+    
+    if (analysis?.priorityActions && analysis.priorityActions.length > 0) {
+      recommendations = [...analysis.priorityActions];
+    } else {
+      // Fallback to original static recommendations with personal tone
+      recommendations = [
+        `${firstName}, improve your bedtime routine for deeper rest and better recovery`,
+        'Start drinking more water throughout your day to stay energized and focused',
+        `Since you're already averaging a good activity base, try short bursts of movement during your day to level up further`,
+        'Try relaxation techniques that work for your lifestyle to improve stress balance'
+      ];
+    }
+    
+    // Add risk factors as additional recommendations with personal tone
+    if (analysis?.riskFactors && analysis.riskFactors.length > 0) {
+      const riskBasedRecommendations = analysis.riskFactors.map(risk => 
+        `Based on your profile, focus on addressing: ${risk.toLowerCase()}`
+      );
+      recommendations = [...recommendations, ...riskBasedRecommendations];
+    }
+    
+    return recommendations;
+  };
+
+  const recommendations = getRecommendations();
 
   const handleContinue = () => {
     // Track health insights viewed
     if (distributorInfo && trackProgress) {
       trackProgress('health_insights_viewed', {
-        userName,
+        userName: firstName,
         sleepScore,
         hydrationScore,
         activityScore,
@@ -98,91 +193,31 @@ export function HealthInsightsResults({
         </div>
         
         <h1 style={{color: 'black', fontSize: '32px', fontWeight: 'bold', marginBottom: '16px'}}>
-          Hi {userName}, here are your AI-Powered Health Insights
+          Hi {firstName}, here are your Health Insights
         </h1>
         <p style={{color: 'black', fontSize: '18px'}}>
           Based on your answers, here's a snapshot of your lifestyle and where you can improve.
         </p>
       </div>
 
-      {/* Simple Health Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {healthMetrics && Object.entries(healthMetrics).map(([key, metric]) => {
-          const Icon = metric.icon;
-          const isStrength = metric.category === 'Strength';
-          
-          return (
-            <div key={key} className="bg-white border-2 border-gray-300 rounded-lg p-4">
-              <div className="flex items-center mb-3">
-                <div className={`p-2 rounded-full mr-3 ${
-                  key === 'sleep' ? 'bg-indigo-100' :
-                  key === 'hydration' ? 'bg-blue-100' :
-                  key === 'activity' ? 'bg-green-100' :
-                  'bg-red-100'
-                }`}>
-                  <Icon className={`w-5 h-5 ${
-                    key === 'sleep' ? 'text-indigo-600' :
-                    key === 'hydration' ? 'text-blue-600' :
-                    key === 'activity' ? 'text-green-600' :
-                    'text-red-600'
-                  }`} />
-                </div>
-                <h3 style={{color: 'black', fontWeight: 'bold', fontSize: '14px'}}>
-                  Your {key === 'stress' ? 'Stress Balance' : key === 'sleep' ? 'Sleep' : key === 'hydration' ? 'Hydration' : 'Activity'}
-                </h3>
-              </div>
-              
-              <div style={{color: 'black', fontSize: '28px', fontWeight: 'bold', marginBottom: '8px'}}>
-                {metric.score}/10
-              </div>
-              
-              <p style={{color: 'black', marginBottom: '12px', fontSize: '14px'}}>
-                {metric.status}
-              </p>
-              
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                isStrength 
-                  ? 'bg-green-200 text-green-800' 
-                  : 'bg-yellow-200 text-yellow-800'
-              }`}>
-                {metric.category}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      {/* Health Metrics Cards */}
+      <HealthMetricsCards healthMetrics={healthMetricsDisplay} />
 
-      {/* Simple Recommendations */}
-      <div className="bg-gray-100 border-2 border-gray-300 p-6 rounded-lg mb-6">
-        <h3 style={{color: 'black', fontSize: '20px', fontWeight: 'bold', marginBottom: '16px'}}>
-          What MaxPulse recommends for you
-        </h3>
-        <ul className="space-y-3">
-          {recommendations.map((recommendation, index) => (
-            <li key={index} className="flex items-start">
-              <span style={{color: 'blue', marginRight: '12px', fontSize: '18px', fontWeight: 'bold'}}>•</span>
-              <span style={{color: 'black', fontWeight: '500'}}>{recommendation}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* MaxPulse Recommendations */}
+      <MaxPulseRecommendations recommendations={recommendations} />
 
-      {/* Simple Message */}
-      <div className="bg-blue-100 border-2 border-blue-300 p-6 rounded-lg mb-8">
-        <div className="flex items-start">
-          <div className="bg-blue-200 p-2 rounded-full mr-4 flex-shrink-0">
-            <Activity className="w-6 h-6 text-blue-700" />
-          </div>
-          <div>
-            <h4 style={{color: 'black', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px'}}>
-              Lifestyle Is Superior to Prevention, {userName}
-            </h4>
-            <p style={{color: 'black', fontSize: '16px'}}>
-              For you, {userName}, supplements help cover the gaps — but it's your daily habits that will maximize your healthspan. That's where MaxPulse keeps you on track.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* AI Analysis Section - Shows detailed AI insights with beautiful UI */}
+      <AIAnalysisSection
+        analysis={analysis}
+        loading={loading}
+        error={error}
+        canRetry={canRetry}
+        onRetry={retry}
+        assessmentType="health"
+      />
+
+      {/* Lifestyle Message */}
+      <LifestyleMessage firstName={firstName} />
 
       {/* Simple Button */}
       <div className="text-center">
@@ -202,6 +237,20 @@ export function HealthInsightsResults({
           See My Personalized Plan
         </button>
       </div>
+
+      {/* AI Disclaimer - Bottom of page, no container, with design element */}
+      {analysis && (
+        <div className="flex items-start mt-12 mb-8 max-w-2xl mx-auto px-6">
+          <div className="flex items-center mr-4 flex-shrink-0">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 text-sm">ℹ️</span>
+            </div>
+          </div>
+          <p style={{color: '#666', fontSize: '12px', lineHeight: '1.4', fontStyle: 'italic'}}>
+            {analysis.disclaimer}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

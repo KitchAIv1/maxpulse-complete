@@ -4,6 +4,9 @@ import { TrendingUp, DollarSign, Users, Target, Check, Shield, Clock } from 'luc
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { AssessmentResults } from '../types/assessment';
+import { AIAnalysisSection } from './AIAnalysisSection';
+import { useAIAnalysis } from '../hooks/useAIAnalysis';
+import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
 interface WealthResultsPageProps {
   results: AssessmentResults;
@@ -31,6 +34,31 @@ export function WealthResultsPage({
   
   // Extract user name from results, distributorInfo, or use default
   const userName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
+
+  // Extract demographics for AI analysis (mock data for wealth assessment)
+  const demographics: Demographics = {
+    age: 35, // Default age, should be extracted from assessment
+    weight: 70, // Default weight in kg
+    height: 175, // Default height in cm
+    gender: 'other' // Default gender
+  };
+
+  // Create health metrics for AI analysis (adapted for wealth context)
+  const healthMetrics: HealthMetrics = {
+    hydration: 7, // Business energy/vitality
+    sleep: 6, // Work-life balance
+    exercise: 8, // Business activity/hustle
+    nutrition: 7 // Financial health/planning
+  };
+
+  // Use AI Analysis hook for wealth assessment
+  const { analysis, loading, error, canRetry, retry } = useAIAnalysis({
+    assessmentType: 'wealth',
+    demographics,
+    healthMetrics,
+    answers: [], // Should pass actual answers from results
+    enabled: true
+  });
   
   // Calculate wealth/business metrics based on user answers
   const businessMetrics = {
@@ -225,6 +253,16 @@ export function WealthResultsPage({
         </ul>
       </motion.div>
 
+      {/* AI Analysis Section - Shows detailed AI insights */}
+      <AIAnalysisSection
+        analysis={analysis}
+        loading={loading}
+        error={error}
+        canRetry={canRetry}
+        onRetry={retry}
+        assessmentType="wealth"
+      />
+
       {/* Business Package Recommendation */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -297,6 +335,20 @@ export function WealthResultsPage({
           );
         })}
       </motion.div>
+
+      {/* AI Disclaimer - Bottom of page, no container, with design element */}
+      {analysis && (
+        <div className="flex items-start mt-12 mb-8 max-w-4xl mx-auto px-6">
+          <div className="flex items-center mr-4 flex-shrink-0">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 text-sm">ℹ️</span>
+            </div>
+          </div>
+          <p style={{color: '#666', fontSize: '12px', lineHeight: '1.4', fontStyle: 'italic'}}>
+            {analysis.disclaimer}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
