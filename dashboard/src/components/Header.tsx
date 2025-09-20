@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Brain, Settings, LogOut, User, Bell } from 'lucide-react';
+import { Settings, LogOut, User, Bell, Brain } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface HeaderProps {
@@ -18,12 +18,20 @@ export function Header({ user, onLogout, onShowProfile, onShowAccountSettings }:
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="bg-red-800 text-white p-2 rounded-lg mr-3">
-              <Brain className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-xl text-red-900">MAXPULSE</h1>
-              <p className="text-xs text-gray-600">{user.level}</p>
+            <img 
+              src="/dashboard/images/branding/logo-horizontal.png" 
+              alt="MAXPULSE Logo" 
+              className="h-12 w-auto mr-3"
+              onError={(e) => {
+                // Fallback to icon + text if logo fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling.style.display = 'flex';
+              }}
+            />
+            <div className="flex items-center" style={{ display: 'none' }}>
+              <div className="bg-red-800 text-white p-2 rounded-lg mr-3">
+                <Brain className="h-6 w-6" />
+              </div>
             </div>
           </div>
 
@@ -65,8 +73,8 @@ export function Header({ user, onLogout, onShowProfile, onShowAccountSettings }:
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          </div>
         </div>
-      </div>
-    </header>
-  );
-}
+      </header>
+    );
+  }

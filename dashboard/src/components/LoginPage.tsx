@@ -39,23 +39,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-amber-50 flex items-center justify-center">
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
-          {/* Logo */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center mb-6">
-              <div className="bg-gradient-to-br from-red-800 to-red-900 text-white p-4 rounded-2xl mr-4 shadow-lg">
-                <Brain className="h-10 w-10" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-red-900 via-red-800 to-amber-700 bg-clip-text text-transparent">
-                  MAXPULSE
-                </h1>
-                <div className="h-0.5 bg-gradient-to-r from-red-800 to-amber-600 rounded-full mt-1"></div>
-              </div>
-            </div>
-            <p className="text-lg text-gray-700 font-medium tracking-wide">
-              Access your dashboard
-            </p>
-          </div>
 
           <Card className="p-8 bg-white/80 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl hover:shadow-3xl hover:bg-white/85 transition-all duration-500 relative overflow-hidden group">
             {/* Border Gradient Overlay */}
@@ -63,6 +46,23 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             
             {/* Content */}
             <div className="relative z-10">
+              {/* Logo at top of card */}
+              <div className="text-center mb-8">
+                <img 
+                  src="/dashboard/images/branding/logo-full.png" 
+                  alt="MAXPULSE Logo" 
+                  className="h-16 w-auto mx-auto"
+                  onError={(e) => {
+                    // Fallback to text logo if image fails
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling.style.display = 'block';
+                  }}
+                />
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-red-900 via-red-800 to-amber-700 bg-clip-text text-transparent" style={{ display: 'none' }}>
+                  MAXPULSE
+                </h1>
+              </div>
+              
             <Tabs defaultValue="distributor" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-8 bg-gray-100/80 backdrop-blur-sm rounded-2xl p-1 border border-gray-200/50">
                 <TabsTrigger value="distributor" className="flex items-center font-semibold text-sm rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-red-800">
