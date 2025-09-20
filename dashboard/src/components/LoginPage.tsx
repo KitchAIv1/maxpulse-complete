@@ -120,13 +120,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     )}
                   </Button>
 
-                  <div className="text-center">
-                    <div className="inline-flex items-center px-4 py-2 bg-gray-100/80 backdrop-blur-sm rounded-xl border border-gray-200/50">
-                      <p className="text-sm text-gray-600 font-medium">
-                        Demo: <span className="text-red-700 font-semibold">sarah@maxpulse.com</span> / <span className="text-red-700 font-semibold">demo123</span>
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
 
