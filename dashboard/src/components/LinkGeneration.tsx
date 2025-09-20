@@ -233,6 +233,23 @@ export function LinkGeneration() {
             <HelpCircle className="w-4 h-4" />
             <span className="hidden sm:inline">Tutorial</span>
           </Button>
+          
+          {/* Debug button for testing - remove in production */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Clear completion status for testing
+              const manager = new (require('../services/OnboardingManager')).OnboardingManager();
+              manager.clearCompleted('link-generation');
+              manager.clearCompleted('link-generation-sales');
+              console.log('🔄 Cleared all onboarding completion status for testing');
+              window.location.reload();
+            }}
+            className="flex items-center gap-2 bg-red-50 hover:bg-red-100 border-red-200 text-red-600"
+          >
+            Reset Tutorial
+          </Button>
         </div>
 
         {/* Integrated Tab Navigation */}
