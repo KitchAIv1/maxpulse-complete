@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { ArrowRight, Menu, X, Building2 } from 'lucide-react';
-import { useState } from 'react';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -30,10 +29,22 @@ export function PublicLayout({ children }: PublicLayoutProps) {
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-red-800 to-amber-700 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">MP</span>
+                <img 
+                  src="/dashboard/images/branding/logo-horizontal.png" 
+                  alt="MAXPULSE Logo" 
+                  className="h-12 w-auto"
+                  onError={(e) => {
+                    // Fallback to text logo if image fails
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="flex items-center space-x-2" style={{ display: 'none' }}>
+                  <div className="w-8 h-8 bg-gradient-to-r from-red-800 to-amber-700 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">MP</span>
+                  </div>
+                  <span className="text-xl font-bold text-gray-900">MAXPULSE</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">MAXPULSE</span>
               </Link>
             </div>
 
