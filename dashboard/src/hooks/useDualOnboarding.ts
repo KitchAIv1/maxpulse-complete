@@ -136,12 +136,15 @@ export const useDualOnboarding = (
   const completeTechnical = useCallback(() => {
     if (!technicalContent) return;
     
+    console.log('🎯 Completing technical phase:', technicalContent.id);
     onboardingManager.markCompleted(technicalContent.id);
+    console.log('🔄 Transitioning to transition screen');
     setCurrentPhase('transition');
     setCurrentSlide(0);
   }, [technicalContent, onboardingManager]);
 
   const startSalesTraining = useCallback(() => {
+    console.log('🚀 Starting sales training phase');
     setCurrentPhase('sales');
     setCurrentSlide(0);
   }, []);

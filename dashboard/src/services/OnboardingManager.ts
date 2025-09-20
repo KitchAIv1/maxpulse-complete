@@ -44,6 +44,25 @@ export class OnboardingManager {
   }
 
   /**
+   * Clear completion status for a specific content ID (for testing)
+   */
+  clearCompleted(contentId: string): void {
+    try {
+      const completed = localStorage.getItem(this.STORAGE_KEY);
+      if (!completed) return;
+      
+      const completedList = JSON.parse(completed);
+      if (Array.isArray(completedList)) {
+        const filtered = completedList.filter(id => id !== contentId);
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtered));
+        console.log(`🔄 Cleared completion status for: ${contentId}`);
+      }
+    } catch (error) {
+      console.warn('Failed to clear onboarding completion:', error);
+    }
+  }
+
+  /**
    * Mark onboarding as completed for a specific content ID
    */
   markCompleted(contentId: string): void {
