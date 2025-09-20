@@ -13,9 +13,7 @@ import { CompanyAnnouncements } from './CompanyAnnouncements';
 import { WelcomeModal } from './WelcomeModal';
 import { DemoDataManager } from '../services/DemoDataManager';
 import { useDashboardStats } from '../hooks/useDashboardStats';
-import { useOnboarding } from '../hooks/useOnboarding';
-import { OnboardingCarousel } from './onboarding/OnboardingCarousel';
-import { distributorOnboardingContent } from '../data/distributorOnboarding';
+// Dashboard onboarding removed to prevent conflicts with dual onboarding
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { 
   TrendingUp, 
@@ -33,8 +31,7 @@ import {
   UserPlus,
   Activity,
   TrendingDown,
-  RefreshCw,
-  HelpCircle
+  RefreshCw
 } from 'lucide-react';
 
 interface DistributorDashboardProps {
@@ -50,8 +47,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   // Use real dashboard statistics from existing working systems
   const { stats: dashboardData, loading: statsLoading } = useDashboardStats('SJ2024');
   
-  // Onboarding system
-  const onboarding = useOnboarding(distributorOnboardingContent);
+  // Dashboard onboarding removed to prevent modal conflicts
 
   // Initialize demo data for commission system
   useEffect(() => {
@@ -442,15 +438,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                   <p className="text-gray-600 text-sm lg:text-base">Here's your performance overview for this month</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onboarding.openOnboarding}
-                    className="flex items-center gap-2"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                    Help Guide
-                  </Button>
+                  {/* Help Guide button removed - onboarding available in LinkGeneration */}
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                     {user.level}
                   </Badge>
@@ -678,23 +666,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
         </div>
       </div>
 
-      {/* Onboarding Modal */}
-      <OnboardingCarousel
-        content={distributorOnboardingContent}
-        isOpen={onboarding.isOpen}
-        currentSlide={onboarding.currentSlide}
-        language={onboarding.language}
-        autoPlay={onboarding.autoPlay}
-        shouldAutoPlay={onboarding.shouldAutoPlay}
-        onClose={onboarding.closeOnboarding}
-        onNext={onboarding.nextSlide}
-        onPrev={onboarding.prevSlide}
-        onGoToSlide={onboarding.goToSlide}
-        onToggleLanguage={onboarding.toggleLanguage}
-        onToggleAutoPlay={onboarding.toggleAutoPlay}
-        onComplete={onboarding.markCompleted}
-        onAutoPlayTriggered={onboarding.clearAutoPlayTrigger}
-      />
+      {/* Dashboard onboarding removed - dual onboarding available in LinkGeneration */}
     </div>
   );
 }
