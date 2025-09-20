@@ -93,15 +93,17 @@ export const PurchaseConfirmation: React.FC<PurchaseConfirmationProps> = ({
   if (success) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600" />
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-8 text-center" style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '32px', textAlign: 'center' }}>
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4" style={{ width: '64px', height: '64px', backgroundColor: '#DCFCE7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+            <Check className="w-8 h-8 text-green-600" style={{ width: '32px', height: '32px', color: '#059669' }} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Purchase Successful!</h2>
-          <p className="text-gray-600 mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2" style={{ color: '#111827', fontSize: '24px', fontWeight: 'bold', lineHeight: '1.5', marginBottom: '8px' }}>
+            Purchase Successful!
+          </h2>
+          <p className="text-gray-600 mb-4" style={{ color: '#4B5563', fontSize: '16px', lineHeight: '1.5', marginBottom: '16px' }}>
             Thank you for your purchase. You will receive confirmation details shortly.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500" style={{ color: '#6B7280', fontSize: '14px', lineHeight: '1.4' }}>
             Your distributor has been credited with the commission.
           </p>
         </div>
@@ -113,11 +115,14 @@ export const PurchaseConfirmation: React.FC<PurchaseConfirmationProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">Confirm Purchase</h2>
+        <div className="flex items-center justify-between p-6 border-b" style={{ borderBottom: '1px solid #E5E7EB' }}>
+          <h2 className="text-xl font-semibold text-gray-900" style={{ color: '#111827', fontSize: '20px', fontWeight: '600', lineHeight: '1.5' }}>
+            Confirm Purchase
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            style={{ color: '#9CA3AF' }}
           >
             <X className="w-5 h-5" />
           </button>
@@ -137,14 +142,18 @@ export const PurchaseConfirmation: React.FC<PurchaseConfirmationProps> = ({
             <div className="flex items-start space-x-3">
               <ShoppingCart className="w-5 h-5 text-gray-600 mt-1" />
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                <h3 className="font-semibold text-gray-900" style={{ color: '#111827', fontSize: '18px', lineHeight: '1.5', marginBottom: '4px' }}>
+                  {product?.name || 'MaxPulse Health Supplements'}
+                </h3>
+                <p className="text-sm text-gray-600 mt-1" style={{ color: '#4B5563', fontSize: '14px', lineHeight: '1.4' }}>
+                  {product?.description || 'Premium health supplements for daily wellness'}
+                </p>
                 <div className="flex items-center justify-between mt-3">
-                  <span className="text-2xl font-bold text-green-600">
-                    ${product.price.toFixed(2)}
+                  <span className="text-2xl font-bold text-green-600" style={{ color: '#059669', fontSize: '24px', fontWeight: 'bold' }}>
+                    ${product?.price?.toFixed(2) || '89.99'}
                   </span>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {product.type.charAt(0).toUpperCase() + product.type.slice(1)}
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', fontSize: '12px', padding: '4px 8px', borderRadius: '4px' }}>
+                    {product?.type ? product.type.charAt(0).toUpperCase() + product.type.slice(1) : 'Product'}
                   </span>
                 </div>
               </div>
@@ -152,32 +161,26 @@ export const PurchaseConfirmation: React.FC<PurchaseConfirmationProps> = ({
           </div>
 
           {/* Purchase Summary */}
-          <div className="border-t pt-4">
+          <div className="border-t pt-4" style={{ borderTop: '1px solid #E5E7EB', paddingTop: '16px' }}>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-600">Subtotal:</span>
-              <span className="font-semibold">${product.price.toFixed(2)}</span>
+              <span className="text-gray-700" style={{ color: '#374151', fontSize: '14px' }}>Subtotal:</span>
+              <span className="font-semibold text-gray-900" style={{ color: '#111827', fontWeight: '600', fontSize: '14px' }}>
+                ${product?.price?.toFixed(2) || '89.99'}
+              </span>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-600">Tax:</span>
-              <span className="font-semibold">$0.00</span>
+              <span className="text-gray-700" style={{ color: '#374151', fontSize: '14px' }}>Tax:</span>
+              <span className="font-semibold text-gray-900" style={{ color: '#111827', fontWeight: '600', fontSize: '14px' }}>$0.00</span>
             </div>
-            <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
-              <span>Total:</span>
-              <span className="text-green-600">${product.price.toFixed(2)}</span>
+            <div className="flex justify-between items-center text-lg font-bold border-t pt-2" style={{ borderTop: '1px solid #E5E7EB', paddingTop: '8px', fontSize: '18px', fontWeight: 'bold' }}>
+              <span className="text-gray-900" style={{ color: '#111827' }}>Total:</span>
+              <span className="text-green-600" style={{ color: '#059669' }}>${product?.price?.toFixed(2) || '89.99'}</span>
             </div>
           </div>
 
-          {/* Commission Info */}
-          <div className="bg-blue-50 rounded-lg p-3">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Your distributor will receive a{' '}
-              <strong>{product.commissionRate}%</strong> commission (${((product.price * product.commissionRate) / 100).toFixed(2)}) 
-              from this purchase.
-            </p>
-          </div>
 
           {/* Disclaimer */}
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-600">
             <p>
               This is a demo purchase. In production, this would integrate with a real payment processor.
               The commission will be tracked in your distributor's dashboard.

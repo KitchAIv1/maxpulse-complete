@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -226,9 +226,8 @@ export function ClientHub() {
   const loadClientData = useCallback(() => {
     setIsLoading(true);
     
-    // Simulate API delay (ORIGINAL WORKING LOGIC - CRITICAL!)
-    setTimeout(() => {
-      try {
+    // Process immediately - removed artificial delay for performance
+    try {
       // Load real-time tracking data from localStorage (ORIGINAL WORKING LOGIC)
       const trackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]') as TrackingEvent[];
       
@@ -398,7 +397,6 @@ export function ClientHub() {
       }
       
       setIsLoading(false);
-    }, 500);  // ← ORIGINAL WORKING DELAY - ESSENTIAL!
   }, []);
 
   // Load data on component mount and set up real-time listeners (ORIGINAL WORKING LOGIC)
@@ -463,54 +461,58 @@ export function ClientHub() {
     };
   }, [loadClientData]);
 
-  // Filter and sort clients
-  const filteredClients = clients
-    .filter(client => {
-      const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           client.phone.includes(searchTerm);
-      
-      const matchesFilter = selectedFilter === 'all' || 
-                           (selectedFilter === 'live' && client.isLive) ||
-                           (selectedFilter === 'assessment' && client.currentAssessment) ||
-                           client.status === selectedFilter;
-      
-      return matchesSearch && matchesFilter;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'status':
-          return a.status.localeCompare(b.status);
-        case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
-        case 'value':
-          return b.value - a.value;
-        case 'lastContact':
-        default:
-          return new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime();
-      }
-    });
+  // Filter and sort clients - memoized for performance
+  const filteredClients = useMemo(() => {
+    return clients
+      .filter(client => {
+        const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             client.phone.includes(searchTerm);
+        
+        const matchesFilter = selectedFilter === 'all' || 
+                             (selectedFilter === 'live' && client.isLive) ||
+                             (selectedFilter === 'assessment' && client.currentAssessment) ||
+                             client.status === selectedFilter;
+        
+        return matchesSearch && matchesFilter;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'name':
+            return a.name.localeCompare(b.name);
+          case 'status':
+            return a.status.localeCompare(b.status);
+          case 'priority':
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            return priorityOrder[b.priority] - priorityOrder[a.priority];
+          case 'value':
+            return b.value - a.value;
+          case 'lastContact':
+          default:
+            return new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime();
+        }
+      });
+  }, [clients, searchTerm, selectedFilter, sortBy]);
 
-  const getStatusColor = (status: string) => {
+  // Memoized status color function for performance
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case 'customer': return 'bg-green-100 text-green-800';
       case 'prospect': return 'bg-blue-100 text-blue-800';
       case 'lead': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
+  }, []);
 
-  const getPriorityColor = (priority: string) => {
+  // Memoized priority color function for performance
+  const getPriorityColor = useCallback((priority: string) => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-orange-100 text-orange-800';
       case 'low': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
+  }, []);
 
   const getAssessmentStatusIcon = (client: UnifiedClient) => {
     if (client.isLive) {
