@@ -12,9 +12,9 @@ export const linkGenerationOnboardingContent: OnboardingContent = {
     {
       id: 'intro',
       title: 'Welcome to Link Generation',
-      image: '/dashboard/assets/onboarding/link-generation/intro.png',
-      audioEn: '/dashboard/assets/onboarding/link-generation/audio/intro-en.mp3',
-      audioTl: '/dashboard/assets/onboarding/link-generation/audio/intro-tl.mp3',
+      image: '/dashboard/assets/onboarding/link-generation/images/sales-intro.png',
+      audioEn: '/dashboard/assets/onboarding/link-generation/audio/sales-intro-en.mp3',
+      audioTl: '/dashboard/assets/onboarding/link-generation/audio/sales-intro-tl.mp3',
       transcriptEn: 'Welcome to the MAXPULSE Assessment Link Generator! This powerful tool is your key to connecting with clients and earning commissions. Every link you create is automatically tagged to you, ensuring you get credit for all purchases made through your assessments.',
       transcriptTl: 'Maligayang pagdating sa MAXPULSE Assessment Link Generator! Ang powerful tool na ito ay inyong susi sa pag-connect sa mga kliyente at pag-earn ng commissions. Bawat link na ginagawa ninyo ay automatically na-tag sa inyo, ensuring na makakakuha kayo ng credit sa lahat ng purchases na ginawa through sa inyong assessments.',
       label: 'Intro'
