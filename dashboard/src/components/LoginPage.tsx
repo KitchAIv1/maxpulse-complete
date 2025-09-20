@@ -171,13 +171,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     )}
                   </Button>
 
-                  <div className="text-center">
-                    <div className="inline-flex items-center px-4 py-2 bg-gray-100/80 backdrop-blur-sm rounded-xl border border-gray-200/50">
-                      <p className="text-sm text-gray-600 font-medium">
-                        Demo: <span className="text-blue-700 font-semibold">trainer@maxpulse.com</span> / <span className="text-blue-700 font-semibold">trainer123</span>
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
 
@@ -222,13 +215,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     )}
                   </Button>
 
-                  <div className="text-center">
-                    <div className="inline-flex items-center px-4 py-2 bg-gray-100/80 backdrop-blur-sm rounded-xl border border-gray-200/50">
-                      <p className="text-sm text-gray-600 font-medium">
-                        Demo: <span className="text-amber-700 font-semibold">admin@maxpulse.com</span> / <span className="text-amber-700 font-semibold">admin123</span>
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
             </Tabs>
