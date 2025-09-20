@@ -4,12 +4,36 @@
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>MAXPULSE Platform Development</title>
+      <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+      <meta http-equiv="Pragma" content="no-cache" />
+      <meta http-equiv="Expires" content="0" />
+      <title>MAXPULSE Platform Development v2024-12-20-CACHE-BUST</title>
     </head>
 
     <body>
       <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
+      <script>
+        // CACHE BUSTING: Clear service worker cache
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+              registration.unregister();
+            }
+          });
+        }
+        
+        // CACHE BUSTING: Clear all caches
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (let name of names) {
+              caches.delete(name);
+            }
+          });
+        }
+        
+        console.log('🔥 CACHE BUSTING: v2024-12-20-FINAL - All caches cleared');
+      </script>
+      <script type="module" src="/src/main.tsx?v=2024-12-20-FINAL"></script>
     </body>
   </html>
   
