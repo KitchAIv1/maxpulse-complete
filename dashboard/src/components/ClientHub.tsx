@@ -157,70 +157,8 @@ export function ClientHub() {
   const [showAddClient, setShowAddClient] = useState(false);
   const [editingClient, setEditingClient] = useState<UnifiedClient | null>(null);
 
-  // Base client data (in production, this would come from API)
-  const baseClients: Omit<UnifiedClient, 'currentAssessment' | 'assessmentHistory' | 'isLive'>[] = [
-    {
-      id: 1,
-      name: 'Jennifer Martinez',
-      email: 'jennifer.m@email.com',
-      phone: '+1 (555) 123-4567',
-      status: 'lead',
-      interests: ['Health App', 'Business Opportunity'],
-      lastContact: '2024-08-21',
-      value: 0,
-      priority: 'high',
-      source: 'Social Media'
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      email: 'michael.chen@gmail.com',
-      phone: '+1 (555) 234-5678',
-      status: 'prospect',
-      interests: ['Wealth Building', 'Investment'],
-      lastContact: '2024-08-20',
-      value: 250,
-      priority: 'medium',
-      source: 'Referral'
-    },
-    {
-      id: 3,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@outlook.com',
-      phone: '+1 (555) 345-6789',
-      status: 'customer',
-      interests: ['Health Coaching', 'Nutrition'],
-      lastContact: '2024-08-19',
-      value: 1200,
-      priority: 'high',
-      source: 'Website',
-      subscription: 'Premium Health Plan'
-    },
-    {
-      id: 4,
-      name: 'David Wilson',
-      email: 'david.w@company.com',
-      phone: '+1 (555) 456-7890',
-      status: 'lead',
-      interests: ['Business Opportunity'],
-      lastContact: '2024-08-18',
-      value: 0,
-      priority: 'low',
-      source: 'Cold Outreach'
-    },
-    {
-      id: 5,
-      name: 'Lisa Thompson',
-      email: 'lisa.thompson@email.com',
-      phone: '+1 (555) 567-8901',
-      status: 'prospect',
-      interests: ['Health App', 'Fitness'],
-      lastContact: '2024-08-17',
-      value: 150,
-      priority: 'medium',
-      source: 'Event'
-    }
-  ];
+  // Client data now comes entirely from real-time assessment tracking and commission data
+  // No mock data - all clients are generated from actual assessment sessions
 
   // Load and merge client data with real-time assessment data
   const loadClientData = useCallback(() => {
@@ -304,73 +242,80 @@ export function ClientHub() {
         sessionsWithRecentActivity: Object.values(sessions).filter(s => s.lastActivity > fiveMinutesAgo).length
       });
       
-      // Merge base client data with real-time assessment data
-      const unifiedClients: UnifiedClient[] = baseClients.map(baseClient => {
-        // Find assessment sessions for this client
-        const clientSessions = Object.values(sessions).filter(session => 
-          session.events.some(event => 
-            event.customerEmail === baseClient.email || 
-            event.customerName === baseClient.name
-          )
-        );
-        
-        // Get current active session
-        const currentAssessment = clientSessions.find(session => 
-          session.status === 'started' || session.status === 'in_progress'
-        );
-        
-        // Check if client is currently live (active in last 5 minutes)
-        // Check all sessions, not just current assessment
-        const isLive = clientSessions.some(session => 
-          (Date.now() - session.lastActivity) < 5 * 60 * 1000
-        );
-        
-        // Debug individual client LIVE status
-        if (clientSessions.length > 0) {
-          console.log(`🔴 Client ${baseClient.name} LIVE check:`, {
-            sessionsCount: clientSessions.length,
-            isLive,
-            lastActivities: clientSessions.map(s => ({
-              code: s.code,
-              lastActivity: new Date(s.lastActivity).toLocaleTimeString(),
-              minutesAgo: Math.round((Date.now() - s.lastActivity) / (60 * 1000))
-            }))
-          });
-        }
-        
-        return {
-          ...baseClient,
-          currentAssessment,
-          assessmentHistory: clientSessions,
-          isLive
-        };
-      });
+      // Create clients entirely from real-time assessment data (no mock data)
+      const unifiedClients: UnifiedClient[] = [];
       
-      // Add anonymous assessment sessions as new clients
+      // Create all clients from assessment sessions (no mock data)
       Object.values(sessions).forEach(session => {
-        const hasMatchingClient = unifiedClients.some(client => 
-          session.events.some(event => 
-            event.customerEmail === client.email || 
-            event.customerName === client.name
-          )
+        if (session.events.length === 0) return;
+        
+        const firstEvent = session.events[0];
+        const clientName = firstEvent.customerName || `Anonymous ${session.code}`;
+        const clientEmail = firstEvent.customerEmail || 'unknown@email.com';
+        
+        // Check if we already have this client
+        const existingClient = unifiedClients.find(client => 
+          client.name.toLowerCase() === clientName.toLowerCase() ||
+          (client.email !== 'unknown@email.com' && client.email === clientEmail)
         );
         
-        if (!hasMatchingClient && session.events.length > 0) {
-          const firstEvent = session.events[0];
-          const isLive = (Date.now() - session.lastActivity) < 5 * 60 * 1000;
+        const isLive = (Date.now() - session.lastActivity) < 5 * 60 * 1000;
+        
+        if (existingClient) {
+          // Add this session to existing client
+          existingClient.assessmentHistory.push(session);
+          if (session.status === 'started' || session.status === 'in_progress') {
+            existingClient.currentAssessment = session;
+          }
+          if (isLive) {
+            existingClient.isLive = true;
+          }
+          // Update last contact to most recent activity
+          const sessionDate = new Date(session.lastActivity).toISOString().split('T')[0];
+          if (sessionDate > existingClient.lastContact) {
+            existingClient.lastContact = sessionDate;
+          }
+        } else {
+          // Create new client from session
+          console.log(`🔴 Adding client from session ${session.code}:`, {
+            customerName: clientName,
+            isLive,
+            lastActivity: new Date(session.lastActivity).toLocaleTimeString(),
+            minutesAgo: Math.round((Date.now() - session.lastActivity) / (60 * 1000))
+          });
+          
+          // Check if client has made a purchase
+          const purchase = getPurchaseByClientName(clientName);
+          const clientValue = purchase ? purchase.purchaseAmount : 0;
+          
+          // Determine status based on assessment completion and purchases
+          let status: 'lead' | 'prospect' | 'customer' = 'lead';
+          if (clientValue > 0) {
+            status = 'customer';
+          } else if (session.status === 'completed') {
+            status = 'prospect';
+          }
+          
+          // Determine interests based on activity
+          const interests = [];
+          if (session.status === 'completed') interests.push('Assessment Completed');
+          else if (session.status === 'in_progress') interests.push('Assessment In Progress');
+          else interests.push('Assessment Started');
+          if (clientValue > 0) interests.push('Customer');
           
           unifiedClients.push({
-            id: Date.now() + Math.random(), // Temporary ID
-            name: firstEvent.customerName || 'Anonymous Client',
-            email: firstEvent.customerEmail || 'No email provided',
-            phone: 'No phone provided',
-            status: 'lead',
-            interests: session.priority ? [session.priority] : ['Assessment Taken'],
-            lastContact: new Date(session.startTime).toISOString().split('T')[0],
-            value: 0,
-            priority: 'medium',
-            source: 'Assessment Tool',
-            currentAssessment: session.status === 'started' || session.status === 'in_progress' ? session : undefined,
+            id: Date.now() + Math.random(),
+            name: clientName,
+            email: clientEmail,
+            phone: 'Not provided',
+            status,
+            interests,
+            lastContact: new Date(session.lastActivity).toISOString().split('T')[0],
+            value: clientValue,
+            priority: clientValue > 500 ? 'high' : session.status === 'completed' ? 'medium' : (session.priority as 'high' | 'medium' | 'low' || 'low'),
+            source: 'Assessment',
+            subscription: purchase ? purchase.productName : undefined,
+            currentAssessment: (session.status === 'started' || session.status === 'in_progress') ? session : undefined,
             assessmentHistory: [session],
             isLive
           });
@@ -388,12 +333,8 @@ export function ClientHub() {
         setClients(unifiedClients);
       } catch (error) {
         console.error('Error loading client data:', error);
-        // Fallback to base clients without assessment data
-        setClients(baseClients.map(client => ({
-          ...client,
-          assessmentHistory: [],
-          isLive: false
-        })));
+        // No fallback data - show empty state when no assessment data exists
+        setClients([]);
       }
       
       setIsLoading(false);

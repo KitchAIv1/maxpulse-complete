@@ -3,8 +3,10 @@
  * Following .cursorrules: UI logic separation, <100 lines, reusable
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useCommissions } from './useCommissions';
+import { SupabaseAnalyticsManager } from '../services/SupabaseAnalyticsManager';
+import { FeatureFlags } from '../utils/featureFlags';
 
 interface DashboardStats {
   monthlyStats: {
@@ -23,8 +25,11 @@ interface DashboardStats {
 export const useDashboardStats = (distributorId: string) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [supabaseStats, setSupabaseStats] = useState<any>(null);
   
   const { commissions } = useCommissions(distributorId);
+  const analyticsManager = useMemo(() => new SupabaseAnalyticsManager(), []);
+
 
   /**
    * Calculate real dashboard statistics from existing data sources
@@ -138,15 +143,46 @@ export const useDashboardStats = (distributorId: string) => {
   }, [commissions]);
 
   useEffect(() => {
-    setLoading(true);
-    const calculatedStats = calculateStats();
-    setStats(calculatedStats);
-    setLoading(false);
-  }, [calculateStats]);
+    const loadStats = async () => {
+      setLoading(true);
+      
+      try {
+        // Load traditional stats
+        const calculatedStats = calculateStats();
+        setStats(calculatedStats);
+        
+        // Load enhanced Supabase analytics (if enabled)
+        if (FeatureFlags.useSupabaseAnalytics) {
+          try {
+            const enhanced = await analyticsManager.getDashboardStats(distributorId, 30);
+            if (enhanced) {
+              setSupabaseStats(enhanced);
+              if (FeatureFlags.debugMode) {
+                console.log('📊 Enhanced analytics loaded:', enhanced);
+              }
+            }
+          } catch (error) {
+            console.error('Failed to fetch Supabase analytics:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard stats:', error);
+      }
+      
+      setLoading(false);
+    };
+
+    loadStats();
+  }, [distributorId, commissions]); // Depend on distributorId and commissions
 
   return {
     stats,
+    supabaseStats,
     loading,
-    refreshStats: calculateStats
+    refreshStats: () => {
+      const calculatedStats = calculateStats();
+      setStats(calculatedStats);
+      // Supabase analytics will be refreshed on next render
+    }
   };
 };

@@ -8,6 +8,7 @@ import { AdminAnalytics } from './AdminAnalytics';
 import { RevenueDetails } from './RevenueDetails';
 import { ProductManagement } from './admin/ProductManagement';
 import { CommissionManagement } from './admin/CommissionManagement';
+import { SystemHealthDashboard } from './SystemHealthDashboard';
 
 interface AdminDashboardProps {
   user: any;
@@ -33,7 +34,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           {/* Future admin routes can be added here */}
           <Route path="/settings" element={<div className="p-6"><h1>Settings Coming Soon</h1></div>} />
           <Route path="/security" element={<div className="p-6"><h1>Security Coming Soon</h1></div>} />
-          <Route path="/system" element={<div className="p-6"><h1>System Health Coming Soon</h1></div>} />
+          <Route path="/system" element={<SystemHealthDashboard />} />
           <Route path="/database" element={<div className="p-6"><h1>Database Management Coming Soon</h1></div>} />
         </Routes>
       </div>

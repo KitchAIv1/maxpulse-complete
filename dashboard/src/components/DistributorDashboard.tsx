@@ -11,7 +11,7 @@ import { FinancePage } from './distributor/FinancePage';
 import { Goals } from './Goals';
 import { CompanyAnnouncements } from './CompanyAnnouncements';
 import { WelcomeModal } from './WelcomeModal';
-import { DemoDataManager } from '../services/DemoDataManager';
+// DemoDataManager removed - using real data only
 import { useDashboardStats } from '../hooks/useDashboardStats';
 // Dashboard onboarding removed to prevent conflicts with dual onboarding
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -44,21 +44,38 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   
-  // Use real dashboard statistics from existing working systems
-  const { stats: dashboardData, loading: statsLoading } = useDashboardStats('SJ2024');
+  // Use real dashboard statistics from existing working systems + enhanced Supabase analytics
+  // Get distributor ID from user data, fallback to SJ2024 for demo users
+  const distributorId = user?.distributorCode || user?.id || 'SJ2024';
+  const { stats: dashboardData, supabaseStats, loading: statsLoading } = useDashboardStats(distributorId);
   
   // Dashboard onboarding removed to prevent modal conflicts
   // VERCEL DEPLOYMENT TEST: v2024-12-20-FINAL - If you see dashboard modal, Vercel is not deploying latest code
 
-  // Initialize demo data for commission system
+  // Real data initialization only
   useEffect(() => {
-    const demoDataManager = new DemoDataManager();
-    demoDataManager.initializeDemoData();
     
     // VERCEL DEPLOYMENT VERIFICATION
     console.log('🚀 MAXPULSE Dashboard v2024-12-20-FINAL - Dashboard onboarding REMOVED');
     console.log('✅ If you see this message, Vercel deployed the latest code');
     console.log('❌ If dashboard modal appears, there is a deployment issue');
+    
+    // SUPABASE ANALYTICS VERIFICATION
+    console.log('🏁 Feature Flags Status:', {
+      useSupabase: import.meta.env.VITE_USE_SUPABASE,
+      analyticsBackend: import.meta.env.VITE_ANALYTICS_BACKEND,
+      aiEdgeFunction: import.meta.env.VITE_AI_EDGE_FUNCTION,
+      debugMode: import.meta.env.VITE_DEBUG_MODE
+    });
+    
+    if (supabaseStats) {
+      console.log('📊 Enhanced Supabase analytics loaded:', supabaseStats);
+      console.log('✅ Analytics backend is working with', supabaseStats.assessments?.total || 0, 'total assessments');
+      console.log('💰 Revenue data:', supabaseStats.revenue);
+      console.log('👥 Client data:', supabaseStats.clients);
+    } else {
+      console.log('📊 Supabase analytics not loaded - using localStorage fallback');
+    }
   }, []);
 
   // Check if this is the user's first time logging in
@@ -250,62 +267,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
     setShowWelcomeModal(true);
   };
 
-  // Add mock revenue and achievement activities for testing
-  const addMockBusinessActivities = () => {
-    const mockActivities = [
-      {
-        event: 'commission_earned',
-        timestamp: Date.now() - 300000, // 5 minutes ago
-        customerName: 'Sarah Johnson',
-        amount: 125,
-        source: 'Health Subscription'
-      },
-      {
-        event: 'subscription_purchased',
-        timestamp: Date.now() - 600000, // 10 minutes ago
-        customerName: 'Mark Thompson',
-        subscriptionType: 'Premium Health Plan'
-      },
-      {
-        event: 'achievement_unlocked',
-        timestamp: Date.now() - 900000, // 15 minutes ago
-        achievementName: 'Weekly Warrior',
-        reward: 100
-      },
-      {
-        event: 'level_progression',
-        timestamp: Date.now() - 1200000, // 20 minutes ago
-        newLevel: 'Gold Elite'
-      },
-      {
-        event: 'product_purchased',
-        timestamp: Date.now() - 1500000, // 25 minutes ago
-        customerName: 'Jennifer Martinez',
-        productName: 'Nutrition Starter Kit'
-      }
-    ];
-
-    // Add to tracking data
-    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-    mockActivities.forEach(activity => {
-      existingTracking.push(activity);
-    });
-    localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-
-    // Broadcast the updates
-    if (typeof BroadcastChannel !== 'undefined') {
-      const channel = new BroadcastChannel('maxpulse-tracking');
-      mockActivities.forEach(activity => {
-        channel.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: activity });
-      });
-      channel.close();
-    }
-
-    // Refresh the activity display
-    loadRecentActivity();
-    
-    console.log('💰 Added mock business activities:', mockActivities.length, 'items');
-  };
+  // Mock business activities removed - using real commission data only
 
   // Real dashboard data now comes from useDashboardStats hook
   // Fallback mock data for loading state
@@ -572,15 +534,6 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                     >
                       <RefreshCw className="h-4 w-4 mr-2" />
                       <span className="hidden sm:inline">Refresh</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={addMockBusinessActivities}
-                      className="hover:bg-green-50 hover:text-green-700 transition-colors"
-                    >
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Test Revenue</span>
                     </Button>
                     <Button variant="ghost" size="sm" className="hover:bg-brand-primary/5 hover:text-brand-primary transition-colors">
                       <Eye className="h-4 w-4 mr-2" />

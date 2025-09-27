@@ -13,20 +13,53 @@ import { SuccessStoriesPage } from './components/SuccessStoriesPage';
 import { ProfileSettings } from './components/ProfileSettings';
 import { AccountSettings } from './components/AccountSettings';
 
-function App() {
+export default function App() {
   const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'distributor' | 'admin' | 'trainer' | null>(null);
+
+  // Debug user state changes
+  React.useEffect(() => {
+    console.log('👤 User state changed:', { user: user?.id || 'null', userRole });
+  }, [user, userRole]);
+
+  // Load user from localStorage on app start
+  React.useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        console.log('🔄 Loading saved user from localStorage:', userData);
+        
+        // Ensure we have a valid role
+        if (userData && userData.role) {
+          setUser(userData);
+          setUserRole(userData.role);
+        } else {
+          console.log('⚠️ Invalid user data in localStorage, clearing...');
+          localStorage.removeItem('currentUser');
+        }
+      } catch (error) {
+        console.error('❌ Error loading saved user:', error);
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }, []);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
 
   const handleLogin = (userData: any, role: 'distributor' | 'admin' | 'trainer') => {
+    console.log('🔄 App.tsx handleLogin called with:', { userData, role });
     setUser(userData);
     setUserRole(role);
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('currentUser', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setUser(null);
     setUserRole(null);
+    localStorage.removeItem('currentUser');
   };
 
   const handleShowProfile = () => {
@@ -210,7 +243,7 @@ function App() {
           <Route 
             path="/login" 
             element={
-              user ? (
+              user && userRole ? (
                 <Navigate to={
                   userRole === 'admin' ? '/admin' : 
                   userRole === 'trainer' ? '/trainer' : 
@@ -221,6 +254,8 @@ function App() {
               )
             } 
           />
+          
+          
           
           {/* 
             PROTECTED DISTRIBUTOR ROUTES 
@@ -316,5 +351,3 @@ function App() {
     </HashRouter>
   );
 }
-
-export default App;

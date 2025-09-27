@@ -9,6 +9,8 @@ import {
   AnalysisCache 
 } from '../types/aiAnalysis';
 import { AIPromptGenerator } from '../utils/aiPromptGenerator';
+import { FeatureFlags } from '../utils/featureFlags';
+import { supabase } from '../lib/supabase';
 
 export class AIAnalysisManager {
   private config: AIConfig = {
@@ -59,6 +61,11 @@ export class AIAnalysisManager {
   }
 
   private async generateNewAnalysis(input: AIAnalysisInput): Promise<AIAnalysisResult> {
+    // Use Supabase Edge Function if enabled
+    if (FeatureFlags.useAIEdgeFunction) {
+      return this.callSupabaseAIAnalysis(input);
+    }
+    
     const prompt = AIPromptGenerator.generateHealthAnalysisPrompt(input);
     
     // Simulate OpenAI API call (replace with actual implementation)
@@ -74,8 +81,6 @@ export class AIAnalysisManager {
   }
 
   private async callOpenAI(prompt: string): Promise<string> {
-    // This is a placeholder for the actual OpenAI API call
-    // In real implementation, use OpenAI SDK
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
@@ -299,6 +304,60 @@ export class AIAnalysisManager {
       }));
     } else {
       localStorage.setItem(this.rateLimitKey, JSON.stringify({ count: 1, resetTime }));
+    }
+  }
+
+  /**
+   * Call Supabase Edge Function for AI Analysis
+   * Uses the deployed ai-analysis function with caching
+   */
+  private async callSupabaseAIAnalysis(input: AIAnalysisInput): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    
+    try {
+      if (FeatureFlags.debugMode) {
+        console.log('🤖 Calling Supabase AI Edge Function...', input);
+      }
+      
+      const { data, error } = await supabase.functions.invoke('ai-analysis', {
+        body: { input }
+      });
+      
+      if (error) {
+        console.error('Supabase Edge Function error:', error);
+        throw new Error(`Edge Function error: ${error.message}`);
+      }
+      
+      if (!data || !data.analysis) {
+        throw new Error('Invalid response from Edge Function');
+      }
+      
+      const processingTime = Date.now() - startTime;
+      
+      if (FeatureFlags.debugMode) {
+        console.log(`🤖 AI Analysis ${data.cached ? 'cached' : 'generated'} in ${processingTime}ms`);
+        console.log('🔍 Cache hits:', data.cacheHits);
+      }
+      
+      // Return the analysis with metadata
+      return {
+        ...data.analysis,
+        processingTime,
+        cached: data.cached,
+        cacheHits: data.cacheHits
+      };
+      
+    } catch (error) {
+      console.error('Supabase AI Analysis failed:', error);
+      
+      // Fallback to mock response if Edge Function fails
+      if (FeatureFlags.debugMode) {
+        console.log('🔄 Using fallback mock response due to Edge Function failure');
+      }
+      
+      const mockResponse = this.getMockResponse();
+      const analysis = JSON.parse(mockResponse);
+      return this.validateAndCleanAnalysis(analysis);
     }
   }
 

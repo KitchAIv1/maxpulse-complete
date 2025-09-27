@@ -23,66 +23,9 @@ export function ClientManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const clients = [
-    {
-      id: 1,
-      name: 'Jennifer Martinez',
-      email: 'jennifer.m@email.com',
-      phone: '+1 (555) 123-4567',
-      status: 'lead',
-      assessmentDate: '2024-08-20',
-      assessmentScore: { health: 85, business: 72 },
-      interests: ['Health App', 'Business Opportunity'],
-      lastContact: '2024-08-21',
-      value: 0,
-      priority: 'high',
-      source: 'Social Media'
-    },
-    {
-      id: 2,
-      name: 'Mark Rodriguez',
-      email: 'mark.r@email.com',
-      phone: '+1 (555) 234-5678',
-      status: 'customer',
-      assessmentDate: '2024-08-18',
-      assessmentScore: { health: 78, business: 45 },
-      interests: ['Health App'],
-      lastContact: '2024-08-22',
-      value: 97,
-      priority: 'medium',
-      source: 'Referral',
-      subscription: 'Health App Premium'
-    },
-    {
-      id: 3,
-      name: 'Lisa Chen',
-      email: 'lisa.c@email.com',
-      phone: '+1 (555) 345-6789',
-      status: 'prospect',
-      assessmentDate: '2024-08-19',
-      assessmentScore: { health: 90, business: 88 },
-      interests: ['Health App', 'Business Opportunity', 'Product Package'],
-      lastContact: '2024-08-20',
-      value: 0,
-      priority: 'high',
-      source: 'Website'
-    },
-    {
-      id: 4,
-      name: 'David Johnson',
-      email: 'david.j@email.com',
-      phone: '+1 (555) 456-7890',
-      status: 'customer',
-      assessmentDate: '2024-08-15',
-      assessmentScore: { health: 65, business: 92 },
-      interests: ['Business Opportunity'],
-      lastContact: '2024-08-22',
-      value: 245,
-      priority: 'medium',
-      source: 'Direct Contact',
-      subscription: 'Distributor Package'
-    }
-  ];
+  // Client data now comes from real assessment tracking and commission data
+  // This component should integrate with ClientHub data or be deprecated
+  const clients: any[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
