@@ -136,6 +136,7 @@ export class FeatureFlags {
       analytics: this.useSupabaseAnalytics,
       realtime: this.useSupabaseRealtime,
       commissions: this.useSupabaseCommissions,
+      databaseSubscriptions: this.useDatabaseSubscriptions, // ← MISSING FLAG ADDED
       debug: this.debugMode,
       mockData: this.useMockData
     };
