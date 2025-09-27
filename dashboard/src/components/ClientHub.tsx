@@ -104,14 +104,21 @@ interface UnifiedClient {
   isLive: boolean;
 }
 
-export function ClientHub() {
+interface ClientHubProps {
+  user?: any;
+}
+
+export function ClientHub({ user }: ClientHubProps) {
   const [clients, setClients] = useState<UnifiedClient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortBy, setSortBy] = useState('lastContact');
   
+  // 🔒 SECURITY FIX: Get distributor ID from user context (not hardcoded)
+  const distributorId = user?.distributorCode || user?.id || 'WB2025991';
+  
   // Add purchase tracking using EXISTING working commission system
-  const { commissions } = useCommissions('WB2025991');
+  const { commissions } = useCommissions(distributorId);
   
   
   // Helper function to get purchase data by session (using existing commission data)
@@ -171,14 +178,14 @@ export function ClientHub() {
       const databaseManager = new SupabaseDatabaseManager();
       await databaseManager.initialize();
       
-      const trackingData = await databaseManager.getAssessmentTrackingData('WB2025991');
+      const trackingData = await databaseManager.getAssessmentTrackingData(distributorId);
       
-      console.log('📊 Loading tracking data from DATABASE (PRODUCTION):', trackingData.length, 'events for WB2025991');
+      console.log('📊 Loading tracking data from DATABASE (PRODUCTION):', trackingData.length, `events for ${distributorId}`);
       
       // Convert database records to TrackingEvent format (using ACTUAL schema)
       const convertedEvents: TrackingEvent[] = trackingData.map(record => ({
-        distributorId: 'WB2025991',
-        code: record.event_data?.original_session_id || `WB2025991-${record.id}`,
+        distributorId: distributorId,
+        code: record.event_data?.original_session_id || `${distributorId}-${record.id}`,
         customerName: record.event_data?.customer_name || 'Unknown',
         customerEmail: record.event_data?.customer_email || 'unknown@email.com',
         event: record.event_data?.metadata?.event || record.event_type,
@@ -385,7 +392,7 @@ export function ClientHub() {
   }, []);
 
   // Supabase real-time subscriptions hook (must be after loadClientData definition)
-  const subscriptions = useSupabaseSubscriptions('WB2025991', loadClientData);
+  const subscriptions = useSupabaseSubscriptions(distributorId, loadClientData);
 
   // Load data on component mount - real-time subscriptions handled by useSupabaseSubscriptions hook
   useEffect(() => {

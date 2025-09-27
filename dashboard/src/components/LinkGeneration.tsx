@@ -24,7 +24,11 @@ import {
 } from 'lucide-react';
 // SimpleAssessment removed - now using Premium Mobile Assessment Tool
 
-export function LinkGeneration() {
+interface LinkGenerationProps {
+  user?: any;
+}
+
+export function LinkGeneration({ user }: LinkGenerationProps) {
   const [activeTab, setActiveTab] = useState('customer');
   // Preview state removed - now opens Premium Mobile Assessment Tool directly
   
@@ -59,7 +63,8 @@ export function LinkGeneration() {
   const generateCampaignLink = () => {
     if (!campaignDetails.name || !campaignDetails.audience) return;
     
-    const distributorId = 'WB2025991'; // In real app, from user context
+    // 🔒 SECURITY FIX: Get distributor ID from user context (not hardcoded)
+    const distributorId = user?.distributorCode || user?.id || 'WB2025991';
     const timestamp = Date.now().toString(36);
     const randomId = Math.random().toString(36).substring(2, 8); // Add random component
     const campaignSlug = campaignDetails.name.toLowerCase().replace(/\s+/g, '-');
@@ -115,7 +120,8 @@ export function LinkGeneration() {
   const generateCustomerLink = () => {
     if (!customerDetails.name || !customerDetails.email) return;
     
-    const distributorId = 'WB2025991'; // In real app, from user context
+    // 🔒 SECURITY FIX: Get distributor ID from user context (not hardcoded)
+    const distributorId = user?.distributorCode || user?.id || 'WB2025991';
     const timestamp = Date.now().toString(36);
     const randomId = Math.random().toString(36).substring(2, 8); // Add random component
     const customerSlug = customerDetails.name.toLowerCase().replace(/\s+/g, '-');

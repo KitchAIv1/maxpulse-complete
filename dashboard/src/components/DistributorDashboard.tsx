@@ -616,8 +616,8 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
           )}
 
           {activeTab === 'announcements' && <CompanyAnnouncements />}
-        {activeTab === 'clients' && <ClientHub />}
-          {activeTab === 'link-generator' && <LinkGeneration />}
+        {activeTab === 'clients' && <ClientHub user={user} />}
+          {activeTab === 'link-generator' && <LinkGeneration user={user} />}
           {activeTab === 'analytics' && <RevenueAnalytics />}
           {activeTab === 'training' && <TrainingCenter />}
           {activeTab === 'earnings' && <FinancePage distributorId={user?.id || 'demo-distributor'} />}
