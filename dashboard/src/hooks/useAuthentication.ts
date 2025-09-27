@@ -38,20 +38,31 @@ export function useAuthentication() {
         if (authData.user && !authError) {
           // Load complete user profile from database
           const userProfile = await UserProfileManager.loadUserProfileWithFallback(authData.user.id);
-          console.log('✅ User authenticated with database profile:', userProfile);
           
+          if (!userProfile) {
+            console.error('❌ No user profile found in database');
+            setIsLoading(false);
+            return { 
+              success: false, 
+              error: 'User profile not found. Please contact support.' 
+            };
+          }
+          
+          console.log('✅ User authenticated with database profile:', userProfile);
           setIsLoading(false);
           return { success: true, user: userProfile };
         }
       }
 
-      // Fallback to demo login for development
-      console.log('ℹ️ Using demo login for role:', role);
-      
-      const demoUser = createDemoUser(role, credentials.email);
+      // 🚨 CRITICAL: No demo login fallback in production
+      console.error('❌ Supabase authentication failed. Auth error:', authError);
+      console.error('❌ Auth data:', authData);
       
       setIsLoading(false);
-      return { success: true, user: demoUser };
+      return { 
+        success: false, 
+        error: 'Authentication failed. Please check your credentials.' 
+      };
 
     } catch (error) {
       console.error('❌ Authentication error:', error);
@@ -63,17 +74,7 @@ export function useAuthentication() {
     }
   };
 
-  const createDemoUser = (role: string, email?: string) => {
-    return {
-      id: role === 'admin' ? 'admin-1' : role === 'trainer' ? 'trainer-1' : 'WB2025991',
-      name: role === 'admin' ? 'Admin User' : role === 'trainer' ? 'Dr. Michael Chen' : 'Sarah Johnson',
-      email: email || (role === 'admin' ? 'admin@maxpulse.com' : role === 'trainer' ? 'trainer@maxpulse.com' : 'sarah@maxpulse.com'),
-      level: role === 'admin' ? 'Administrator' : role === 'trainer' ? 'Senior Trainer' : 'Gold Distributor',
-      distributorCode: role === 'admin' || role === 'trainer' ? null : 'WB2025991',
-      specialization: role === 'trainer' ? 'Health & Wellness Expert' : null,
-      avatar: `https://ui-avatars.com/api/?name=${role === 'admin' ? 'Admin+User' : role === 'trainer' ? 'Dr+Michael+Chen' : 'Sarah+Johnson'}&background=8B1538&color=fff`
-    };
-  };
+  // 🗑️ DEMO LOGIN COMPLETELY DELETED - SUPABASE AUTH ONLY
 
   return {
     isLoading,

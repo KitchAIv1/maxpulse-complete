@@ -36,15 +36,25 @@ export class UserProfileManager {
         .eq('user_id', user.id)
         .single();
 
+      // Check if user has a distributor profile to determine role
+      const { data: distributorProfile } = await supabase
+        .from('distributor_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      // If no profiles exist, create them immediately
+      if (!userProfile && !distributorProfile) {
+        console.log('⚠️ No profiles found, creating missing profiles...');
+        const created = await this.createMissingProfiles(user);
+        if (created) {
+          // Retry loading after creation
+          return this.loadUserProfile();
+        }
+      }
+
       if (userProfile) {
         console.log('✅ Loaded user profile from database');
-        
-        // Check if user has a distributor profile to determine role
-        const { data: distributorProfile } = await supabase
-          .from('distributor_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
 
         const fullName = userProfile.first_name && userProfile.last_name 
           ? `${userProfile.first_name} ${userProfile.last_name}`
@@ -127,33 +137,19 @@ export class UserProfileManager {
     };
   }
 
-  /**
-   * Create demo user for fallback
-   */
-  private static createDemoUser(): UserProfile {
-    return {
-      id: 'demo',
-      email: 'demo@maxpulse.com',
-      fullName: 'Demo User',
-      name: 'Demo User', // For backward compatibility
-      role: 'distributor',
-      distributorCode: 'DEMO2024',
-      territory: 'Demo Territory',
-      createdAt: new Date().toISOString()
-    };
-  }
+  // 🗑️ DEMO USER COMPLETELY DELETED - SUPABASE PROFILES ONLY
 
   /**
-   * Load user profile with fallback to demo
+   * Load user profile - NO FALLBACK, STRICT AUTHENTICATION
    */
-  static async loadUserProfileWithFallback(userId?: string): Promise<UserProfile> {
+  static async loadUserProfileWithFallback(userId?: string): Promise<UserProfile | null> {
     const profile = await this.loadUserProfile();
     
-    if (profile) {
-      return profile;
+    if (!profile) {
+      console.error('❌ No user profile found - authentication required');
+      return null;
     }
 
-    console.log('⚠️ Falling back to demo user');
-    return this.createDemoUser();
+    return profile;
   }
 }

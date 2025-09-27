@@ -45,8 +45,16 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   
   // Use real dashboard statistics from existing working systems + enhanced Supabase analytics
-  // Get distributor ID from user data, fallback to SJ2024 for demo users
-  const distributorId = user?.distributorCode || user?.id || 'WB2025991';
+  // 🚨 CRITICAL: No fallback allowed - must have valid distributor code
+  // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
+  if (!user?.distributorCode) {
+    console.error('🚨 CRITICAL: No distributor code in DistributorDashboard. User:', user);
+    return <div className="p-4 text-red-600">
+      <h3>Authentication Error</h3>
+      <p>Invalid user profile. Please log out and log back in.</p>
+    </div>;
+  }
+  const distributorId = user.distributorCode;
   const { stats: dashboardData, supabaseStats, loading: statsLoading } = useDashboardStats(distributorId);
   
   // Dashboard onboarding removed to prevent modal conflicts

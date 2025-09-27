@@ -63,8 +63,13 @@ export function LinkGeneration({ user }: LinkGenerationProps) {
   const generateCampaignLink = () => {
     if (!campaignDetails.name || !campaignDetails.audience) return;
     
-    // 🔒 SECURITY FIX: Get distributor ID from user context (not hardcoded)
-    const distributorId = user?.distributorCode || user?.id || 'WB2025991';
+    // 🚨 CRITICAL: No fallback allowed - must have valid distributor code
+    // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
+    if (!user?.distributorCode) {
+      console.error('🚨 CRITICAL: No distributor code in LinkGeneration');
+      return;
+    }
+    const distributorId = user.distributorCode;
     const timestamp = Date.now().toString(36);
     const randomId = Math.random().toString(36).substring(2, 8); // Add random component
     const campaignSlug = campaignDetails.name.toLowerCase().replace(/\s+/g, '-');
@@ -120,8 +125,13 @@ export function LinkGeneration({ user }: LinkGenerationProps) {
   const generateCustomerLink = () => {
     if (!customerDetails.name || !customerDetails.email) return;
     
-    // 🔒 SECURITY FIX: Get distributor ID from user context (not hardcoded)
-    const distributorId = user?.distributorCode || user?.id || 'WB2025991';
+    // 🚨 CRITICAL: No fallback allowed - must have valid distributor code
+    // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
+    if (!user?.distributorCode) {
+      console.error('🚨 CRITICAL: No distributor code in LinkGeneration');
+      return;
+    }
+    const distributorId = user.distributorCode;
     const timestamp = Date.now().toString(36);
     const randomId = Math.random().toString(36).substring(2, 8); // Add random component
     const customerSlug = customerDetails.name.toLowerCase().replace(/\s+/g, '-');
