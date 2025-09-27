@@ -51,17 +51,24 @@ export function useAuthentication() {
           console.log('✅ User authenticated with database profile:', userProfile);
           setIsLoading(false);
           return { success: true, user: userProfile };
+        } else {
+          // Authentication failed
+          console.error('❌ Supabase authentication failed. Auth error:', authError);
+          console.error('❌ Auth data:', authData);
+          
+          setIsLoading(false);
+          return { 
+            success: false, 
+            error: authError?.message || 'Authentication failed. Please check your credentials.' 
+          };
         }
       }
 
-      // 🚨 CRITICAL: No demo login fallback in production
-      console.error('❌ Supabase authentication failed. Auth error:', authError);
-      console.error('❌ Auth data:', authData);
-      
+      // No credentials provided
       setIsLoading(false);
       return { 
         success: false, 
-        error: 'Authentication failed. Please check your credentials.' 
+        error: 'Email and password are required.' 
       };
 
     } catch (error) {
