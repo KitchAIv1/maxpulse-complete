@@ -114,8 +114,13 @@ export function ClientHub({ user }: ClientHubProps) {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortBy, setSortBy] = useState('lastContact');
   
-  // 🔒 SECURITY FIX: Get distributor ID from user context (not hardcoded)
-  const distributorId = user?.distributorCode || user?.id || 'WB2025991';
+  // 🔒 SECURITY FIX: Get distributor CODE from user context (not hardcoded)
+  // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
+  console.log('🔍 DEBUG: User object in ClientHub:', { 
+    user: user ? { id: user.id, distributorCode: user.distributorCode, role: user.role, fullName: user.fullName } : null 
+  });
+  const distributorId = user?.distributorCode || 'WB2025991';
+  console.log('🔍 DEBUG: Using distributorId:', distributorId);
   
   // Add purchase tracking using EXISTING working commission system
   const { commissions } = useCommissions(distributorId);
