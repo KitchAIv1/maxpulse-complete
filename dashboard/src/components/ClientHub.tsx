@@ -119,7 +119,17 @@ export function ClientHub({ user }: ClientHubProps) {
   console.log('🔍 DEBUG: User object in ClientHub:', { 
     user: user ? { id: user.id, distributorCode: user.distributorCode, role: user.role, fullName: user.fullName } : null 
   });
-  const distributorId = user?.distributorCode || 'WB2025991';
+  
+  // 🚨 CRITICAL: No fallback allowed - must have valid distributor code
+  if (!user?.distributorCode) {
+    console.error('🚨 CRITICAL: No distributor code found in user object. User must be reloaded from database.');
+    return <div className="p-4 text-red-600">
+      <h3>Authentication Error</h3>
+      <p>Please log out and log back in to refresh your profile.</p>
+    </div>;
+  }
+  
+  const distributorId = user.distributorCode;
   console.log('🔍 DEBUG: Using distributorId:', distributorId);
   
   // Add purchase tracking using EXISTING working commission system
