@@ -59,7 +59,7 @@ export function LinkGeneration() {
   const generateCampaignLink = () => {
     if (!campaignDetails.name || !campaignDetails.audience) return;
     
-    const distributorId = 'SJ2024'; // In real app, from user context
+    const distributorId = 'WB2025991'; // In real app, from user context
     const timestamp = Date.now().toString(36);
     const randomId = Math.random().toString(36).substring(2, 8); // Add random component
     const campaignSlug = campaignDetails.name.toLowerCase().replace(/\s+/g, '-');
@@ -68,7 +68,7 @@ export function LinkGeneration() {
     // Create Premium Mobile Assessment Tool URL with unique session ID
     // For monorepo: Use same domain with /assessment path
     const assessmentBaseUrl = import.meta.env.VITE_ASSESSMENT_BASE_URL || 
-      (window.location.hostname === 'localhost' ? 'http://localhost:3000/assessment' : `${window.location.origin}/assessment`);
+      (window.location.hostname === 'localhost' ? 'http://localhost:5174/assessment' : `${window.location.origin}/assessment`);
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
     const directUrl = `${assessmentBaseUrl}/?distributor=${distributorId}&campaign=${encodeURIComponent(campaignDetails.name)}&code=${code}&session=${sessionId}`;
     const shareableText = `🌟 ${campaignDetails.name}\n\nTake the MAXPULSE Health & Wealth Assessment!\n\n🔗 Link: ${directUrl}\n\nTransform your health and financial future today!\n\nThis assessment takes just 3 minutes and provides instant insights tailored for ${campaignDetails.audience}.`;
@@ -115,7 +115,7 @@ export function LinkGeneration() {
   const generateCustomerLink = () => {
     if (!customerDetails.name || !customerDetails.email) return;
     
-    const distributorId = 'SJ2024'; // In real app, from user context
+    const distributorId = 'WB2025991'; // In real app, from user context
     const timestamp = Date.now().toString(36);
     const randomId = Math.random().toString(36).substring(2, 8); // Add random component
     const customerSlug = customerDetails.name.toLowerCase().replace(/\s+/g, '-');
@@ -124,7 +124,7 @@ export function LinkGeneration() {
     // Create personalized Premium Mobile Assessment Tool URL with unique session ID
     // For monorepo: Use same domain with /assessment path
     const assessmentBaseUrl = import.meta.env.VITE_ASSESSMENT_BASE_URL || 
-      (window.location.hostname === 'localhost' ? 'http://localhost:3000/assessment' : `${window.location.origin}/assessment`);
+      (window.location.hostname === 'localhost' ? 'http://localhost:5174/assessment' : `${window.location.origin}/assessment`);
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
     const directUrl = `${assessmentBaseUrl}/?distributor=${distributorId}&customer=${encodeURIComponent(customerDetails.name)}&email=${encodeURIComponent(customerDetails.email)}&code=${code}&session=${sessionId}`;
     const shareableText = `Hi ${customerDetails.name}!\n\nI'd like to invite you to take the MAXPULSE Health & Wealth Assessment - it's completely free and takes just 3 minutes.\n\n🔗 Your Personal Link: ${directUrl}\n\nThis will give you personalized recommendations for your health and financial goals.\n\nLooking forward to helping you on your journey!\n\nBest regards,\nSarah Johnson\nMAXPULSE Gold Distributor`;

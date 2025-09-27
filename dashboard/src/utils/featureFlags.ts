@@ -91,7 +91,8 @@ export class FeatureFlags {
    * Enable debug mode for additional logging
    */
   static get debugMode(): boolean {
-    return import.meta.env.VITE_DEBUG_MODE === 'true';
+    return true; // Temporarily force debug mode for troubleshooting
+    // return import.meta.env.VITE_DEBUG_MODE === 'true';
   }
   
   /**

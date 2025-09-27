@@ -5,13 +5,14 @@
 
 import { supabase } from '../lib/supabase';
 import { FeatureFlags } from '../utils/featureFlags';
+import { DistributorResolver } from './DistributorResolver';
 
 export interface AssessmentTrackingData {
   sessionId: string;
   distributorId: string;
   customerName: string;
   customerEmail: string;
-  assessmentType: string;
+  assessmentType: 'health' | 'wealth' | 'hybrid';
   currentStep: number;
   totalSteps: number;
   progress: number;
@@ -148,26 +149,52 @@ export class SupabaseDualWriteManager {
    */
   private async writeToSupabase(data: AssessmentTrackingData): Promise<boolean> {
     try {
+      // Resolve distributor code to UUID
+      const distributorUuid = await DistributorResolver.resolveDistributorId(data.distributorId);
+      
+      if (!distributorUuid) {
+        console.error('❌ Failed to resolve distributor ID:', data.distributorId);
+        return false;
+      }
+      
+      if (FeatureFlags.debugMode) {
+        console.log('🔍 Writing to Supabase with resolved distributor:', {
+          original: data.distributorId,
+          resolved: distributorUuid
+        });
+      }
+
+      // Step 1: Create or get assessment_sessions record
+      const sessionUuid = await this.getOrCreateSessionRecord(data, distributorUuid);
+      if (!sessionUuid) {
+        console.error('❌ Failed to create session record for:', data.sessionId);
+        return false;
+      }
+
+      // Step 2: Insert tracking record with proper UUID reference
       const { error } = await supabase
         .from('assessment_tracking')
-        .upsert({
-          session_id: data.sessionId,
-          distributor_id: data.distributorId,
-          customer_name: data.customerName,
-          customer_email: data.customerEmail,
-          assessment_type: data.assessmentType,
-          current_step: data.currentStep,
-          total_steps: data.totalSteps,
-          progress: data.progress,
-          status: data.status,
-          started_at: data.startedAt,
-          last_activity: data.lastActivity,
-          completed_at: data.completedAt,
-          responses: data.responses,
-          metadata: data.metadata,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'session_id'
+        .insert({
+          session_id: sessionUuid as string, // Now using proper UUID reference
+          distributor_id: distributorUuid,
+          event_type: this.getEventType(data.status),
+          event_data: {
+            original_session_id: data.sessionId, // Store original string ID for reference
+            customer_name: data.customerName,
+            customer_email: data.customerEmail,
+            assessment_type: data.assessmentType,
+            current_step: data.currentStep,
+            total_steps: data.totalSteps,
+            progress: data.progress,
+            status: data.status,
+            responses: data.responses,
+            metadata: data.metadata
+          },
+          timestamp: new Date().toISOString(),
+          client_info: {
+            name: data.customerName,
+            email: data.customerEmail
+          }
         });
 
       if (error) {
@@ -175,11 +202,158 @@ export class SupabaseDualWriteManager {
         return false;
       }
 
+      if (FeatureFlags.debugMode) {
+        console.log('✅ Supabase write successful for session:', data.sessionId, 'UUID:', sessionUuid);
+      }
+
       return true;
 
     } catch (error) {
       console.error('Supabase write error:', error);
       return false;
+    }
+  }
+
+  /**
+   * Create or get assessment_sessions record
+   */
+  private async getOrCreateSessionRecord(data: AssessmentTrackingData, distributorUuid: string): Promise<string | null> {
+    try {
+      // First, try to find existing session by session_id (TEXT field)
+      const { data: existingSessions, error: searchError } = await supabase
+        .from('assessment_sessions')
+        .select('id')
+        .eq('session_id', data.sessionId)
+        .limit(1);
+
+      if (searchError) {
+        console.error('Error searching for existing session:', searchError);
+      }
+
+      // If session exists, return its UUID
+      if (existingSessions && existingSessions.length > 0) {
+        if (FeatureFlags.debugMode) {
+          console.log('📋 Using existing session UUID:', existingSessions[0].id);
+        }
+        return existingSessions[0].id;
+      }
+
+      // Need to create assessment record first (required by schema)
+      const assessmentId = await this.getOrCreateAssessmentRecord(data, distributorUuid);
+      if (!assessmentId) {
+        console.error('❌ Failed to create assessment record');
+        return null;
+      }
+
+      // Create new session record with correct schema
+      const { data: newSession, error: insertError } = await supabase
+        .from('assessment_sessions')
+        .insert({
+          assessment_id: assessmentId,
+          session_id: data.sessionId, // Use TEXT field as designed
+          session_data: {
+            distributor_id: distributorUuid,
+            customer_name: data.customerName,
+            customer_email: data.customerEmail,
+            assessment_type: data.assessmentType,
+            status: data.status,
+            started_at: data.startedAt,
+            total_steps: data.totalSteps,
+            created_from: 'dual_write_manager'
+          },
+          progress_percentage: data.progress,
+          current_question_index: data.currentStep - 1
+        })
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('Error creating session record:', insertError);
+        return null;
+      }
+
+      if (FeatureFlags.debugMode) {
+        console.log('✅ Created new session UUID:', newSession.id, 'for session_id:', data.sessionId);
+      }
+
+      return newSession.id;
+
+    } catch (error) {
+      console.error('Session record creation failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Create or get assessments record
+   */
+  private async getOrCreateAssessmentRecord(data: AssessmentTrackingData, distributorUuid: string): Promise<string | null> {
+    try {
+      // Try to find existing assessment for this distributor and type
+      const { data: existingAssessments, error: searchError } = await supabase
+        .from('assessments')
+        .select('id')
+        .eq('distributor_id', distributorUuid)
+        .eq('assessment_type', data.assessmentType)
+        .eq('status', 'incomplete')
+        .limit(1);
+
+      if (searchError) {
+        console.error('Error searching for existing assessment:', searchError);
+      }
+
+      // If assessment exists, return its UUID
+      if (existingAssessments && existingAssessments.length > 0) {
+        if (FeatureFlags.debugMode) {
+          console.log('📋 Using existing assessment UUID:', existingAssessments[0].id);
+        }
+        return existingAssessments[0].id;
+      }
+
+      // Create new assessment record
+      const insertData = {
+        distributor_id: distributorUuid,
+        assessment_type: data.assessmentType,
+        status: data.status === 'completed' ? 'completed' : 'incomplete',
+        started_at: data.startedAt
+      };
+      
+      if (FeatureFlags.debugMode) {
+        console.log('🔍 Attempting to insert assessment:', insertData);
+      }
+      
+      const { data: newAssessment, error: insertError } = await supabase
+        .from('assessments')
+        .insert(insertData)
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('❌ DETAILED Assessment Error:', {
+          error: insertError,
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          data_sent: {
+            distributor_id: distributorUuid,
+            assessment_type: data.assessmentType,
+            status: data.status === 'completed' ? 'completed' : 'incomplete',
+            started_at: data.startedAt
+          }
+        });
+        return null;
+      }
+
+      if (FeatureFlags.debugMode) {
+        console.log('✅ Created new assessment UUID:', newAssessment.id, 'type:', data.assessmentType);
+      }
+
+      return newAssessment.id;
+
+    } catch (error) {
+      console.error('Assessment record creation failed:', error);
+      return null;
     }
   }
 
@@ -233,7 +407,7 @@ export class SupabaseDualWriteManager {
     distributorId: string,
     customerName: string,
     customerEmail: string,
-    assessmentType: string,
+    assessmentType: 'health' | 'wealth' | 'hybrid',
     totalSteps: number
   ): Promise<boolean> {
     const data: AssessmentTrackingData = {

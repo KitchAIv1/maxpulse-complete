@@ -46,7 +46,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
   
   // Use real dashboard statistics from existing working systems + enhanced Supabase analytics
   // Get distributor ID from user data, fallback to SJ2024 for demo users
-  const distributorId = user?.distributorCode || user?.id || 'SJ2024';
+  const distributorId = user?.distributorCode || user?.id || 'WB2025991';
   const { stats: dashboardData, supabaseStats, loading: statsLoading } = useDashboardStats(distributorId);
   
   // Dashboard onboarding removed to prevent modal conflicts

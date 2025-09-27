@@ -3,6 +3,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { useCommissions } from '../hooks/useCommissions';
+import { useSupabaseSubscriptions } from '../hooks/useSupabaseSubscriptions';
+import { SupabaseDatabaseManager } from '../services/SupabaseDatabaseManager';
 import { 
   Search, 
   Users, 
@@ -109,7 +111,7 @@ export function ClientHub() {
   const [sortBy, setSortBy] = useState('lastContact');
   
   // Add purchase tracking using EXISTING working commission system
-  const { commissions } = useCommissions('SJ2024');
+  const { commissions } = useCommissions('WB2025991');
   
   
   // Helper function to get purchase data by session (using existing commission data)
@@ -161,20 +163,42 @@ export function ClientHub() {
   // No mock data - all clients are generated from actual assessment sessions
 
   // Load and merge client data with real-time assessment data
-  const loadClientData = useCallback(() => {
+  const loadClientData = useCallback(async () => {
     setIsLoading(true);
     
-    // Process immediately - removed artificial delay for performance
     try {
-      // Load real-time tracking data from localStorage (ORIGINAL WORKING LOGIC)
-      const trackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]') as TrackingEvent[];
+      // PRODUCTION-READY: Pure database approach (fixed column name issue)
+      const databaseManager = new SupabaseDatabaseManager();
+      await databaseManager.initialize();
       
-      console.log('📊 Loading tracking data from localStorage:', trackingData.length, 'events');
+      const trackingData = await databaseManager.getAssessmentTrackingData('WB2025991');
       
-      // Group events by assessment code (ORIGINAL WORKING LOGIC)
+      console.log('📊 Loading tracking data from DATABASE (PRODUCTION):', trackingData.length, 'events for WB2025991');
+      
+      // Convert database records to TrackingEvent format (using ACTUAL schema)
+      const convertedEvents: TrackingEvent[] = trackingData.map(record => ({
+        distributorId: 'WB2025991',
+        code: record.event_data?.original_session_id || `WB2025991-${record.id}`,
+        customerName: record.event_data?.customer_name || 'Unknown',
+        customerEmail: record.event_data?.customer_email || 'unknown@email.com',
+        event: record.event_data?.metadata?.event || record.event_type,
+        timestamp: new Date(record.timestamp).getTime(),
+        priority: record.event_data?.metadata?.priority || record.event_data?.assessment_type || 'health',
+        questionNumber: record.event_data?.metadata?.questionNumber || record.event_data?.current_step,
+        totalQuestions: record.event_data?.metadata?.totalQuestions || record.event_data?.total_steps,
+        score: record.event_data?.score
+      }));
+
+      console.log('📊 Converted database records to events:', convertedEvents.length);
+
+      // Group events by assessment code - SORT BY TIMESTAMP FOR CORRECT PROGRESS
       const clientMap = new Map<string, AssessmentSession>();
       
-      trackingData.forEach(event => {
+      // Sort events chronologically (oldest first) for correct progress calculation
+      const sortedEvents = convertedEvents.sort((a, b) => a.timestamp - b.timestamp);
+      console.log('📊 Sorted events chronologically for correct progress calculation');
+      
+      sortedEvents.forEach(event => {
         if (!clientMap.has(event.code)) {
           clientMap.set(event.code, {
             code: event.code,
@@ -197,15 +221,22 @@ export function ClientHub() {
           client.status = 'in_progress';
         } else if (event.event === 'question_answered') {
           client.status = 'in_progress';
-          // ORIGINAL WORKING PROGRESS CALCULATION
+          // SESSION-SPECIFIC PROGRESS CALCULATION
           console.log('🎯 Dashboard received question_answered event:', {
+            sessionCode: event.code,
             questionNumber: event.questionNumber,
             totalQuestions: event.totalQuestions,
             clientName: event.customerName
           });
-          if (event.questionNumber && event.totalQuestions) {
-            client.progress = Math.round((event.questionNumber / event.totalQuestions) * 100);
-            console.log('📊 Updated client progress:', client.progress + '%');
+          
+          // Only process if this event belongs to THIS client's session
+          if (event.code === client.code && event.questionNumber && event.totalQuestions) {
+            const newProgress = Math.round((event.questionNumber / event.totalQuestions) * 100);
+            // Only update if this is higher progress (in case events are out of order)
+            client.progress = Math.max(client.progress, newProgress);
+            console.log('📊 Updated client progress for', event.code + ':', client.progress + '% (question', event.questionNumber, 'of', event.totalQuestions + ')');
+          } else if (event.code !== client.code) {
+            console.log('🔄 Skipping event for different session:', event.code, '(current client:', client.code + ')');
           } else {
             console.log('❌ Missing questionNumber or totalQuestions in event:', event);
           }
@@ -232,6 +263,19 @@ export function ClientHub() {
       });
       
       console.log('📊 Processed client summaries:', Object.keys(sessions).length, 'clients');
+      
+      // Log final progress for each client for debugging
+      Object.values(sessions).forEach(session => {
+        const questionEvents = session.events.filter(e => e.event === 'question_answered');
+        const maxQuestion = Math.max(...questionEvents.map(e => e.questionNumber || 0));
+        console.log('📈 Final progress for', session.code + ':', {
+          clientName: questionEvents[0]?.customerName || 'Unknown',
+          progress: session.progress + '%',
+          questionsAnswered: questionEvents.length,
+          maxQuestionReached: maxQuestion,
+          totalQuestions: questionEvents[0]?.totalQuestions || 0
+        });
+      });
       
       // Debug LIVE detection
       const now = Date.now();
@@ -340,67 +384,20 @@ export function ClientHub() {
       setIsLoading(false);
   }, []);
 
-  // Load data on component mount and set up real-time listeners (ORIGINAL WORKING LOGIC)
+  // Supabase real-time subscriptions hook (must be after loadClientData definition)
+  const subscriptions = useSupabaseSubscriptions('WB2025991', loadClientData);
+
+  // Load data on component mount - real-time subscriptions handled by useSupabaseSubscriptions hook
   useEffect(() => {
     loadClientData();
     
-    // Method 1: BroadcastChannel listener (modern browsers) - ORIGINAL WORKING LOGIC
-    let broadcastChannel: BroadcastChannel | null = null;
-    if (typeof BroadcastChannel !== 'undefined') {
-      broadcastChannel = new BroadcastChannel('maxpulse-tracking');
-      broadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-          console.log('📊 Received real-time tracking update (BroadcastChannel):', event.data.data);
-          
-          // Add the new tracking event to localStorage - ORIGINAL WORKING LOGIC
-          const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-          existingTracking.push(event.data.data);
-          localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-          
-          // Immediately refresh the dashboard
-          loadClientData();
-        }
-      };
-    }
-    
-    // Method 2: postMessage listener (for opener/opened windows) - ORIGINAL WORKING LOGIC
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-        console.log('📊 Received real-time tracking update (postMessage):', event.data.data);
-        
-        // Add the new tracking event to localStorage - ORIGINAL WORKING LOGIC
-        const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-        existingTracking.push(event.data.data);
-        localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-        
-        // Immediately refresh the dashboard
-        loadClientData();
-      }
-    };
-    
-    // Method 3: localStorage event listener (fallback) - ORIGINAL WORKING LOGIC
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'assessment-tracking' && event.newValue) {
-        console.log('📊 Received real-time tracking update (localStorage event)');
-        loadClientData();
-      }
-    };
-    
-    window.addEventListener('message', handleMessage);
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Refresh every 30 seconds as backup
+    // Auto-refresh every 30 seconds as backup
     const interval = setInterval(loadClientData, 30000);
     
     return () => {
-      if (broadcastChannel) {
-        broadcastChannel.close();
-      }
-      window.removeEventListener('message', handleMessage);
-      window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [loadClientData]);
+  }, []);
 
   // Filter and sort clients - memoized for performance
   const filteredClients = useMemo(() => {
@@ -480,12 +477,31 @@ export function ClientHub() {
     ));
   };
 
+  // Helper function to clean old distributor data from localStorage
+  const cleanOldDistributorData = () => {
+    try {
+      const allTrackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]') as TrackingEvent[];
+      
+      // Keep only WB2025991 data, remove all SJ2024 and other old data
+      const cleanedData = allTrackingData.filter(event => 
+        event.distributorId === 'WB2025991' || event.code?.startsWith('WB2025991-')
+      );
+      
+      localStorage.setItem('assessment-tracking', JSON.stringify(cleanedData));
+      
+      console.log('🧹 Cleaned localStorage:', allTrackingData.length, '→', cleanedData.length, 'events');
+      loadClientData(); // Refresh the data
+    } catch (error) {
+      console.error('Error cleaning old data:', error);
+    }
+  };
+
   // Test function to simulate LIVE tracking data
   const addTestLiveData = () => {
     const testTrackingData = [
       {
-        distributorId: 'SJ2024',
-        code: 'SJ2024-test-live-client-' + Date.now().toString(36),
+        distributorId: 'WB2025991',
+        code: 'WB2025991-test-live-client-' + Date.now().toString(36),
         customerName: 'Jennifer Martinez',
         customerEmail: 'jennifer.m@email.com',
         event: 'question_answered',
@@ -536,6 +552,14 @@ export function ClientHub() {
           >
             <Activity className="h-4 w-4 mr-2" />
             Test LIVE
+          </Button>
+          <Button 
+            onClick={cleanOldDistributorData} 
+            variant="outline" 
+            size="sm"
+            className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+          >
+            🧹 Clean Old Data
           </Button>
           <Button onClick={() => setShowAddClient(true)}>
             <UserPlus className="h-4 w-4 mr-2" />

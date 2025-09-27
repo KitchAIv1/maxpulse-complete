@@ -27,6 +27,10 @@ import {
   handleDynamicBranching 
 } from './utils/assessment';
 import { wealthQuestions } from './data/wealthQuestions';
+import { SupabaseDualWriteManager, AssessmentTrackingData } from './services/SupabaseDualWriteManager';
+import { SupabaseRealtimeManager } from './services/SupabaseRealtimeManager';
+import { AssessmentCompletionManager, AssessmentCompletionData } from './services/AssessmentCompletionManager';
+import { FeatureFlags } from './utils/featureFlags';
 
 // Import video to ensure it's properly bundled
 import assessmentBackgroundVideoSrc from '/videoversion.mp4?url';
@@ -84,8 +88,49 @@ export default function App() {
     questionAnswerTime: 0
   });
   const [showProgressRecovery, setShowProgressRecovery] = useState(false);
+  
+  // Supabase managers for database integration
+  const [dualWriteManager] = useState(() => new SupabaseDualWriteManager());
+  const [realtimeManager] = useState(() => new SupabaseRealtimeManager());
+  const [completionManager] = useState(() => new AssessmentCompletionManager());
   const [distributorInfo, setDistributorInfo] = useState<DistributorInfo | null>(null);
   const isMobile = useIsMobile();
+
+  // Initialize Supabase managers
+  useEffect(() => {
+    const initializeSupabaseManagers = async () => {
+      console.log('🔄 Initializing Supabase managers...', {
+        debugMode: FeatureFlags.debugMode,
+        useSupabase: FeatureFlags.useSupabase,
+        useDatabaseSubscriptions: FeatureFlags.useDatabaseSubscriptions,
+        distributorInfo: distributorInfo
+      });
+      
+      try {
+        // Initialize dual-write manager
+        const dualWriteSuccess = await dualWriteManager.initialize();
+        console.log('🔄 Dual-write manager initialized:', dualWriteSuccess);
+        
+        // Initialize completion manager
+        const completionSuccess = await completionManager.initialize();
+        console.log('🔄 Completion manager initialized:', completionSuccess);
+        
+        // Initialize real-time manager if distributor info is available
+        if (distributorInfo?.distributorId) {
+          const realtimeSuccess = await realtimeManager.initialize(distributorInfo.distributorId);
+          console.log('🔄 Real-time manager initialized:', realtimeSuccess);
+        } else {
+          console.log('⏳ Waiting for distributor info to initialize real-time manager');
+        }
+        
+        console.log('✅ All Supabase managers initialization complete');
+      } catch (error) {
+        console.error('❌ Failed to initialize Supabase managers:', error);
+      }
+    };
+    
+    initializeSupabaseManagers();
+  }, [distributorInfo?.distributorId, dualWriteManager, realtimeManager, completionManager]);
 
   // Parse URL parameters for distributor tracking with session isolation
   useEffect(() => {
@@ -206,8 +251,8 @@ export default function App() {
     setAppState('priority');
   };
 
-  // Progress tracking function with session isolation
-  const trackProgress = (event: string, data: any = {}) => {
+  // Progress tracking function with session isolation and Supabase integration
+  const trackProgress = async (event: string, data: any = {}) => {
     if (!distributorInfo) return;
 
     const sessionId = localStorage.getItem('current-session-id');
@@ -246,7 +291,77 @@ export default function App() {
     globalTracking.push(trackingData);
     localStorage.setItem('assessment-tracking', JSON.stringify(globalTracking));
 
-    // Send real-time updates to MAXPULSE Platform
+    // NEW: Supabase dual-write integration
+    try {
+      // Prepare data for Supabase
+      const supabaseTrackingData: AssessmentTrackingData = {
+        sessionId: sessionId || '',
+        distributorId: distributorInfo.distributorId,
+        customerName: distributorInfo.customerName || '',
+        customerEmail: distributorInfo.customerEmail || '',
+        assessmentType: selectedPriority === 'both' ? 'hybrid' : (selectedPriority || 'health'),
+        currentStep: data.questionNumber || currentQuestionIndex + 1,
+        totalSteps: data.totalQuestions || getCurrentQuestions(selectedPriority, answers).length,
+        progress: data.questionNumber && data.totalQuestions 
+          ? Math.round((data.questionNumber / data.totalQuestions) * 100) 
+          : 0,
+        status: event === 'assessment_started' ? 'started' : 
+                event === 'assessment_completed' ? 'completed' : 'in_progress',
+        startedAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+        completedAt: event === 'assessment_completed' ? new Date().toISOString() : undefined,
+        responses: Object.keys(answers).length > 0 ? [answers] : undefined,
+        metadata: {
+          event,
+          priority: selectedPriority,
+          userAgent: navigator.userAgent,
+          timestamp: trackingData.timestamp,
+          ...data
+        }
+      };
+
+      // Write to both localStorage and Supabase
+      await dualWriteManager.writeAssessmentTracking(supabaseTrackingData);
+
+      // Send real-time event to dashboard
+      await realtimeManager.sendAssessmentEvent({
+        type: event,
+        sessionId: sessionId || '',
+        distributorId: distributorInfo.distributorId,
+        data: trackingData,
+        timestamp: new Date().toISOString()
+      });
+
+      // Handle assessment completion - create client_assessments record
+      if (event === 'assessment_completed') {
+        const completionData: AssessmentCompletionData = {
+          sessionId: sessionId || '',
+          distributorId: distributorInfo.distributorId,
+          customerName: distributorInfo.customerName || 'Anonymous',
+          customerEmail: distributorInfo.customerEmail || '',
+          assessmentType: selectedPriority || 'health',
+          responses: answers,
+          results: data.results || {},
+          score: data.score || null,
+          completedAt: new Date().toISOString()
+        };
+
+        const completionSuccess = await completionManager.processAssessmentCompletion(completionData);
+        
+        if (FeatureFlags.debugMode) {
+          console.log('🎯 Assessment completion processed:', {
+            success: completionSuccess,
+            sessionId: sessionId,
+            customerName: distributorInfo.customerName
+          });
+        }
+      }
+
+    } catch (error) {
+      console.warn('⚠️ Supabase tracking failed (fallback to localStorage only):', error);
+    }
+
+    // Send real-time updates to MAXPULSE Platform (existing system)
     try {
       // Method 1: BroadcastChannel for cross-tab communication (modern browsers)
       if (typeof BroadcastChannel !== 'undefined') {
@@ -280,13 +395,6 @@ export default function App() {
         data: trackingData,
         timestamp: Date.now()
       }));
-      
-      // For production: Send to backend API
-      // await fetch('/api/tracking', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(trackingData)
-      // });
       
     } catch (error) {
       console.warn('Could not send tracking data to platform:', error);

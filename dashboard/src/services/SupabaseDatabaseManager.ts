@@ -20,6 +20,7 @@ export interface DatabaseSubscription {
 export class SupabaseDatabaseManager {
   private subscriptions: Map<string, any> = new Map();
   private isInitialized = false;
+  private assessmentTrackingCallback: ((payload: any) => void) | null = null;
 
   /**
    * Initialize database subscription system
@@ -52,10 +53,44 @@ export class SupabaseDatabaseManager {
   }
 
   /**
+   * Resolve distributor code to UUID
+   */
+  private async resolveDistributorId(distributorCode: string): Promise<string | null> {
+    try {
+      const { data, error } = await supabase
+        .from('distributor_profiles')
+        .select('id')
+        .eq('distributor_code', distributorCode)
+        .single();
+
+      if (error || !data) {
+        console.error('❌ Distributor not found:', distributorCode, error?.message);
+        return null;
+      }
+
+      return data.id;
+    } catch (error) {
+      console.error('❌ Error resolving distributor ID:', error);
+      return null;
+    }
+  }
+
+  /**
    * Subscribe to assessment tracking table
    */
-  async subscribeToAssessmentTracking(distributorId: string): Promise<boolean> {
+  async subscribeToAssessmentTracking(distributorId: string, callback?: (payload: any) => void): Promise<boolean> {
+    // Store the callback for direct updates
+    if (callback) {
+      this.assessmentTrackingCallback = callback;
+    }
     if (!this.isInitialized) {
+      return false;
+    }
+
+    // Resolve distributor code to UUID for proper filtering
+    const distributorUuid = await this.resolveDistributorId(distributorId);
+    if (!distributorUuid) {
+      console.error('❌ Cannot subscribe: Distributor not found:', distributorId);
       return false;
     }
 
@@ -70,7 +105,7 @@ export class SupabaseDatabaseManager {
             event: '*',
             schema: 'public',
             table: 'assessment_tracking',
-            filter: `distributor_id=eq.${distributorId}`
+            filter: `distributor_id=eq.${distributorUuid}`
           },
           (payload) => {
             this.handleAssessmentTrackingUpdate(payload);
@@ -143,11 +178,53 @@ export class SupabaseDatabaseManager {
 
     const { eventType, new: newRecord, old: oldRecord } = payload;
 
-    // Update localStorage for backward compatibility
-    this.updateLocalStorageTracking(eventType, newRecord, oldRecord);
+    // PURE DATABASE APPROACH - No localStorage sync needed
+    // ClientHub now reads directly from database
 
-    // Dispatch to existing systems
-    this.dispatchTrackingUpdate(eventType, newRecord);
+    // Call the callback to trigger ClientHub refresh
+    if (this.assessmentTrackingCallback) {
+      this.assessmentTrackingCallback(payload);
+    }
+  }
+
+
+  /**
+   * Get assessment tracking data from database (replaces localStorage)
+   */
+  async getAssessmentTrackingData(distributorId: string): Promise<any[]> {
+    if (!this.isInitialized) {
+      return [];
+    }
+
+    try {
+      // Resolve distributor code to UUID
+      const distributorUuid = await this.resolveDistributorId(distributorId);
+      if (!distributorUuid) {
+        console.error('❌ Cannot fetch data: Distributor not found:', distributorId);
+        return [];
+      }
+
+      const { data, error } = await supabase
+        .from('assessment_tracking')
+        .select('*')
+        .eq('distributor_id', distributorUuid)
+        .order('timestamp', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching assessment tracking data:', error);
+        return [];
+      }
+
+      if (FeatureFlags.debugMode) {
+        console.log('📊 Fetched assessment tracking data from database:', data?.length || 0, 'records');
+      }
+
+      return data || [];
+
+    } catch (error) {
+      console.error('❌ Error in getAssessmentTrackingData:', error);
+      return [];
+    }
   }
 
   /**

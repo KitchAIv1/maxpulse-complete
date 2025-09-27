@@ -65,11 +65,11 @@ export function useAuthentication() {
 
   const createDemoUser = (role: string, email?: string) => {
     return {
-      id: role === 'admin' ? 'admin-1' : role === 'trainer' ? 'trainer-1' : 'SJ2024',
+      id: role === 'admin' ? 'admin-1' : role === 'trainer' ? 'trainer-1' : 'WB2025991',
       name: role === 'admin' ? 'Admin User' : role === 'trainer' ? 'Dr. Michael Chen' : 'Sarah Johnson',
       email: email || (role === 'admin' ? 'admin@maxpulse.com' : role === 'trainer' ? 'trainer@maxpulse.com' : 'sarah@maxpulse.com'),
       level: role === 'admin' ? 'Administrator' : role === 'trainer' ? 'Senior Trainer' : 'Gold Distributor',
-      distributorCode: role === 'admin' || role === 'trainer' ? null : 'SJ2024',
+      distributorCode: role === 'admin' || role === 'trainer' ? null : 'WB2025991',
       specialization: role === 'trainer' ? 'Health & Wellness Expert' : null,
       avatar: `https://ui-avatars.com/api/?name=${role === 'admin' ? 'Admin+User' : role === 'trainer' ? 'Dr+Michael+Chen' : 'Sarah+Johnson'}&background=8B1538&color=fff`
     };

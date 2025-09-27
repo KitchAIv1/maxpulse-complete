@@ -35,7 +35,7 @@ export function AssessmentLanding() {
       // In real implementation, this would make an API call to get distributor info
       // For now, we'll use mock data based on the distributor ID
       const mockDistributorData: Record<string, any> = {
-        'SJ2024': {
+        'WB2025991': {
           name: 'Sarah Johnson',
           level: 'Gold Distributor',
           successRate: '92%'

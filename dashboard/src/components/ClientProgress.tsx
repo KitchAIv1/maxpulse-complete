@@ -47,6 +47,10 @@ interface ClientProgressSummary {
   events: TrackingEvent[];
 }
 
+/**
+ * @deprecated This component uses localStorage and should be replaced with ClientHub
+ * ClientHub now uses pure Supabase database subscriptions for production-ready tracking
+ */
 export function ClientProgress() {
   const [clientSummaries, setClientSummaries] = useState<ClientProgressSummary[]>([]);
   const [selectedClient, setSelectedClient] = useState<ClientProgressSummary | null>(null);
