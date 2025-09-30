@@ -72,40 +72,101 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
   try {
     const periodStart = new Date(Date.now() - period * 24 * 60 * 60 * 1000).toISOString();
     
-    // Get assessment statistics
-    const { data: assessmentStats } = await supabase
-      .from('assessments')
-      .select('id, assessment_type, status, created_at')
-      .eq('distributor_id', distributorId)
-      .gte('created_at', periodStart);
+    // 🔍 CRITICAL FIX: Resolve distributor code to UUID
+    let distributorUuid = distributorId;
     
-    // Get commission statistics
-    const { data: commissionStats } = await supabase
-      .from('commissions')
-      .select('commission_amount, status, created_at, product_type')
-      .eq('distributor_id', distributorId)
-      .gte('created_at', periodStart);
+    // If distributorId looks like a code (not UUID), resolve it
+    if (!distributorId.includes('-')) {
+      console.log(`🔍 Resolving distributor code ${distributorId} to UUID...`);
+      
+      const { data: distributorData, error: distributorError } = await supabase
+        .from('distributor_profiles')
+        .select('id')
+        .eq('distributor_code', distributorId)
+        .single();
+      
+      if (distributorError || !distributorData) {
+        console.error(`❌ Distributor ${distributorId} not found:`, distributorError);
+        // Return empty stats instead of failing
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            stats: getEmptyStats(period, periodStart)
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      distributorUuid = distributorData.id;
+      console.log(`✅ Resolved ${distributorId} to UUID: ${distributorUuid}`);
+    }
     
-    // Get client statistics
-    const { data: clientStats } = await supabase
-      .from('clients')
-      .select('id, status, priority, created_at')
-      .eq('distributor_id', distributorId)
-      .gte('created_at', periodStart);
+    // Get assessment statistics from assessment_tracking table
+    const { data: assessmentStats, error: assessmentError } = await supabase
+      .from('assessment_tracking')
+      .select('id, event_type, event_data, timestamp')
+      .eq('distributor_id', distributorUuid)
+      .gte('timestamp', periodStart);
     
-    // Get link performance
-    const { data: linkStats } = await supabase
-      .from('assessment_links')
-      .select('click_count, conversion_count, created_at')
-      .eq('distributor_id', distributorId);
+    console.log(`🔍 Assessment query result: ${assessmentStats?.length || 0} records found`);
+    if (assessmentError) {
+      console.error('❌ Assessment query error:', assessmentError);
+    }
+    if (assessmentStats?.length > 0) {
+      console.log('📊 Sample assessment record:', assessmentStats[0]);
+    }
     
-    // Calculate metrics
-    const totalAssessments = assessmentStats?.length || 0;
-    const completedAssessments = assessmentStats?.filter(a => a.status === 'completed').length || 0;
+    // Get commission statistics (table may not exist yet, handle gracefully)
+    let commissionStats = [];
+    try {
+      const { data } = await supabase
+        .from('commissions')
+        .select('commission_amount, status, created_at, product_type')
+        .eq('distributor_id', distributorUuid)
+        .gte('created_at', periodStart);
+      commissionStats = data || [];
+    } catch (error) {
+      console.log('ℹ️ Commissions table not found, using empty data');
+      commissionStats = [];
+    }
+    
+    // Get client statistics from assessment_tracking (unique clients)
+    const { data: clientTrackingData, error: clientError } = await supabase
+      .from('assessment_tracking')
+      .select('client_info, timestamp')
+      .eq('distributor_id', distributorUuid)
+      .gte('timestamp', periodStart)
+      .not('client_info', 'is', null);
+    
+    console.log(`🔍 Client query result: ${clientTrackingData?.length || 0} records found`);
+    if (clientError) {
+      console.error('❌ Client query error:', clientError);
+    }
+    
+    // Get link performance (table may not exist yet, handle gracefully)
+    let linkStats = [];
+    try {
+      const { data } = await supabase
+        .from('assessment_links')
+        .select('click_count, conversion_count, created_at')
+        .eq('distributor_id', distributorUuid);
+      linkStats = data || [];
+    } catch (error) {
+      console.log('ℹ️ Assessment_links table not found, using empty data');
+      linkStats = [];
+    }
+    
+    // Calculate metrics from assessment_tracking data
+    const uniqueSessions = new Set(assessmentStats?.map(a => a.id) || []).size;
+    const completedAssessments = assessmentStats?.filter(a => a.event_type === 'assessment_completed').length || 0;
     const totalRevenue = commissionStats?.reduce((sum, c) => sum + (c.commission_amount || 0), 0) || 0;
     const pendingCommissions = commissionStats?.filter(c => c.status === 'pending').length || 0;
-    const totalClients = clientStats?.length || 0;
-    const highPriorityClients = clientStats?.filter(c => c.priority === 'high').length || 0;
+    
+    // Calculate unique clients from client_info
+    const uniqueClients = new Set(
+      clientTrackingData?.map(c => c.client_info?.email || c.client_info?.name).filter(Boolean) || []
+    ).size;
+    
     const totalClicks = linkStats?.reduce((sum, l) => sum + (l.click_count || 0), 0) || 0;
     const totalConversions = linkStats?.reduce((sum, l) => sum + (l.conversion_count || 0), 0) || 0;
     
@@ -114,11 +175,11 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
     const previousPeriodEnd = periodStart;
     
     const { data: previousAssessments } = await supabase
-      .from('assessments')
+      .from('assessment_tracking')
       .select('id')
       .eq('distributor_id', distributorId)
-      .gte('created_at', previousPeriodStart)
-      .lt('created_at', previousPeriodEnd);
+      .gte('timestamp', previousPeriodStart)
+      .lt('timestamp', previousPeriodEnd);
     
     const { data: previousCommissions } = await supabase
       .from('commissions')
@@ -132,7 +193,7 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
     
     // Calculate trends
     const assessmentTrend = previousAssessmentCount > 0 
-      ? ((totalAssessments - previousAssessmentCount) / previousAssessmentCount) * 100 
+      ? ((uniqueSessions - previousAssessmentCount) / previousAssessmentCount) * 100 
       : 0;
     const revenueTrend = previousRevenue > 0 
       ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 
@@ -145,9 +206,9 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
         end: new Date().toISOString()
       },
       assessments: {
-        total: totalAssessments,
+        total: uniqueSessions,
         completed: completedAssessments,
-        completionRate: totalAssessments > 0 ? (completedAssessments / totalAssessments) * 100 : 0,
+        completionRate: uniqueSessions > 0 ? (completedAssessments / uniqueSessions) * 100 : 0,
         trend: Math.round(assessmentTrend * 100) / 100
       },
       revenue: {
@@ -156,11 +217,11 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
         trend: Math.round(revenueTrend * 100) / 100
       },
       clients: {
-        total: totalClients,
-        highPriority: highPriorityClients,
-        leads: clientStats?.filter(c => c.status === 'lead').length || 0,
-        prospects: clientStats?.filter(c => c.status === 'prospect').length || 0,
-        customers: clientStats?.filter(c => c.status === 'customer').length || 0
+        total: uniqueClients,
+        highPriority: 0, // Not available in current data structure
+        leads: 0, // Not available in current data structure
+        prospects: 0, // Not available in current data structure
+        customers: uniqueClients // All clients are considered customers for now
       },
       links: {
         totalClicks: totalClicks,
@@ -170,7 +231,7 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
       breakdown: {
         assessmentTypes: getAssessmentTypeBreakdown(assessmentStats),
         productTypes: getProductTypeBreakdown(commissionStats),
-        clientSources: getClientSourceBreakdown(clientStats)
+        clientSources: getClientSourceBreakdown(clientTrackingData)
       }
     };
     
@@ -344,7 +405,8 @@ function getAssessmentTypeBreakdown(assessments: any[]) {
   if (!assessments) return {};
   
   return assessments.reduce((acc, assessment) => {
-    acc[assessment.assessment_type] = (acc[assessment.assessment_type] || 0) + 1;
+    const type = assessment.event_data?.priority || assessment.event_type || 'unknown';
+    acc[type] = (acc[type] || 0) + 1;
     return acc;
   }, {});
 }
@@ -358,11 +420,11 @@ function getProductTypeBreakdown(commissions: any[]) {
   }, {});
 }
 
-function getClientSourceBreakdown(clients: any[]) {
-  if (!clients) return {};
+function getClientSourceBreakdown(clientData: any[]) {
+  if (!clientData) return {};
   
-  return clients.reduce((acc, client) => {
-    const source = client.source || 'unknown';
+  return clientData.reduce((acc, client) => {
+    const source = 'assessment_link'; // All clients come from assessment links for now
     acc[source] = (acc[source] || 0) + 1;
     return acc;
   }, {});
@@ -510,4 +572,45 @@ async function trackPerformanceMetric(
   } catch (error) {
     console.warn('⚠️ Failed to track performance metric:', error);
   }
+}
+
+/**
+ * Get empty stats structure for when no data is found
+ */
+function getEmptyStats(period: number, periodStart: string) {
+  return {
+    period: {
+      days: period,
+      start: periodStart,
+      end: new Date().toISOString()
+    },
+    assessments: {
+      total: 0,
+      completed: 0,
+      completionRate: 0,
+      trend: 0
+    },
+    revenue: {
+      total: 0,
+      pending: 0,
+      trend: 0
+    },
+    clients: {
+      total: 0,
+      highPriority: 0,
+      leads: 0,
+      prospects: 0,
+      customers: 0
+    },
+    links: {
+      totalClicks: 0,
+      totalConversions: 0,
+      conversionRate: 0
+    },
+    breakdown: {
+      assessmentTypes: {},
+      productTypes: {},
+      clientSources: {}
+    }
+  };
 }
