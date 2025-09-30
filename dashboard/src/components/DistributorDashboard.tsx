@@ -386,21 +386,21 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Monthly Assessments</p>
                       <p className="text-xl lg:text-2xl text-gray-900">
-                        {statsLoading ? '...' : (dashboardData?.monthlyStats.assessments.current || fallbackData.monthlyStats.assessments.current)}
+                        {statsLoading ? '...' : (supabaseStats?.assessments?.total || dashboardData?.monthlyStats.assessments.current || fallbackData.monthlyStats.assessments.current)}
                       </p>
                     </div>
                     <Target className="h-6 w-6 lg:h-8 lg:w-8 text-brand-primary" />
                   </div>
                   <div className="flex items-center mt-2">
-                    {!statsLoading && (dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? (
+                    {!statsLoading && (supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? (
                       <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
                     ) : (
                       <TrendingDown className="h-3 w-3 lg:h-4 lg:w-4 text-red-600 mr-1" />
                     )}
                     <span className={`text-xs lg:text-sm ${
-                      !statsLoading && (dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                      !statsLoading && (supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {statsLoading ? '...' : `${(dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.assessments.trend || 0}%`}
+                      {statsLoading ? '...' : `${(supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? '+' : ''}${supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0}%`}
                     </span>
                   </div>
                 </Card>
@@ -410,7 +410,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Total Revenue</p>
                       <p className="text-xl lg:text-2xl text-gray-900">
-                        ${statsLoading ? '...' : (dashboardData?.monthlyStats.revenue.current || fallbackData.monthlyStats.revenue.current)}
+                        ${statsLoading ? '...' : (supabaseStats?.revenue?.total || dashboardData?.monthlyStats.revenue.current || fallbackData.monthlyStats.revenue.current)}
                       </p>
                     </div>
                     <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-brand-primary" />
@@ -430,7 +430,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Active Clients</p>
                       <p className="text-xl lg:text-2xl text-gray-900">
-                        {statsLoading ? '...' : (dashboardData?.monthlyStats.clients.current || fallbackData.monthlyStats.clients.current)}
+                        {statsLoading ? '...' : (supabaseStats?.clients?.total || dashboardData?.monthlyStats.clients.current || fallbackData.monthlyStats.clients.current)}
                       </p>
                     </div>
                     <Users className="h-6 w-6 lg:h-8 lg:w-8 text-brand-secondary" />
@@ -448,7 +448,7 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
                     <div>
                       <p className="text-xs lg:text-sm text-gray-700">Conversion Rate</p>
                       <p className="text-xl lg:text-2xl text-gray-900">
-                        {statsLoading ? '...' : `${dashboardData?.monthlyStats.conversion.current || fallbackData.monthlyStats.conversion.current}%`}
+                        {statsLoading ? '...' : `${supabaseStats?.assessments?.completionRate?.toFixed(1) || dashboardData?.monthlyStats.conversion.current || fallbackData.monthlyStats.conversion.current}%`}
                       </p>
                     </div>
                     <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-orange-600" />

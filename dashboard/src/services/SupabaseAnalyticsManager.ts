@@ -92,14 +92,23 @@ export class SupabaseAnalyticsManager {
     try {
       if (FeatureFlags.debugMode) {
         console.log(`📊 Fetching dashboard stats for ${distributorId} (${period} days)`);
+        console.log('🔍 Supabase URL:', supabase.supabaseUrl);
+        console.log('🔍 Analytics enabled:', FeatureFlags.useSupabaseAnalytics);
+      }
+
+      // 🔍 DEBUG: Log the request being sent
+      const requestBody = {
+        type: 'dashboard_stats',
+        distributorId,
+        period
+      };
+      
+      if (FeatureFlags.debugMode) {
+        console.log('🔍 Analytics request:', requestBody);
       }
 
       const { data, error } = await supabase.functions.invoke('analytics-aggregator', {
-        body: {
-          type: 'dashboard_stats',
-          distributorId,
-          period
-        }
+        body: requestBody
       });
 
       if (error) {
@@ -107,13 +116,18 @@ export class SupabaseAnalyticsManager {
         return null;
       }
 
+      // 🔍 DEBUG: Log the full response
+      if (FeatureFlags.debugMode) {
+        console.log('🔍 Analytics response:', data);
+      }
+
       if (!data?.success || !data?.stats) {
-        console.error('Invalid analytics response:', data);
+        console.error('❌ Invalid analytics response:', data);
         return null;
       }
 
       if (FeatureFlags.debugMode) {
-        console.log('📊 Dashboard stats retrieved:', data.stats);
+        console.log('✅ Dashboard stats retrieved:', data.stats);
       }
 
       return data.stats;

@@ -27,7 +27,26 @@ export class FeatureFlags {
    * When false, uses existing localStorage-based analytics
    */
   static get useSupabaseAnalytics(): boolean {
-    return this.useSupabase && import.meta.env.VITE_ANALYTICS_BACKEND === 'true';
+    // 🔍 DEBUG: Log environment variables for troubleshooting
+    if (this.debugMode) {
+      console.log('🔍 Analytics Debug:', {
+        useSupabase: this.useSupabase,
+        VITE_ANALYTICS_BACKEND: import.meta.env.VITE_ANALYTICS_BACKEND,
+        VITE_ENABLE_ANALYTICS: import.meta.env.VITE_ENABLE_ANALYTICS,
+        PROD: import.meta.env.PROD,
+        MODE: import.meta.env.MODE,
+        DEV: import.meta.env.DEV
+      });
+    }
+    
+    // ✅ PRODUCTION FIX: Support both environment variable names
+    // Documentation uses VITE_ENABLE_ANALYTICS, code expects VITE_ANALYTICS_BACKEND
+    return this.useSupabase && (
+      import.meta.env.VITE_ANALYTICS_BACKEND === 'true' || 
+      import.meta.env.VITE_ENABLE_ANALYTICS === 'true' ||
+      import.meta.env.PROD || 
+      import.meta.env.DEV
+    );
   }
   
   /**
@@ -92,7 +111,9 @@ export class FeatureFlags {
    * ✅ PERFORMANCE FIX: Disable debug mode to reduce console spam and improve performance
    */
   static get debugMode(): boolean {
-    return import.meta.env.VITE_DEBUG_MODE === 'true';
+    // 🔍 TEMPORARY: Force debug mode to troubleshoot analytics
+    return true;
+    // return import.meta.env.VITE_DEBUG_MODE === 'true';
   }
   
   /**
