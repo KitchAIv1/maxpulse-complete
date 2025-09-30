@@ -523,87 +523,103 @@ export function ClientHub({ user }: ClientHubProps) {
     console.log('🔍 Extracted values:', { sessionId, eventType, currentStep, totalSteps });
     console.log('🔍 Raw eventData:', eventData);
     
-    if (sessionId && eventType && currentStep && totalSteps) {
-      // Calculate accurate progress from event data
-      const newProgress = Math.round((currentStep / totalSteps) * 100);
-      
-      console.log('📊 Calculated progress:', newProgress + '%', `(${currentStep}/${totalSteps})`);
-      
-      // 🎯 MICRO-UPDATE: Update DOM directly without React re-render
-      const progressElements = document.querySelectorAll(`[data-session-id="${sessionId}"]`);
-      
-      console.log('🔍 Looking for DOM elements with session ID:', sessionId);
-      console.log('🔍 Found elements:', progressElements.length);
-      
-      if (progressElements.length > 0) {
-        progressElements.forEach(element => {
-          // Update progress bar width
-          const progressBar = element.querySelector('.progress-bar');
-          if (progressBar) {
-            (progressBar as HTMLElement).style.width = `${newProgress}%`;
+        if (sessionId && eventType) {
+          // Handle different event types
+          let newProgress = 100; // Default for completion events
+          let shouldUpdateProgress = false;
+          
+          if (currentStep && totalSteps) {
+            // Question progress events
+            newProgress = Math.round((currentStep / totalSteps) * 100);
+            shouldUpdateProgress = true;
+            console.log('📊 Calculated progress:', newProgress + '%', `(${currentStep}/${totalSteps})`);
+          } else if (eventType === 'assessment_completed') {
+            // Completion events - set to 100%
+            newProgress = 100;
+            shouldUpdateProgress = true;
+            console.log('🏁 Assessment completed:', sessionId);
+          } else {
+            // Other events (insights_viewed, plan_viewed) - don't update progress
+            console.log('ℹ️ Non-progress event:', eventType);
           }
           
-          // Update progress text
-          const progressText = element.querySelector('.progress-text');
-          if (progressText) {
-            progressText.textContent = `${newProgress}%`;
-          }
-          
-          // Update status text if completed
-          if (eventType === 'assessment_completed') {
-            const statusText = element.querySelector('.status-text');
-            if (statusText) {
-              statusText.textContent = 'completed';
+          if (shouldUpdateProgress) {
+            // 🎯 MICRO-UPDATE: Update DOM directly without React re-render
+            const progressElements = document.querySelectorAll(`[data-session-id="${sessionId}"]`);
+            
+            console.log('🔍 Looking for DOM elements with session ID:', sessionId);
+            console.log('🔍 Found elements:', progressElements.length);
+            
+            if (progressElements.length > 0) {
+              progressElements.forEach(element => {
+                // Update progress bar width
+                const progressBar = element.querySelector('.progress-bar');
+                if (progressBar) {
+                  (progressBar as HTMLElement).style.width = `${newProgress}%`;
+                }
+                
+                // Update progress text
+                const progressText = element.querySelector('.progress-text');
+                if (progressText) {
+                  progressText.textContent = `${newProgress}%`;
+                }
+                
+                // Update status text if completed
+                if (eventType === 'assessment_completed') {
+                  const statusText = element.querySelector('.status-text');
+                  if (statusText) {
+                    statusText.textContent = 'completed';
+                  }
+                }
+              });
+              
+              console.log('✅ Micro-update applied:', sessionId, `${newProgress}%`);
+            } else {
+              // 🚀 PRODUCTION FIX: Session not in DOM - buffer update and trigger reload
+              console.log('🔄 Session not in DOM - buffering update for:', sessionId);
+              
+              // Buffer the update for later application
+              const updateData = {
+                sessionId,
+                eventType,
+                progress: newProgress,
+                currentStep,
+                totalSteps,
+                timestamp: Date.now()
+              };
+              
+              setPendingUpdates(prev => {
+                const newMap = new Map(prev);
+                newMap.set(sessionId, updateData);
+                console.log('📦 Buffered update for session:', sessionId, `${newProgress}%`);
+                return newMap;
+              });
+              
+              // Check if it's truly new session
+              const isExistingSession = clients.some(client => 
+                client.currentAssessment?.code === sessionId ||
+                client.assessmentHistory.some(session => session.code === sessionId)
+              );
+              
+              if (!isExistingSession) {
+                console.log('🆕 New session detected - triggering immediate reload:', sessionId);
+                // Trigger immediate reload for new sessions
+                loadClientDataRef.current?.();
+              } else {
+                console.log('🔄 Existing session - will apply buffered update when DOM ready:', sessionId);
+              }
             }
           }
-        });
-        
-        console.log('✅ Micro-update applied:', sessionId, `${newProgress}%`);
-      } else {
-        // 🚀 PRODUCTION FIX: Session not in DOM - buffer update and trigger reload
-        console.log('🔄 Session not in DOM - buffering update for:', sessionId);
-        
-        // Buffer the update for later application
-        const updateData = {
-          sessionId,
-          eventType,
-          progress: newProgress,
-          currentStep,
-          totalSteps,
-          timestamp: Date.now()
-        };
-        
-        setPendingUpdates(prev => {
-          const newMap = new Map(prev);
-          newMap.set(sessionId, updateData);
-          console.log('📦 Buffered update for session:', sessionId, `${newProgress}%`);
-          return newMap;
-        });
-        
-        // Check if it's truly new session
-        const isExistingSession = clients.some(client => 
-          client.currentAssessment?.code === sessionId ||
-          client.assessmentHistory.some(session => session.code === sessionId)
-        );
-        
-        if (!isExistingSession) {
-          console.log('🆕 New session detected - triggering immediate reload:', sessionId);
-          // Trigger immediate reload for new sessions
-          loadClientDataRef.current?.();
         } else {
-          console.log('🔄 Existing session - will apply buffered update when DOM ready:', sessionId);
+          // Invalid payload - skip to prevent container flickering  
+          console.log('❌ Invalid payload - missing required fields:', {
+            sessionId: !!sessionId,
+            eventType: !!eventType, 
+            currentStep: !!currentStep,
+            totalSteps: !!totalSteps
+          });
+          // ✅ NO RELOAD: Invalid payloads shouldn't cause container flickering
         }
-      }
-    } else {
-      // Invalid payload - skip to prevent container flickering  
-      console.log('❌ Invalid payload - missing required fields:', {
-        sessionId: !!sessionId,
-        eventType: !!eventType, 
-        currentStep: !!currentStep,
-        totalSteps: !!totalSteps
-      });
-      // ✅ NO RELOAD: Invalid payloads shouldn't cause container flickering
-    }
   }, [clients]);
 
   // Supabase real-time subscriptions hook with optimized callback
