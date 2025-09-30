@@ -20,7 +20,7 @@ interface SubscriptionStatus {
  */
 export const useSupabaseSubscriptions = (
   distributorId: string,
-  onUpdate: () => void
+  onUpdate: (payload?: any) => void
 ) => {
   const [status, setStatus] = useState<SubscriptionStatus>({
     isConnected: false,
@@ -31,69 +31,20 @@ export const useSupabaseSubscriptions = (
 
   const [databaseManager] = useState(() => new SupabaseDatabaseManager());
 
-  // Setup localStorage fallback system
-  const setupFallbackSystem = useCallback(() => {
-    console.log('📊 Setting up localStorage fallback system...');
-    
-    setStatus(prev => ({ ...prev, fallbackActive: true }));
-
-    // BroadcastChannel listener
-    let broadcastChannel: BroadcastChannel | null = null;
-    if (typeof BroadcastChannel !== 'undefined') {
-      broadcastChannel = new BroadcastChannel('maxpulse-tracking');
-      broadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-          console.log('📊 Received real-time tracking update (BroadcastChannel):', event.data.data);
-          
-          // Add to localStorage and trigger update
-          const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-          existingTracking.push(event.data.data);
-          localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-          
-          onUpdate();
-        }
-      };
-    }
-
-    // postMessage listener
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-        console.log('📊 Received real-time tracking update (postMessage):', event.data.data);
-        
-        const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-        existingTracking.push(event.data.data);
-        localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-        
-        onUpdate();
-      }
-    };
-
-    // localStorage event listener
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'assessment-tracking' && event.newValue) {
-        console.log('📊 Received real-time tracking update (localStorage event)');
-        onUpdate();
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      if (broadcastChannel) {
-        broadcastChannel.close();
-      }
-      window.removeEventListener('message', handleMessage);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [onUpdate]);
+  // ✅ REMOVED: Fallback systems no longer needed
+  // Database subscriptions handle all real-time updates
 
   // Initialize Supabase subscriptions
   useEffect(() => {
     const initializeSubscriptions = async () => {
       if (!FeatureFlags.useDatabaseSubscriptions) {
-        console.log('📊 Database subscriptions disabled, using localStorage fallback');
-        setupFallbackSystem();
+        console.error('❌ Database subscriptions disabled - real-time functionality unavailable');
+        setStatus(prev => ({ 
+          ...prev, 
+          error: 'Database subscriptions disabled',
+          isConnected: false,
+          fallbackActive: false 
+        }));
         return;
       }
 
@@ -116,7 +67,7 @@ export const useSupabaseSubscriptions = (
           distributorId,
           (payload) => {
             console.log('📊 Real-time database update received:', payload);
-            onUpdate();
+            onUpdate(payload);
           }
         );
 
@@ -136,12 +87,12 @@ export const useSupabaseSubscriptions = (
         setStatus(prev => ({ 
           ...prev, 
           error: error instanceof Error ? error.message : 'Unknown error',
-          isConnected: false 
+          isConnected: false,
+          fallbackActive: false
         }));
         
-        // Fall back to localStorage system
-        console.log('⚠️ Falling back to localStorage system');
-        setupFallbackSystem();
+        // ✅ NO FALLBACK: Real-time subscriptions must work
+        console.error('🚨 CRITICAL: Real-time subscriptions failed - no fallback available');
       }
     };
 
@@ -150,11 +101,11 @@ export const useSupabaseSubscriptions = (
     return () => {
       databaseManager.disconnect();
     };
-  }, [distributorId, databaseManager, onUpdate, setupFallbackSystem]);
+  }, [distributorId, databaseManager, onUpdate]);
 
   return {
     status,
-    isReady: status.isConnected || status.fallbackActive,
+    isReady: status.isConnected, // ✅ REAL-TIME ONLY: No fallback consideration
     cleanup: () => databaseManager.disconnect()
   };
 };

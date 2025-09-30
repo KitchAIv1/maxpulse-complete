@@ -126,75 +126,7 @@ export function ClientProgress() {
 
   useEffect(() => {
     loadTrackingData();
-    
-    // Method 1: BroadcastChannel listener (modern browsers)
-    let broadcastChannel: BroadcastChannel | null = null;
-    if (typeof BroadcastChannel !== 'undefined') {
-      broadcastChannel = new BroadcastChannel('maxpulse-tracking');
-      broadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-          console.log('📊 Received real-time tracking update (BroadcastChannel):', event.data.data);
-          
-          // Add the new tracking event to localStorage
-          const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-          existingTracking.push(event.data.data);
-          localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-          
-          // Immediately refresh the dashboard
-          loadTrackingData();
-        }
-      };
-    }
-    
-    // Method 2: postMessage listener (for opener/opened windows)
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-        console.log('📊 Received real-time tracking update (postMessage):', event.data.data);
-        
-        // Add the new tracking event to localStorage
-        const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-        existingTracking.push(event.data.data);
-        localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-        
-        // Immediately refresh the dashboard
-        loadTrackingData();
-      }
-    };
-    
-    // Method 3: localStorage event listener (cross-tab fallback)
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'maxpulse-tracking-event' && event.newValue) {
-        try {
-          const trackingEvent = JSON.parse(event.newValue);
-          if (trackingEvent.type === 'ASSESSMENT_TRACKING_UPDATE') {
-            console.log('📊 Received real-time tracking update (localStorage):', trackingEvent.data);
-            
-            // The data is already in localStorage via the assessment tool
-            // Just refresh the dashboard
-            loadTrackingData();
-          }
-        } catch (error) {
-          console.warn('Error parsing localStorage tracking event:', error);
-        }
-      }
-    };
-    
-    // Add all event listeners
-    window.addEventListener('message', handleMessage);
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Auto-refresh every 30 seconds as fallback
-    const interval = setInterval(loadTrackingData, 30000);
-    
-    return () => {
-      // Cleanup all listeners
-      if (broadcastChannel) {
-        broadcastChannel.close();
-      }
-      window.removeEventListener('message', handleMessage);
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
+    // ✅ REAL-TIME ONLY: No fallback systems - ClientHub handles all real-time updates
   }, []);
 
   const getStatusColor = (status: string) => {

@@ -66,7 +66,7 @@ export class FeatureFlags {
       VITE_ANALYTICS_BACKEND: 'true',       // 32ms response time, enhanced metrics
       VITE_REALTIME_BACKEND: 'true',        // 8ms latency, improved reliability
       VITE_COMMISSION_BACKEND: 'true',      // 28ms processing, automated calculations
-      VITE_DATABASE_SUBSCRIPTIONS: 'false', // Keep disabled until UUID migration
+      VITE_DATABASE_SUBSCRIPTIONS: 'true', // ✅ ENABLE for real-time subscriptions
       VITE_MOCK_DATA: 'false'
     };
   }
@@ -89,10 +89,10 @@ export class FeatureFlags {
   
   /**
    * Enable debug mode for additional logging
+   * ✅ PERFORMANCE FIX: Disable debug mode to reduce console spam and improve performance
    */
   static get debugMode(): boolean {
-    return true; // Temporarily force debug mode for troubleshooting
-    // return import.meta.env.VITE_DEBUG_MODE === 'true';
+    return import.meta.env.VITE_DEBUG_MODE === 'true';
   }
   
   /**

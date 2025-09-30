@@ -2,9 +2,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
+import { Skeleton } from './ui/skeleton';
 import { useCommissions } from '../hooks/useCommissions';
 import { useSupabaseSubscriptions } from '../hooks/useSupabaseSubscriptions';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { SupabaseDatabaseManager } from '../services/SupabaseDatabaseManager';
+import { FeatureFlags } from '../utils/featureFlags';
 import { 
   Search, 
   Users, 
@@ -82,6 +85,7 @@ interface AssessmentSession {
   completionTime?: number;
   score?: number;
   events: TrackingEvent[];
+  isLive?: boolean;
 }
 
 // Unified client interface
@@ -114,11 +118,16 @@ export function ClientHub({ user }: ClientHubProps) {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortBy, setSortBy] = useState('lastContact');
   
+  // Debounce search term to reduce filtering frequency (performance optimization)
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
+  
   // 🔒 SECURITY FIX: Get distributor CODE from user context (not hardcoded)
   // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
-  console.log('🔍 DEBUG: User object in ClientHub:', { 
-    user: user ? { id: user.id, distributorCode: user.distributorCode, role: user.role, fullName: user.fullName } : null 
-  });
+  if (FeatureFlags.debugMode) {
+    console.log('🔍 DEBUG: User object in ClientHub:', { 
+      user: user ? { id: user.id, distributorCode: user.distributorCode, role: user.role, fullName: user.fullName } : null 
+    });
+  }
   
   // 🚨 CRITICAL: No fallback allowed - must have valid distributor code
   if (!user?.distributorCode) {
@@ -130,7 +139,9 @@ export function ClientHub({ user }: ClientHubProps) {
   }
   
   const distributorId = user.distributorCode;
-  console.log('🔍 DEBUG: Using distributorId:', distributorId);
+  if (FeatureFlags.debugMode) {
+    console.log('🔍 DEBUG: Using distributorId:', distributorId);
+  }
   
   // Add purchase tracking using EXISTING working commission system
   const { commissions } = useCommissions(distributorId);
@@ -244,23 +255,35 @@ export function ClientHub({ user }: ClientHubProps) {
         } else if (event.event === 'question_answered') {
           client.status = 'in_progress';
           // SESSION-SPECIFIC PROGRESS CALCULATION
-          console.log('🎯 Dashboard received question_answered event:', {
-            sessionCode: event.code,
-            questionNumber: event.questionNumber,
-            totalQuestions: event.totalQuestions,
-            clientName: event.customerName
-          });
+          // ✅ PERFORMANCE FIX: Only log in debug mode to reduce console spam
+          if (FeatureFlags.debugMode) {
+            console.log('🎯 Dashboard received question_answered event:', {
+              sessionCode: event.code,
+              questionNumber: event.questionNumber,
+              totalQuestions: event.totalQuestions,
+              clientName: event.customerName
+            });
+          }
           
           // Only process if this event belongs to THIS client's session
           if (event.code === client.code && event.questionNumber && event.totalQuestions) {
             const newProgress = Math.round((event.questionNumber / event.totalQuestions) * 100);
             // Only update if this is higher progress (in case events are out of order)
             client.progress = Math.max(client.progress, newProgress);
-            console.log('📊 Updated client progress for', event.code + ':', client.progress + '% (question', event.questionNumber, 'of', event.totalQuestions + ')');
+            // ✅ PERFORMANCE FIX: Only log progress updates in debug mode
+            if (FeatureFlags.debugMode) {
+              console.log('📊 Updated client progress for', event.code + ':', client.progress + '% (question', event.questionNumber, 'of', event.totalQuestions + ')');
+            }
           } else if (event.code !== client.code) {
-            console.log('🔄 Skipping event for different session:', event.code, '(current client:', client.code + ')');
+            // ✅ PERFORMANCE FIX: Only log session mismatches in debug mode
+            if (FeatureFlags.debugMode) {
+              console.log('🔄 Skipping event for different session:', event.code, '(current client:', client.code + ')');
+            }
           } else {
-            console.log('❌ Missing questionNumber or totalQuestions in event:', event);
+            // ✅ PERFORMANCE FIX: Only log missing data in debug mode
+            if (FeatureFlags.debugMode) {
+              console.log('❌ Missing questionNumber or totalQuestions in event:', event);
+            }
           }
         } else if (event.event === 'assessment_completed') {
           client.status = 'completed';
@@ -404,30 +427,101 @@ export function ClientHub({ user }: ClientHubProps) {
       }
       
       setIsLoading(false);
-  }, []);
+  }, [distributorId]);
 
-  // Supabase real-time subscriptions hook (must be after loadClientData definition)
-  const subscriptions = useSupabaseSubscriptions(distributorId, loadClientData);
+  // Ultra-smooth real-time callback using direct DOM updates
+  const handleRealtimeUpdate = useCallback((payload: any) => {
+    if (FeatureFlags.debugMode) {
+      console.log('🔄 Processing micro-update:', payload);
+    }
+    
+    // Extract data from broadcast payload
+    const eventData = payload.new?.event_data;
+    const sessionId = eventData?.original_session_id;
+    const eventType = payload.new?.event_type;
+    const currentStep = eventData?.current_step;
+    const totalSteps = eventData?.total_steps;
+    
+    if (sessionId && eventType && currentStep && totalSteps) {
+      // Calculate accurate progress from event data
+      const newProgress = Math.round((currentStep / totalSteps) * 100);
+      
+      // 🎯 MICRO-UPDATE: Update DOM directly without React re-render
+      const progressElements = document.querySelectorAll(`[data-session-id="${sessionId}"]`);
+      
+      if (progressElements.length > 0) {
+        progressElements.forEach(element => {
+          // Update progress bar width
+          const progressBar = element.querySelector('.progress-bar');
+          if (progressBar) {
+            (progressBar as HTMLElement).style.width = `${newProgress}%`;
+          }
+          
+          // Update progress text
+          const progressText = element.querySelector('.progress-text');
+          if (progressText) {
+            progressText.textContent = `${newProgress}%`;
+          }
+          
+          // Update status text if completed
+          if (eventType === 'assessment_completed') {
+            const statusText = element.querySelector('.status-text');
+            if (statusText) {
+              statusText.textContent = 'completed';
+            }
+          }
+        });
+        
+        if (FeatureFlags.debugMode) {
+          console.log('✅ Micro-update applied:', sessionId, `${newProgress}%`);
+        }
+      } else {
+        // Session not visible - only reload if it's a new session
+        if (FeatureFlags.debugMode) {
+          console.log('🔄 Session not in current view - checking if new session');
+        }
+        
+        // Only reload for truly new sessions, not existing ones
+        const isNewSession = !clients.some(client => 
+          client.currentAssessment?.code === sessionId ||
+          client.assessmentHistory.some(session => session.code === sessionId)
+        );
+        
+        if (isNewSession) {
+          if (FeatureFlags.debugMode) {
+            console.log('🆕 New session detected - reloading data');
+          }
+          loadClientData();
+        }
+      }
+    } else {
+      // Fallback to full reload only for new sessions
+      if (FeatureFlags.debugMode) {
+        console.log('🔄 Full reload needed - new session');
+      }
+      loadClientData();
+    }
+  }, [loadClientData]);
 
-  // Load data on component mount - real-time subscriptions handled by useSupabaseSubscriptions hook
+  // Supabase real-time subscriptions hook with optimized callback
+  const subscriptions = useSupabaseSubscriptions(distributorId, handleRealtimeUpdate);
+
+  // Load data on component mount - real-time subscriptions handle all updates
   useEffect(() => {
     loadClientData();
     
-    // Auto-refresh every 30 seconds as backup
-    const interval = setInterval(loadClientData, 30000);
+    // ✅ REAL-TIME ONLY: No timer fallback - subscriptions handle all updates
+    // Timer-based polling removed for pure real-time experience
     
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+  }, [loadClientData]);
 
   // Filter and sort clients - memoized for performance
   const filteredClients = useMemo(() => {
     return clients
       .filter(client => {
-        const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             client.phone.includes(searchTerm);
+        const matchesSearch = client.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                             client.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                             client.phone.includes(debouncedSearchTerm);
         
         const matchesFilter = selectedFilter === 'all' || 
                              (selectedFilter === 'live' && client.isLive) ||
@@ -452,7 +546,7 @@ export function ClientHub({ user }: ClientHubProps) {
             return new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime();
         }
       });
-  }, [clients, searchTerm, selectedFilter, sortBy]);
+  }, [clients, debouncedSearchTerm, selectedFilter, sortBy]);
 
   // Memoized status color function for performance
   const getStatusColor = useCallback((status: string) => {
@@ -592,61 +686,94 @@ export function ClientHub({ user }: ClientHubProps) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Clients</p>
-              <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
+        {isLoading ? (
+          // Skeleton loading for stats cards with smooth transitions
+          <>
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg border animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-8 w-12" />
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </>
+        ) : (
+          // Actual stats cards with fade-in animation
+          <>
+            <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Clients</p>
+                  <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
+                </div>
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
             </div>
-            <Users className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Live Now</p>
-              <p className="text-2xl font-bold text-green-600">{clients.filter(c => c.isLive).length}</p>
+            
+            <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Live Now</p>
+                  <p className="text-2xl font-bold text-green-600">{clients.filter(c => c.isLive).length}</p>
+                </div>
+                <Activity className="h-8 w-8 text-green-600" />
+              </div>
             </div>
-            <Activity className="h-8 w-8 text-green-600" />
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">In Assessment</p>
-              <p className="text-2xl font-bold text-blue-600">{clients.filter(c => c.currentAssessment).length}</p>
+            
+            <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">In Assessment</p>
+                  <p className="text-2xl font-bold text-blue-600">{clients.filter(c => c.currentAssessment).length}</p>
+                </div>
+                <Clock className="h-8 w-8 text-blue-600" />
+              </div>
             </div>
-            <Clock className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Customers</p>
-              <p className="text-2xl font-bold text-purple-600">{clients.filter(c => c.status === 'customer').length}</p>
+            
+            <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Customers</p>
+                  <p className="text-2xl font-bold text-purple-600">{clients.filter(c => c.status === 'customer').length}</p>
+                </div>
+                <Star className="h-8 w-8 text-purple-600" />
+              </div>
             </div>
-            <Star className="h-8 w-8 text-purple-600" />
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Filters and Search */}
       <div className="bg-white p-4 rounded-lg border space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search clients by name, email, or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        {isLoading ? (
+          // Skeleton loading for search and filters
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-28" />
+              <Skeleton className="h-10 w-24" />
             </div>
           </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search clients by name, email, or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
           
           <div className="flex gap-2">
             <DropdownMenu>
@@ -684,6 +811,7 @@ export function ClientHub({ user }: ClientHubProps) {
             </DropdownMenu>
           </div>
         </div>
+        )}
       </div>
 
       {/* Client List */}
@@ -703,7 +831,71 @@ export function ClientHub({ user }: ClientHubProps) {
               </tr>
             </thead>
             <tbody>
-              {filteredClients.map((client) => (
+              {isLoading ? (
+                // Skeleton loading for table rows
+                <>
+                  {[...Array(5)].map((_, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="w-10 h-10 rounded-full" />
+                          <div className="flex-1">
+                            <Skeleton className="h-4 w-32 mb-1" />
+                            <Skeleton className="h-3 w-48 mb-1" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <Skeleton className="h-6 w-16 rounded-full" />
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded" />
+                          <div>
+                            <Skeleton className="h-4 w-20 mb-1" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded" />
+                          <div>
+                            <Skeleton className="h-4 w-24 mb-1" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div>
+                          <Skeleton className="h-4 w-16 mb-1" />
+                          <Skeleton className="h-3 w-12" />
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <Skeleton className="h-6 w-14 rounded-full" />
+                      </td>
+                      <td className="p-4">
+                        <Skeleton className="h-4 w-20" />
+                      </td>
+                      <td className="p-4">
+                        <div className="flex justify-end gap-2">
+                          <Skeleton className="h-8 w-8 rounded" />
+                          <Skeleton className="h-8 w-8 rounded" />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </>
+              ) : filteredClients.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-gray-500">
+                    No clients found. Start by generating assessment links to capture leads.
+                  </td>
+                </tr>
+              ) : (
+                filteredClients.map((client) => (
                 <tr key={client.id} className="border-b hover:bg-gray-50 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -740,12 +932,12 @@ export function ClientHub({ user }: ClientHubProps) {
                     <div className="flex items-center gap-2">
                       {getAssessmentStatusIcon(client)}
                       {client.currentAssessment ? (
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {client.currentAssessment.progress}% Complete
+                        <div data-session-id={client.currentAssessment.code}>
+                          <p className="text-sm font-medium text-gray-900 transition-all duration-300">
+                            <span className="progress-text">{client.currentAssessment.progress}%</span> Complete
                           </p>
                           <p className="text-xs text-gray-500">
-                            {client.currentAssessment.status}
+                            <span className="status-text">{client.currentAssessment.status}</span>
                           </p>
                         </div>
                       ) : client.assessmentHistory.length > 0 ? (
@@ -765,8 +957,8 @@ export function ClientHub({ user }: ClientHubProps) {
                   <td className="p-4">
                     {(() => {
                       // Get purchase data for this client's session
-                      const sessionId = client.currentAssessment?.sessionId || 
-                                       (client.assessmentHistory.length > 0 ? client.assessmentHistory[0].sessionId : null);
+                      const sessionId = client.currentAssessment?.code || 
+                                       (client.assessmentHistory.length > 0 ? client.assessmentHistory[0].code : null);
                       let purchase = sessionId ? getPurchaseBySession(sessionId) : null;
                       
                       // Fallback: try matching by client name if sessionId lookup failed
@@ -813,8 +1005,8 @@ export function ClientHub({ user }: ClientHubProps) {
                   {/* NEW FEATURE: Purchase Value Column */}
                   <td className="p-4">
                     {(() => {
-                      const sessionId = client.currentAssessment?.sessionId || 
-                                       (client.assessmentHistory.length > 0 ? client.assessmentHistory[0].sessionId : null);
+                      const sessionId = client.currentAssessment?.code || 
+                                       (client.assessmentHistory.length > 0 ? client.assessmentHistory[0].code : null);
                       let purchase = sessionId ? getPurchaseBySession(sessionId) : null;
                       
                       // Fallback: try matching by client name if sessionId lookup failed
@@ -908,16 +1100,10 @@ export function ClientHub({ user }: ClientHubProps) {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
-          
-          {filteredClients.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No clients found matching your criteria</p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -999,14 +1185,14 @@ export function ClientHub({ user }: ClientHubProps) {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <span className="text-sm text-blue-700">Progress</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2" data-session-id={selectedClient.currentAssessment.code}>
                         <div className="flex-1 bg-blue-200 rounded-full h-2">
                           <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300 progress-bar"
                             style={{ width: `${selectedClient.currentAssessment.progress}%` }}
                           ></div>
                         </div>
-                        <span className="text-sm font-medium text-blue-900">
+                        <span className="text-sm font-medium text-blue-900 transition-all duration-300 progress-text">
                           {selectedClient.currentAssessment.progress}%
                         </span>
                       </div>
@@ -1014,7 +1200,7 @@ export function ClientHub({ user }: ClientHubProps) {
                     <div className="space-y-1">
                       <span className="text-sm text-blue-700">Status</span>
                       <p className="text-sm font-medium text-blue-900 capitalize">
-                        {selectedClient.currentAssessment.status.replace('_', ' ')}
+                        <span className="status-text">{selectedClient.currentAssessment.status.replace('_', ' ')}</span>
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -1072,7 +1258,7 @@ export function ClientHub({ user }: ClientHubProps) {
                                   style={{ width: `${session.progress}%` }}
                                 ></div>
                               </div>
-                              <span className="font-medium text-gray-900">{session.progress}%</span>
+                              <span className="font-medium text-gray-900 transition-all duration-300">{session.progress}%</span>
                             </div>
                           </div>
                           {session.score && (
@@ -1090,8 +1276,8 @@ export function ClientHub({ user }: ClientHubProps) {
 
               {/* NEW FEATURE: Purchase Information */}
               {(() => {
-                const sessionId = selectedClient.currentAssessment?.sessionId || 
-                                 (selectedClient.assessmentHistory.length > 0 ? selectedClient.assessmentHistory[0].sessionId : null);
+                const sessionId = selectedClient.currentAssessment?.code || 
+                                 (selectedClient.assessmentHistory.length > 0 ? selectedClient.assessmentHistory[0].code : null);
                 let purchase = sessionId ? getPurchaseBySession(sessionId) : null;
                 
                 // Fallback: try matching by client name if sessionId lookup failed

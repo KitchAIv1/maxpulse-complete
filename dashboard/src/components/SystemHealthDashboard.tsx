@@ -24,14 +24,8 @@ export function SystemHealthDashboard() {
 
   useEffect(() => {
     loadHealthData();
-    
-    // Auto-refresh every 30 seconds if enabled
-    const interval = autoRefresh ? setInterval(loadHealthData, 30000) : null;
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [autoRefresh]);
+    // ✅ MANUAL REFRESH ONLY: No auto-refresh timer - user controls when to refresh
+  }, []);
 
   const loadHealthData = async () => {
     try {

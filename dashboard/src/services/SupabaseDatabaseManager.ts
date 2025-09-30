@@ -17,10 +17,17 @@ export interface DatabaseSubscription {
  * Supabase Database Subscription Manager
  * Handles real-time database subscriptions as documented in Phase 5
  */
+interface CacheEntry {
+  data: any[];
+  timestamp: number;
+}
+
 export class SupabaseDatabaseManager {
   private subscriptions: Map<string, any> = new Map();
   private isInitialized = false;
   private assessmentTrackingCallback: ((payload: any) => void) | null = null;
+  private cache: Map<string, CacheEntry> = new Map();
+  private readonly CACHE_DURATION = 30000; // 30 seconds
 
   /**
    * Initialize database subscription system
@@ -76,7 +83,7 @@ export class SupabaseDatabaseManager {
   }
 
   /**
-   * Subscribe to assessment tracking table
+   * Subscribe to assessment tracking via broadcast channels (postgres_changes alternative)
    */
   async subscribeToAssessmentTracking(distributorId: string, callback?: (payload: any) => void): Promise<boolean> {
     // Store the callback for direct updates
@@ -87,42 +94,76 @@ export class SupabaseDatabaseManager {
       return false;
     }
 
-    // Resolve distributor code to UUID for proper filtering
-    const distributorUuid = await this.resolveDistributorId(distributorId);
-    if (!distributorUuid) {
-      console.error('❌ Cannot subscribe: Distributor not found:', distributorId);
-      return false;
-    }
-
     const subscriptionKey = `assessment_tracking_${distributorId}`;
 
     try {
+      console.log('🔍 Setting up broadcast-based realtime subscription...');
+      console.log('🔍 Distributor ID:', distributorId);
+      
+      // Use broadcast channels instead of postgres_changes (works without replication)
       const subscription = supabase
-        .channel('assessment_tracking_changes')
+        .channel(`distributor_${distributorId}`, {
+          config: {
+            broadcast: { self: false }, // Don't receive own messages
+            presence: { key: `dashboard_${Date.now()}` }
+          }
+        })
         .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'assessment_tracking',
-            filter: `distributor_id=eq.${distributorUuid}`
-          },
+          'broadcast',
+          { event: 'tracking_update' },
           (payload) => {
-            this.handleAssessmentTrackingUpdate(payload);
+            console.log('🔥 BROADCAST EVENT RECEIVED:', {
+              type: payload.type,
+              distributorId: payload.distributorId,
+              sessionId: payload.sessionId,
+              data: payload.data
+            });
+            
+            // Convert broadcast payload to postgres_changes format for compatibility
+            const postgresPayload = {
+              eventType: 'INSERT',
+              table: 'assessment_tracking',
+              new: {
+                id: payload.data?.session || payload.sessionId,
+                distributor_id: payload.distributorId,
+                event_type: payload.type,
+                event_data: payload.data,
+                timestamp: payload.timestamp,
+                client_info: {
+                  name: payload.customerName,
+                  email: payload.email
+                }
+              },
+              old: null
+            };
+            
+            this.handleAssessmentTrackingUpdate(postgresPayload);
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('📊 Broadcast subscription status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Successfully subscribed to broadcast tracking updates');
+            console.log('🔍 Waiting for assessment events via broadcast...');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ Broadcast channel error - check connection');
+          } else if (status === 'TIMED_OUT') {
+            console.error('❌ Broadcast subscription timed out');
+          } else if (status === 'CLOSED') {
+            console.warn('⚠️ Broadcast subscription closed');
+          }
+        });
 
       this.subscriptions.set(subscriptionKey, subscription);
 
       if (FeatureFlags.debugMode) {
-        console.log(`📊 Subscribed to assessment tracking for ${distributorId}`);
+        console.log(`📊 Subscribed to broadcast tracking for ${distributorId}`);
       }
 
       return true;
 
     } catch (error) {
-      console.error('Failed to subscribe to assessment tracking:', error);
+      console.error('Failed to subscribe to broadcast tracking:', error);
       return false;
     }
   }
@@ -178,6 +219,13 @@ export class SupabaseDatabaseManager {
 
     const { eventType, new: newRecord, old: oldRecord } = payload;
 
+    // Clear cache to force fresh data on next request
+    if (newRecord?.event_data?.distributorId) {
+      this.clearCache(newRecord.event_data.distributorId);
+    } else if (oldRecord?.event_data?.distributorId) {
+      this.clearCache(oldRecord.event_data.distributorId);
+    }
+
     // PURE DATABASE APPROACH - No localStorage sync needed
     // ClientHub now reads directly from database
 
@@ -189,7 +237,7 @@ export class SupabaseDatabaseManager {
 
 
   /**
-   * Get assessment tracking data from database (replaces localStorage)
+   * Get assessment tracking data from database with caching (replaces localStorage)
    */
   async getAssessmentTrackingData(distributorId: string): Promise<any[]> {
     if (!this.isInitialized) {
@@ -197,6 +245,17 @@ export class SupabaseDatabaseManager {
     }
 
     try {
+      // Check cache first
+      const cacheKey = `tracking_${distributorId}`;
+      const cached = this.cache.get(cacheKey);
+      
+      if (cached && (Date.now() - cached.timestamp) < this.CACHE_DURATION) {
+        if (FeatureFlags.debugMode) {
+          console.log('📊 Using cached assessment tracking data:', cached.data.length, 'records');
+        }
+        return cached.data;
+      }
+
       // Resolve distributor code to UUID
       const distributorUuid = await this.resolveDistributorId(distributorId);
       if (!distributorUuid) {
@@ -206,24 +265,45 @@ export class SupabaseDatabaseManager {
 
       const { data, error } = await supabase
         .from('assessment_tracking')
-        .select('*')
+        .select('id, event_data, event_type, timestamp, distributor_id')
         .eq('distributor_id', distributorUuid)
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error('❌ Error fetching assessment tracking data:', error);
         return [];
       }
 
+      const result = data || [];
+      
+      // Cache the result
+      this.cache.set(cacheKey, {
+        data: result,
+        timestamp: Date.now()
+      });
+
       if (FeatureFlags.debugMode) {
-        console.log('📊 Fetched assessment tracking data from database:', data?.length || 0, 'records');
+        console.log('📊 Fetched and cached assessment tracking data:', result.length, 'records');
       }
 
-      return data || [];
+      return result;
 
     } catch (error) {
       console.error('❌ Error in getAssessmentTrackingData:', error);
       return [];
+    }
+  }
+
+  /**
+   * Clear cache for a specific distributor (called on real-time updates)
+   */
+  private clearCache(distributorId: string): void {
+    const cacheKey = `tracking_${distributorId}`;
+    this.cache.delete(cacheKey);
+    
+    if (FeatureFlags.debugMode) {
+      console.log('🗑️ Cleared cache for distributor:', distributorId);
     }
   }
 

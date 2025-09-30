@@ -217,52 +217,10 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
     }
   };
 
-  // Load recent activity and set up real-time listeners
+  // Load recent activity once on mount - real-time handled by ClientHub
   useEffect(() => {
     loadRecentActivity();
-    
-    // Set up real-time listeners similar to ClientHub
-    let broadcastChannel: BroadcastChannel | null = null;
-    if (typeof BroadcastChannel !== 'undefined') {
-      broadcastChannel = new BroadcastChannel('maxpulse-tracking');
-      broadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-          console.log('📊 Dashboard received real-time update:', event.data.data);
-          setTimeout(loadRecentActivity, 500); // Small delay to ensure localStorage is updated
-        }
-      };
-    }
-    
-    // postMessage listener
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'ASSESSMENT_TRACKING_UPDATE') {
-        console.log('📊 Dashboard received real-time update (postMessage):', event.data.data);
-        setTimeout(loadRecentActivity, 500);
-      }
-    };
-    
-    // localStorage event listener
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'assessment-tracking' && event.newValue) {
-        console.log('📊 Dashboard received real-time update (localStorage event)');
-        loadRecentActivity();
-      }
-    };
-    
-    window.addEventListener('message', handleMessage);
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Refresh every 30 seconds as backup
-    const interval = setInterval(loadRecentActivity, 30000);
-    
-    return () => {
-      if (broadcastChannel) {
-        broadcastChannel.close();
-      }
-      window.removeEventListener('message', handleMessage);
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
+    // ✅ REAL-TIME ONLY: No fallback systems - ClientHub handles all real-time updates
   }, []);
 
   const handleCloseWelcomeModal = () => {
