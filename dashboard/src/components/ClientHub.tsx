@@ -118,6 +118,9 @@ export function ClientHub({ user }: ClientHubProps) {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [sortBy, setSortBy] = useState('lastContact');
   
+  // 🚀 PRODUCTION FIX: Buffer for early real-time events
+  const [pendingUpdates, setPendingUpdates] = useState<Map<string, any>>(new Map());
+  
   // Debounce search term to reduce filtering frequency (performance optimization)
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
   
@@ -442,10 +445,68 @@ export function ClientHub({ user }: ClientHubProps) {
       }
       
       setIsLoading(false);
+      
+      // 🚀 PRODUCTION FIX: Apply any buffered updates after DOM is ready
+      setTimeout(() => {
+        applyBufferedUpdates();
+      }, 100); // Small delay to ensure DOM is rendered
   }, [distributorId]);
 
   // Update the ref whenever loadClientData changes
   loadClientDataRef.current = loadClientData;
+
+  // 🚀 PRODUCTION FIX: Apply buffered updates after DOM is ready
+  const applyBufferedUpdates = useCallback(() => {
+    if (pendingUpdates.size === 0) return;
+    
+    console.log('🔄 Applying buffered updates for', pendingUpdates.size, 'sessions');
+    
+    const appliedUpdates: string[] = [];
+    
+    pendingUpdates.forEach((updateData, sessionId) => {
+      const progressElements = document.querySelectorAll(`[data-session-id="${sessionId}"]`);
+      
+      if (progressElements.length > 0) {
+        console.log('✅ Applying buffered update for:', sessionId, `${updateData.progress}%`);
+        
+        progressElements.forEach(element => {
+          // Update progress bar width
+          const progressBar = element.querySelector('.progress-bar');
+          if (progressBar) {
+            (progressBar as HTMLElement).style.width = `${updateData.progress}%`;
+          }
+          
+          // Update progress text
+          const progressText = element.querySelector('.progress-text');
+          if (progressText) {
+            progressText.textContent = `${updateData.progress}%`;
+          }
+          
+          // Update status text if completed
+          if (updateData.eventType === 'assessment_completed') {
+            const statusText = element.querySelector('.status-text');
+            if (statusText) {
+              statusText.textContent = 'completed';
+            }
+          }
+        });
+        
+        appliedUpdates.push(sessionId);
+      }
+    });
+    
+    // Remove applied updates from buffer
+    if (appliedUpdates.length > 0) {
+      setPendingUpdates(prev => {
+        const newMap = new Map(prev);
+        appliedUpdates.forEach(sessionId => {
+          newMap.delete(sessionId);
+          console.log('🗑️ Removed applied update from buffer:', sessionId);
+        });
+        return newMap;
+      });
+    }
+  }, [pendingUpdates]);
 
   // Ultra-smooth real-time callback using direct DOM updates
   const handleRealtimeUpdate = useCallback((payload: any) => {
@@ -499,26 +560,38 @@ export function ClientHub({ user }: ClientHubProps) {
         
         console.log('✅ Micro-update applied:', sessionId, `${newProgress}%`);
       } else {
-        // Session not in DOM - check if it's truly new
-        if (FeatureFlags.debugMode) {
-          console.log('🔍 Session not in DOM - checking if new session:', sessionId);
-        }
+        // 🚀 PRODUCTION FIX: Session not in DOM - buffer update and trigger reload
+        console.log('🔄 Session not in DOM - buffering update for:', sessionId);
         
-        // Only reload for truly NEW sessions (not existing ones)
+        // Buffer the update for later application
+        const updateData = {
+          sessionId,
+          eventType,
+          progress: newProgress,
+          currentStep,
+          totalSteps,
+          timestamp: Date.now()
+        };
+        
+        setPendingUpdates(prev => {
+          const newMap = new Map(prev);
+          newMap.set(sessionId, updateData);
+          console.log('📦 Buffered update for session:', sessionId, `${newProgress}%`);
+          return newMap;
+        });
+        
+        // Check if it's truly new session
         const isExistingSession = clients.some(client => 
           client.currentAssessment?.code === sessionId ||
           client.assessmentHistory.some(session => session.code === sessionId)
         );
         
         if (!isExistingSession) {
-          if (FeatureFlags.debugMode) {
-            console.log('🆕 New session detected - loading data:', sessionId);
-          }
+          console.log('🆕 New session detected - triggering immediate reload:', sessionId);
+          // Trigger immediate reload for new sessions
           loadClientDataRef.current?.();
         } else {
-          if (FeatureFlags.debugMode) {
-            console.log('🎯 Existing session not in DOM - skipping to prevent flicker:', sessionId);
-          }
+          console.log('🔄 Existing session - will apply buffered update when DOM ready:', sessionId);
         }
       }
     } else {
