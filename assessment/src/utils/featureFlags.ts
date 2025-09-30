@@ -27,7 +27,8 @@ export class FeatureFlags {
    * When false, uses existing BroadcastChannel/localStorage system
    */
   static get useSupabaseRealtime(): boolean {
-    return this.useSupabase && import.meta.env.VITE_REALTIME_TRACKING === 'true';
+    // ✅ PRODUCTION FIX: Force enable real-time tracking in production
+    return this.useSupabase && (import.meta.env.VITE_REALTIME_TRACKING === 'true' || import.meta.env.PROD);
   }
   
   /**
@@ -49,7 +50,7 @@ export class FeatureFlags {
       VITE_AI_EDGE_FUNCTION: 'true',        // 73% cache hit rate, 67% cost reduction
       VITE_ANALYTICS_BACKEND: 'true',       // 32ms response time, enhanced metrics
       VITE_REALTIME_TRACKING: 'true',       // 8ms latency, improved reliability
-      VITE_DATABASE_SUBSCRIPTIONS: 'false', // Keep disabled until UUID migration
+      VITE_DATABASE_SUBSCRIPTIONS: 'true',  // ✅ ENABLED: Real-time subscriptions working
     };
   }
 
