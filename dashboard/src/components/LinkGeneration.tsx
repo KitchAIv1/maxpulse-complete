@@ -5,6 +5,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useDualOnboarding } from '../hooks/useDualOnboarding';
+import { useLinkGeneration } from '../hooks/useLinkGeneration';
+import { useClipboard } from '../hooks/useClipboard';
+import { CustomerLinkTab } from './CustomerLinkTab';
 import { DualOnboardingCarousel } from './onboarding/DualOnboardingCarousel';
 import { linkGenerationOnboardingContent } from '../data/linkGenerationOnboarding';
 import { linkGenerationSalesOnboardingContent } from '../data/linkGenerationSalesOnboarding';
@@ -30,7 +33,6 @@ interface LinkGenerationProps {
 
 export function LinkGeneration({ user }: LinkGenerationProps) {
   const [activeTab, setActiveTab] = useState('customer');
-  // Preview state removed - now opens Premium Mobile Assessment Tool directly
   
   // Dual onboarding system for link generation (technical + sales)
   const dualOnboarding = useDualOnboarding(
@@ -38,169 +40,32 @@ export function LinkGeneration({ user }: LinkGenerationProps) {
     linkGenerationSalesOnboardingContent
   );
   
-  // Campaign link state
-  const [campaignLink, setCampaignLink] = useState('');
-  const [campaignCode, setCampaignCode] = useState('');
-  const [campaignUrl, setCampaignUrl] = useState('');
-  const [campaignDetails, setCampaignDetails] = useState({
-    name: '',
-    audience: '',
-    focusArea: 'both',
-    notes: ''
-  });
+  // ✅ EXTRACTED: Use custom hooks for business logic
+  const { 
+    campaignDetails,
+    setCampaignDetails,
+    campaignLink,
+    setCampaignLink,
+    campaignCode,
+    setCampaignCode,
+    campaignUrl,
+    setCampaignUrl,
+    customerDetails,
+    setCustomerDetails,
+    customerLink,
+    setCustomerLink,
+    customerCode,
+    setCustomerCode,
+    customerUrl,
+    setCustomerUrl,
+    generateCampaignLink, 
+    generateCustomerLink, 
+    resetCampaignForm, 
+    resetCustomerForm 
+  } = useLinkGeneration(user?.distributorCode);
   
-  // Customer link state
-  const [customerLink, setCustomerLink] = useState('');
-  const [customerCode, setCustomerCode] = useState('');
-  const [customerUrl, setCustomerUrl] = useState('');
-  const [customerDetails, setCustomerDetails] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
+  const { copyToClipboard, shareLink } = useClipboard();
 
-  // Generate unique campaign link - ALWAYS creates new unique link
-  const generateCampaignLink = () => {
-    if (!campaignDetails.name || !campaignDetails.audience) return;
-    
-    // 🚨 CRITICAL: No fallback allowed - must have valid distributor code
-    // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
-    if (!user?.distributorCode) {
-      console.error('🚨 CRITICAL: No distributor code in LinkGeneration');
-      return;
-    }
-    const distributorId = user.distributorCode;
-    const timestamp = Date.now().toString(36);
-    const randomId = Math.random().toString(36).substring(2, 8); // Add random component
-    const campaignSlug = campaignDetails.name.toLowerCase().replace(/\s+/g, '-');
-    const code = `${distributorId}-campaign-${campaignSlug}-${timestamp}-${randomId}`;
-    
-    // Create Premium Mobile Assessment Tool URL with unique session ID
-    // For monorepo: Use same domain with /assessment path
-    const assessmentBaseUrl = import.meta.env.VITE_ASSESSMENT_BASE_URL || 
-      (window.location.hostname === 'localhost' ? 'http://localhost:5174/assessment' : `${window.location.origin}/assessment`);
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-    const directUrl = `${assessmentBaseUrl}/?distributor=${distributorId}&campaign=${encodeURIComponent(campaignDetails.name)}&code=${code}&session=${sessionId}`;
-    const shareableText = `🌟 ${campaignDetails.name}\n\nTake the MAXPULSE Health & Wealth Assessment!\n\n🔗 Link: ${directUrl}\n\nTransform your health and financial future today!\n\nThis assessment takes just 3 minutes and provides instant insights tailored for ${campaignDetails.audience}.`;
-    
-    setCampaignCode(code);
-    setCampaignUrl(directUrl);
-    setCampaignLink(shareableText);
-
-    // Track campaign link generation activity
-    const linkActivity = {
-      event: 'link_generated',
-      timestamp: Date.now(),
-      campaignName: campaignDetails.name,
-      audience: campaignDetails.audience,
-      code: code,
-      linkType: 'campaign'
-    };
-
-    // Add to tracking data
-    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-    existingTracking.push(linkActivity);
-    localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-
-    // Broadcast the update
-    if (typeof BroadcastChannel !== 'undefined') {
-      const channel = new BroadcastChannel('maxpulse-tracking');
-      channel.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity });
-      channel.close();
-    }
-    
-    // Also use postMessage for cross-window communication
-    window.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity }, '*');
-    
-    console.log('🔗 Generated unique campaign link:', { 
-      campaign: campaignDetails.name, 
-      audience: campaignDetails.audience,
-      code, 
-      sessionId, 
-      url: directUrl 
-    });
-  };
-
-  // Generate unique customer-specific link - ALWAYS creates new unique link
-  const generateCustomerLink = () => {
-    if (!customerDetails.name || !customerDetails.email) return;
-    
-    // 🚨 CRITICAL: No fallback allowed - must have valid distributor code
-    // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
-    if (!user?.distributorCode) {
-      console.error('🚨 CRITICAL: No distributor code in LinkGeneration');
-      return;
-    }
-    const distributorId = user.distributorCode;
-    const timestamp = Date.now().toString(36);
-    const randomId = Math.random().toString(36).substring(2, 8); // Add random component
-    const customerSlug = customerDetails.name.toLowerCase().replace(/\s+/g, '-');
-    const code = `${distributorId}-${customerSlug}-${timestamp}-${randomId}`;
-    
-    // Create personalized Premium Mobile Assessment Tool URL with unique session ID
-    // For monorepo: Use same domain with /assessment path
-    const assessmentBaseUrl = import.meta.env.VITE_ASSESSMENT_BASE_URL || 
-      (window.location.hostname === 'localhost' ? 'http://localhost:5174/assessment' : `${window.location.origin}/assessment`);
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-    const directUrl = `${assessmentBaseUrl}/?distributor=${distributorId}&customer=${encodeURIComponent(customerDetails.name)}&email=${encodeURIComponent(customerDetails.email)}&code=${code}&session=${sessionId}`;
-    const shareableText = `Hi ${customerDetails.name}!\n\nI'd like to invite you to take the MAXPULSE Health & Wealth Assessment - it's completely free and takes just 3 minutes.\n\n🔗 Your Personal Link: ${directUrl}\n\nThis will give you personalized recommendations for your health and financial goals.\n\nLooking forward to helping you on your journey!\n\nBest regards,\nSarah Johnson\nMAXPULSE Gold Distributor`;
-    
-    setCustomerCode(code);
-    setCustomerUrl(directUrl);
-    setCustomerLink(shareableText);
-    
-    console.log('🔗 Generated unique customer link:', { 
-      customer: customerDetails.name, 
-      code, 
-      sessionId, 
-      url: directUrl 
-    });
-
-    // Track link generation activity
-    const linkActivity = {
-      event: 'link_generated',
-      timestamp: Date.now(),
-      customerName: customerDetails.name,
-      customerEmail: customerDetails.email,
-      code: code,
-      linkType: 'personalized'
-    };
-
-    // Add to tracking data
-    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-    existingTracking.push(linkActivity);
-    localStorage.setItem('assessment-tracking', JSON.stringify(existingTracking));
-
-    // Broadcast the update
-    if (typeof BroadcastChannel !== 'undefined') {
-      const channel = new BroadcastChannel('maxpulse-tracking');
-      channel.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity });
-      channel.close();
-    }
-    
-    // Also use postMessage for cross-window communication
-    window.postMessage({ type: 'ASSESSMENT_TRACKING_UPDATE', data: linkActivity }, '*');
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
-  };
-
-  const shareLink = async (text: string) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'MAXPULSE Health Assessment',
-          text: text,
-        });
-      } catch (error) {
-        copyToClipboard(text);
-      }
-    } else {
-      copyToClipboard(text);
-    }
-  };
 
   const previewAssessment = (url: string) => {
     // Open the actual Premium Mobile Assessment Tool for preview
@@ -516,214 +381,20 @@ export function LinkGeneration({ user }: LinkGenerationProps) {
               )}
           </TabsContent>
 
-          {/* Personal Link Tab */}
           <TabsContent value="customer" className="space-y-6">
-
-            {!customerLink ? (
-              <div className="max-w-lg mx-auto">
-                {/* Form Container */}
-                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-xl shadow-gray-900/5">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="customerName" className="text-gray-700 font-medium">Client Full Name</Label>
-                      <Input
-                        id="customerName"
-                        placeholder="Jennifer Martinez"
-                        value={customerDetails.name}
-                        onChange={(e) => setCustomerDetails(prev => ({ ...prev, name: e.target.value }))}
-                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-gray-800/20 transition-all duration-200"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="customerEmail" className="text-gray-700 font-medium">Client Email Address</Label>
-                      <Input
-                        id="customerEmail"
-                        type="email"
-                        placeholder="jennifer.martinez@email.com"
-                        value={customerDetails.email}
-                        onChange={(e) => setCustomerDetails(prev => ({ ...prev, email: e.target.value }))}
-                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-gray-800/20 transition-all duration-200"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="customerPhone" className="text-gray-700 font-medium">Client Phone Number</Label>
-                      <Input
-                        id="customerPhone"
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        value={customerDetails.phone}
-                        onChange={(e) => setCustomerDetails(prev => ({ ...prev, phone: e.target.value }))}
-                        className="border-0 bg-gray-50/50 rounded-xl px-4 py-3 focus:bg-white focus:ring-2 focus:ring-gray-800/20 transition-all duration-200"
-                      />
-                    </div>
-
-                    {/* Features List */}
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200/50">
-                      <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
-                        <User className="h-5 w-5 text-gray-600" />
-                        Personal Features
-                      </h4>
-                      <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-emerald-500" />
-                          Pre-filled client information
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-emerald-500" />
-                          Perfect for relationship building
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-emerald-500" />
-                          Direct follow-up capability
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button 
-                      onClick={generateCustomerLink}
-                      disabled={!customerDetails.name || !customerDetails.email}
-                      className="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-900 hover:to-gray-800 text-white rounded-xl py-4 shadow-lg shadow-gray-800/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <User className="h-5 w-5 mr-2" />
-                      Generate Personal Link
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="max-w-2xl mx-auto space-y-6">
-                {/* Success Header */}
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg shadow-emerald-500/25 mb-4">
-                    <CheckCircle className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-medium text-gray-900 mb-2">Personal Link Created!</h3>
-                  <p className="text-gray-600">For {customerDetails.name}</p>
-                </div>
-
-                {/* Client Details */}
-                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg shadow-gray-900/5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Name</span>
-                      <p className="font-medium text-gray-900">{customerDetails.name}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Email</span>
-                      <p className="font-medium text-gray-900">{customerDetails.email}</p>
-                    </div>
-                    {customerDetails.phone && (
-                      <div className="md:col-span-2">
-                        <span className="text-gray-500">Phone</span>
-                        <p className="font-medium text-gray-900">{customerDetails.phone}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* URL Display */}
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200/50">
-                  <Label className="text-gray-700 font-medium mb-3 block flex items-center gap-2">
-                    <Link className="h-4 w-4 text-gray-600" />
-                    Personal Assessment URL
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <code className="flex-1 text-sm bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-white/50 break-all text-gray-700">
-                      {customerUrl}
-                    </code>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => copyToClipboard(customerUrl)}
-                      className="shrink-0 hover:bg-white/50"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Message Preview */}
-                <div className="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-lg shadow-gray-900/5">
-                  <Label className="text-gray-700 font-medium mb-3 block flex items-center gap-2">
-                    <Share2 className="h-4 w-4 text-gray-600" />
-                    Personal Message
-                  </Label>
-                  <div className="bg-gray-50/50 rounded-xl p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                    {customerLink}
-                  </div>
-                </div>
-
-                {/* Security Notice */}
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100/50">
-                  <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
-                    <User className="h-5 w-5 text-red-500" />
-                    Security Notice
-                  </h4>
-                  <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                      Perfect for direct messaging
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                      Use for relationship building
-                    </div>
-                    <div className="flex items-center gap-2 text-red-600">
-                      <ExternalLink className="h-4 w-4 shrink-0" />
-                      Do NOT share publicly
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Button 
-                    onClick={() => copyToClipboard(customerLink)} 
-                    variant="outline"
-                    className="flex items-center gap-2 rounded-xl border-gray-200 hover:bg-gray-50"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy Message
-                  </Button>
-                  <Button 
-                    onClick={() => openDirectUrl(customerUrl)} 
-                    variant="outline"
-                    className="flex items-center gap-2 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Test Link
-                  </Button>
-                  <Button 
-                    onClick={() => downloadQR(customerUrl, `assessment-${customerCode}`)} 
-                    variant="outline"
-                    className="flex items-center gap-2 rounded-xl border-gray-200 hover:bg-gray-50"
-                  >
-                    <QrCode className="h-4 w-4" />
-                    QR Code
-                  </Button>
-                </div>
-
-                {/* Create Another */}
-                <div className="text-center">
-                  <Button 
-                    onClick={() => {
-                      setCustomerLink('');
-                      setCustomerCode('');
-                      setCustomerUrl('');
-                      setCustomerDetails({ name: '', email: '', phone: '' });
-                    }}
-                    variant="ghost"
-                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
-                  >
-                    Create Another Personal Link
-                  </Button>
-                </div>
-              </div>
-              )}
-          </TabsContent>
-        </Tabs>
+            <CustomerLinkTab
+              customerDetails={customerDetails}
+              setCustomerDetails={setCustomerDetails}
+              customerLink={customerLink}
+              customerCode={customerCode}
+              customerUrl={customerUrl}
+              onGenerate={generateCustomerLink}
+              onCopy={copyToClipboard}
+              onShare={shareLink}
+              onReset={resetCustomerForm}
+              onPreview={previewAssessment}
+            />
+          </TabsContent>        </Tabs>
       </div>
 
       {/* Dual Link Generation Onboarding Modal */}
