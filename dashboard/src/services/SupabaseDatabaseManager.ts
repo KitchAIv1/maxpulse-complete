@@ -101,37 +101,34 @@ export class SupabaseDatabaseManager {
       console.log('🔍 Distributor ID:', distributorId);
       
       // Use broadcast channels instead of postgres_changes (works without replication)
-      const subscription = supabase
-        .channel(`distributor_${distributorId}`, {
-          config: {
-            broadcast: { self: false }, // Don't receive own messages
-            presence: { key: `dashboard_${Date.now()}` }
-          }
-        })
+           const subscription = supabase
+             .channel(`distributor_${distributorId}`, {
+               config: {
+                 broadcast: { self: false }, // Don't receive own messages
+                 presence: { key: `dashboard_${distributorId}` } // Use stable key
+               }
+             })
         .on(
           'broadcast',
           { event: 'tracking_update' },
           (payload) => {
-            console.log('🔥 BROADCAST EVENT RECEIVED:', {
-              type: payload.type,
-              distributorId: payload.distributorId,
-              sessionId: payload.sessionId,
-              data: payload.data
-            });
+            console.log('🔥 BROADCAST EVENT RECEIVED:', payload);
+            console.log('🔍 Raw payload structure:', JSON.stringify(payload, null, 2));
             
             // Convert broadcast payload to postgres_changes format for compatibility
+            const broadcastData = payload.payload; // Extract the actual payload data
             const postgresPayload = {
               eventType: 'INSERT',
               table: 'assessment_tracking',
               new: {
-                id: payload.data?.session || payload.sessionId,
-                distributor_id: payload.distributorId,
-                event_type: payload.type,
-                event_data: payload.data,
-                timestamp: payload.timestamp,
+                id: broadcastData.data?.sessionId || broadcastData.sessionId || broadcastData.code,
+                distributor_id: broadcastData.distributorId,
+                event_type: broadcastData.type,
+                event_data: broadcastData.data,
+                timestamp: broadcastData.timestamp,
                 client_info: {
-                  name: payload.customerName,
-                  email: payload.email
+                  name: broadcastData.customerName,
+                  email: broadcastData.email
                 }
               },
               old: null

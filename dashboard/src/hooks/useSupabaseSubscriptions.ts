@@ -3,7 +3,7 @@
 // Purpose: Clean hook for database subscriptions following .cursorrules
 // Following .cursorrules: <200 lines, custom hook pattern, single responsibility
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { SupabaseDatabaseManager } from '../services/SupabaseDatabaseManager';
 import { FeatureFlags } from '../utils/featureFlags';
 
@@ -30,6 +30,10 @@ export const useSupabaseSubscriptions = (
   });
 
   const [databaseManager] = useState(() => new SupabaseDatabaseManager());
+  const onUpdateRef = useRef(onUpdate);
+  
+  // Update ref when callback changes
+  onUpdateRef.current = onUpdate;
 
   // ✅ REMOVED: Fallback systems no longer needed
   // Database subscriptions handle all real-time updates
@@ -67,7 +71,9 @@ export const useSupabaseSubscriptions = (
           distributorId,
           (payload) => {
             console.log('📊 Real-time database update received:', payload);
-            onUpdate(payload);
+            console.log('🔥 CALLING onUpdate callback with payload:', payload);
+            onUpdateRef.current(payload);
+            console.log('✅ onUpdate callback completed');
           }
         );
 
@@ -101,7 +107,7 @@ export const useSupabaseSubscriptions = (
     return () => {
       databaseManager.disconnect();
     };
-  }, [distributorId, databaseManager, onUpdate]);
+  }, [distributorId]);
 
   return {
     status,

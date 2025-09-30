@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -27,7 +27,6 @@ import {
   Plus,
   Zap,
   Edit,
-  Trash2,
   MoreHorizontal,
   Filter,
   SortAsc,
@@ -35,7 +34,8 @@ import {
   UserPlus,
   PhoneCall,
   ShoppingCart,
-  Send
+  Send,
+  Trash2
 } from 'lucide-react';
 import { 
   DropdownMenu,
@@ -189,6 +189,9 @@ export function ClientHub({ user }: ClientHubProps) {
   
   const [selectedClient, setSelectedClient] = useState<UnifiedClient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Stable reference to loadClientData for real-time callbacks
+  const loadClientDataRef = useRef<() => void>();
   const [showAddClient, setShowAddClient] = useState(false);
   const [editingClient, setEditingClient] = useState<UnifiedClient | null>(null);
 
@@ -209,18 +212,30 @@ export function ClientHub({ user }: ClientHubProps) {
       console.log('📊 Loading tracking data from DATABASE (PRODUCTION):', trackingData.length, `events for ${distributorId}`);
       
       // Convert database records to TrackingEvent format (using ACTUAL schema)
-      const convertedEvents: TrackingEvent[] = trackingData.map(record => ({
-        distributorId: distributorId,
-        code: record.event_data?.original_session_id || `${distributorId}-${record.id}`,
-        customerName: record.event_data?.customer_name || 'Unknown',
-        customerEmail: record.event_data?.customer_email || 'unknown@email.com',
-        event: record.event_data?.metadata?.event || record.event_type,
-        timestamp: new Date(record.timestamp).getTime(),
-        priority: record.event_data?.metadata?.priority || record.event_data?.assessment_type || 'health',
-        questionNumber: record.event_data?.metadata?.questionNumber || record.event_data?.current_step,
-        totalQuestions: record.event_data?.metadata?.totalQuestions || record.event_data?.total_steps,
-        score: record.event_data?.score
-      }));
+      const convertedEvents: TrackingEvent[] = trackingData
+        .filter(record => {
+          // ✅ FILTER: Only include records with new format (WB2025991-XXXXX)
+          const sessionCode = record.event_data?.code || record.event_data?.original_session_id || `${distributorId}-${record.id}`;
+          const isNewFormat = sessionCode.startsWith(`${distributorId}-`) && !sessionCode.startsWith('session_');
+          
+          if (!isNewFormat && FeatureFlags.debugMode) {
+            console.log('🗑️ Filtering out old format session:', sessionCode);
+          }
+          
+          return isNewFormat;
+        })
+        .map(record => ({
+          distributorId: distributorId,
+          code: record.event_data?.code || record.event_data?.original_session_id || `${distributorId}-${record.id}`,
+          customerName: record.event_data?.customerName || record.event_data?.customer_name || 'Unknown',
+          customerEmail: record.event_data?.customerEmail || record.event_data?.customer_email || 'unknown@email.com',
+          event: record.event_data?.event || record.event_data?.metadata?.event || record.event_type,
+          timestamp: new Date(record.timestamp).getTime(),
+          priority: record.event_data?.priority || record.event_data?.metadata?.priority || record.event_data?.assessment_type || 'health',
+          questionNumber: record.event_data?.questionNumber || record.event_data?.metadata?.questionNumber || record.event_data?.current_step,
+          totalQuestions: record.event_data?.totalQuestions || record.event_data?.metadata?.totalQuestions || record.event_data?.total_steps,
+          score: record.event_data?.score
+        }));
 
       console.log('📊 Converted database records to events:', convertedEvents.length);
 
@@ -257,12 +272,12 @@ export function ClientHub({ user }: ClientHubProps) {
           // SESSION-SPECIFIC PROGRESS CALCULATION
           // ✅ PERFORMANCE FIX: Only log in debug mode to reduce console spam
           if (FeatureFlags.debugMode) {
-            console.log('🎯 Dashboard received question_answered event:', {
+          console.log('🎯 Dashboard received question_answered event:', {
               sessionCode: event.code,
-              questionNumber: event.questionNumber,
-              totalQuestions: event.totalQuestions,
-              clientName: event.customerName
-            });
+            questionNumber: event.questionNumber,
+            totalQuestions: event.totalQuestions,
+            clientName: event.customerName
+          });
           }
           
           // Only process if this event belongs to THIS client's session
@@ -282,7 +297,7 @@ export function ClientHub({ user }: ClientHubProps) {
           } else {
             // ✅ PERFORMANCE FIX: Only log missing data in debug mode
             if (FeatureFlags.debugMode) {
-              console.log('❌ Missing questionNumber or totalQuestions in event:', event);
+            console.log('❌ Missing questionNumber or totalQuestions in event:', event);
             }
           }
         } else if (event.event === 'assessment_completed') {
@@ -429,25 +444,35 @@ export function ClientHub({ user }: ClientHubProps) {
       setIsLoading(false);
   }, [distributorId]);
 
+  // Update the ref whenever loadClientData changes
+  loadClientDataRef.current = loadClientData;
+
   // Ultra-smooth real-time callback using direct DOM updates
   const handleRealtimeUpdate = useCallback((payload: any) => {
-    if (FeatureFlags.debugMode) {
-      console.log('🔄 Processing micro-update:', payload);
-    }
+    console.log('🔥 REALTIME UPDATE CALLBACK TRIGGERED:', payload);
+    console.log('🔍 Payload structure:', JSON.stringify(payload, null, 2));
     
     // Extract data from broadcast payload
     const eventData = payload.new?.event_data;
-    const sessionId = eventData?.original_session_id;
+    const sessionId = eventData?.code || eventData?.sessionId || payload.new?.id; // Use code first (matches DOM elements)
     const eventType = payload.new?.event_type;
-    const currentStep = eventData?.current_step;
-    const totalSteps = eventData?.total_steps;
+    const currentStep = eventData?.questionNumber;
+    const totalSteps = eventData?.totalQuestions;
+    
+    console.log('🔍 Extracted values:', { sessionId, eventType, currentStep, totalSteps });
+    console.log('🔍 Raw eventData:', eventData);
     
     if (sessionId && eventType && currentStep && totalSteps) {
       // Calculate accurate progress from event data
       const newProgress = Math.round((currentStep / totalSteps) * 100);
       
+      console.log('📊 Calculated progress:', newProgress + '%', `(${currentStep}/${totalSteps})`);
+      
       // 🎯 MICRO-UPDATE: Update DOM directly without React re-render
       const progressElements = document.querySelectorAll(`[data-session-id="${sessionId}"]`);
+      
+      console.log('🔍 Looking for DOM elements with session ID:', sessionId);
+      console.log('🔍 Found elements:', progressElements.length);
       
       if (progressElements.length > 0) {
         progressElements.forEach(element => {
@@ -472,36 +497,41 @@ export function ClientHub({ user }: ClientHubProps) {
           }
         });
         
-        if (FeatureFlags.debugMode) {
-          console.log('✅ Micro-update applied:', sessionId, `${newProgress}%`);
-        }
+        console.log('✅ Micro-update applied:', sessionId, `${newProgress}%`);
       } else {
-        // Session not visible - only reload if it's a new session
+        // Session not in DOM - check if it's truly new
         if (FeatureFlags.debugMode) {
-          console.log('🔄 Session not in current view - checking if new session');
+          console.log('🔍 Session not in DOM - checking if new session:', sessionId);
         }
         
-        // Only reload for truly new sessions, not existing ones
-        const isNewSession = !clients.some(client => 
+        // Only reload for truly NEW sessions (not existing ones)
+        const isExistingSession = clients.some(client => 
           client.currentAssessment?.code === sessionId ||
           client.assessmentHistory.some(session => session.code === sessionId)
         );
         
-        if (isNewSession) {
+        if (!isExistingSession) {
           if (FeatureFlags.debugMode) {
-            console.log('🆕 New session detected - reloading data');
+            console.log('🆕 New session detected - loading data:', sessionId);
           }
-          loadClientData();
+          loadClientDataRef.current?.();
+        } else {
+          if (FeatureFlags.debugMode) {
+            console.log('🎯 Existing session not in DOM - skipping to prevent flicker:', sessionId);
+          }
         }
       }
     } else {
-      // Fallback to full reload only for new sessions
-      if (FeatureFlags.debugMode) {
-        console.log('🔄 Full reload needed - new session');
-      }
-      loadClientData();
+      // Invalid payload - skip to prevent container flickering  
+      console.log('❌ Invalid payload - missing required fields:', {
+        sessionId: !!sessionId,
+        eventType: !!eventType, 
+        currentStep: !!currentStep,
+        totalSteps: !!totalSteps
+      });
+      // ✅ NO RELOAD: Invalid payloads shouldn't cause container flickering
     }
-  }, [loadClientData]);
+  }, [clients]);
 
   // Supabase real-time subscriptions hook with optimized callback
   const subscriptions = useSupabaseSubscriptions(distributorId, handleRealtimeUpdate);
@@ -518,34 +548,34 @@ export function ClientHub({ user }: ClientHubProps) {
   // Filter and sort clients - memoized for performance
   const filteredClients = useMemo(() => {
     return clients
-      .filter(client => {
+    .filter(client => {
         const matchesSearch = client.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                              client.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                              client.phone.includes(debouncedSearchTerm);
-        
-        const matchesFilter = selectedFilter === 'all' || 
-                             (selectedFilter === 'live' && client.isLive) ||
-                             (selectedFilter === 'assessment' && client.currentAssessment) ||
-                             client.status === selectedFilter;
-        
-        return matchesSearch && matchesFilter;
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case 'name':
-            return a.name.localeCompare(b.name);
-          case 'status':
-            return a.status.localeCompare(b.status);
-          case 'priority':
-            const priorityOrder = { high: 3, medium: 2, low: 1 };
-            return priorityOrder[b.priority] - priorityOrder[a.priority];
-          case 'value':
-            return b.value - a.value;
-          case 'lastContact':
-          default:
-            return new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime();
-        }
-      });
+      
+      const matchesFilter = selectedFilter === 'all' || 
+                           (selectedFilter === 'live' && client.isLive) ||
+                           (selectedFilter === 'assessment' && client.currentAssessment) ||
+                           client.status === selectedFilter;
+      
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'priority':
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return priorityOrder[b.priority] - priorityOrder[a.priority];
+        case 'value':
+          return b.value - a.value;
+        case 'lastContact':
+        default:
+          return new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime();
+      }
+    });
   }, [clients, debouncedSearchTerm, selectedFilter, sortBy]);
 
   // Memoized status color function for performance
@@ -593,48 +623,7 @@ export function ClientHub({ user }: ClientHubProps) {
     ));
   };
 
-  // Helper function to clean old distributor data from localStorage
-  const cleanOldDistributorData = () => {
-    try {
-      const allTrackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]') as TrackingEvent[];
-      
-      // Keep only WB2025991 data, remove all SJ2024 and other old data
-      const cleanedData = allTrackingData.filter(event => 
-        event.distributorId === 'WB2025991' || event.code?.startsWith('WB2025991-')
-      );
-      
-      localStorage.setItem('assessment-tracking', JSON.stringify(cleanedData));
-      
-      console.log('🧹 Cleaned localStorage:', allTrackingData.length, '→', cleanedData.length, 'events');
-      loadClientData(); // Refresh the data
-    } catch (error) {
-      console.error('Error cleaning old data:', error);
-    }
-  };
-
-  // Test function to simulate LIVE tracking data
-  const addTestLiveData = () => {
-    const testTrackingData = [
-      {
-        distributorId: 'WB2025991',
-        code: 'WB2025991-test-live-client-' + Date.now().toString(36),
-        customerName: 'Jennifer Martinez',
-        customerEmail: 'jennifer.m@email.com',
-        event: 'question_answered',
-        timestamp: Date.now() - (2 * 60 * 1000), // 2 minutes ago
-        priority: 'health',
-        questionNumber: 3,
-        totalQuestions: 10
-      }
-    ];
-    
-    const existingTracking = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-    const updatedTracking = [...existingTracking, ...testTrackingData];
-    localStorage.setItem('assessment-tracking', JSON.stringify(updatedTracking));
-    
-    console.log('🔴 Added test LIVE data:', testTrackingData);
-    loadClientData(); // Refresh the data
-  };
+  // ✅ REMOVED: All localStorage functions - dashboard is now 100% database-driven
 
   return (
     <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
@@ -660,23 +649,8 @@ export function ClientHub({ user }: ClientHubProps) {
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button 
-            onClick={addTestLiveData} 
-            variant="outline" 
-            size="sm"
-            className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-          >
-            <Activity className="h-4 w-4 mr-2" />
-            Test LIVE
-          </Button>
-          <Button 
-            onClick={cleanOldDistributorData} 
-            variant="outline" 
-            size="sm"
-            className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-          >
-            🧹 Clean Old Data
-          </Button>
+          {/* ✅ REMOVED: Test LIVE button - using pure database-driven real-time tracking */}
+          {/* ✅ REMOVED: Clean Old Data button - no localStorage to clean */}
           <Button onClick={() => setShowAddClient(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add Client
@@ -705,44 +679,44 @@ export function ClientHub({ user }: ClientHubProps) {
           // Actual stats cards with fade-in animation
           <>
             <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Clients</p>
-                  <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Clients</p>
+              <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
             </div>
-            
+            <Users className="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+        
             <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Live Now</p>
-                  <p className="text-2xl font-bold text-green-600">{clients.filter(c => c.isLive).length}</p>
-                </div>
-                <Activity className="h-8 w-8 text-green-600" />
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Live Now</p>
+              <p className="text-2xl font-bold text-green-600">{clients.filter(c => c.isLive).length}</p>
             </div>
-            
+            <Activity className="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+        
             <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">In Assessment</p>
-                  <p className="text-2xl font-bold text-blue-600">{clients.filter(c => c.currentAssessment).length}</p>
-                </div>
-                <Clock className="h-8 w-8 text-blue-600" />
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">In Assessment</p>
+              <p className="text-2xl font-bold text-blue-600">{clients.filter(c => c.currentAssessment).length}</p>
             </div>
-            
+            <Clock className="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+        
             <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Customers</p>
-                  <p className="text-2xl font-bold text-purple-600">{clients.filter(c => c.status === 'customer').length}</p>
-                </div>
-                <Star className="h-8 w-8 text-purple-600" />
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Customers</p>
+              <p className="text-2xl font-bold text-purple-600">{clients.filter(c => c.status === 'customer').length}</p>
             </div>
+            <Star className="h-8 w-8 text-purple-600" />
+          </div>
+        </div>
           </>
         )}
       </div>
@@ -762,18 +736,18 @@ export function ClientHub({ user }: ClientHubProps) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search clients by name, email, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search clients by name, email, or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
+          </div>
           
           <div className="flex gap-2">
             <DropdownMenu>

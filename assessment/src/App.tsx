@@ -151,8 +151,8 @@ export default function App() {
       };
       setDistributorInfo(info);
       
-      // Create unique session storage key for this assessment
-      const sessionKey = sessionId || `session_${code}_${Date.now()}`;
+      // ✅ FORCE: Use distributor code directly as session key (new format)
+      const sessionKey = info.code; // Use distributor code directly
       
       // Log the tracking info for debugging
       console.log('🔗 Assessment started via unique distributor link:', { 
@@ -255,10 +255,14 @@ export default function App() {
   const trackProgress = async (event: string, data: any = {}) => {
     if (!distributorInfo) return;
 
-    const sessionId = localStorage.getItem('current-session-id');
+    // ✅ FORCE: Always use distributor code as session ID (new format)
+    const sessionId = distributorInfo.code; // Use distributor code directly
+    console.log('🔍 DEBUG sessionId (FORCED to distributor code):', sessionId);
+    console.log('🔍 DEBUG distributorInfo.code:', distributorInfo.code);
+    
     const trackingData = {
       ...distributorInfo,
-      sessionId,
+      sessionId: sessionId, // Always use distributor code
       event,
       timestamp: Date.now(),
       isUniqueSession: true,
@@ -326,8 +330,11 @@ export default function App() {
       // Send real-time event to dashboard
       await realtimeManager.sendAssessmentEvent({
         type: event,
-        sessionId: sessionId || '',
+        sessionId: trackingData.code || sessionId || '',
         distributorId: distributorInfo.distributorId,
+        customerName: distributorInfo.customerName || '',
+        email: distributorInfo.customerEmail || '',
+        code: distributorInfo.code || '',
         data: trackingData,
         timestamp: new Date().toISOString()
       });
@@ -361,44 +368,7 @@ export default function App() {
       console.warn('⚠️ Supabase tracking failed (fallback to localStorage only):', error);
     }
 
-    // Send real-time updates to MAXPULSE Platform (existing system)
-    try {
-      // Method 1: BroadcastChannel for cross-tab communication (modern browsers)
-      if (typeof BroadcastChannel !== 'undefined') {
-        console.log('📡 Sending via BroadcastChannel:', trackingData);
-        const channel = new BroadcastChannel('maxpulse-tracking');
-        channel.postMessage({
-          type: 'ASSESSMENT_TRACKING_UPDATE',
-          data: trackingData
-        });
-        channel.close();
-      } else {
-        console.warn('❌ BroadcastChannel not supported in this browser');
-      }
-      
-      // Method 2: postMessage to opener window (if assessment was opened from platform)
-      if (window.opener && window.opener !== window) {
-        console.log('📡 Sending via postMessage to opener:', trackingData);
-        window.opener.postMessage({
-          type: 'ASSESSMENT_TRACKING_UPDATE',
-          data: trackingData
-        }, '*');
-      } else {
-        console.log('ℹ️ No opener window found for postMessage');
-      }
-      
-      // Method 3: localStorage event (fallback for cross-tab communication)
-      // This triggers 'storage' event in other tabs
-      console.log('📡 Sending via localStorage event:', trackingData);
-      localStorage.setItem('maxpulse-tracking-event', JSON.stringify({
-        type: 'ASSESSMENT_TRACKING_UPDATE',
-        data: trackingData,
-        timestamp: Date.now()
-      }));
-      
-    } catch (error) {
-      console.warn('Could not send tracking data to platform:', error);
-    }
+    // ✅ REAL-TIME ONLY: All fallback methods removed - using Supabase broadcast only
   };
 
   const handlePrioritySelection = (priority: Priority) => {

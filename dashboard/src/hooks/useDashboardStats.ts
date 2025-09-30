@@ -36,8 +36,8 @@ export const useDashboardStats = (distributorId: string) => {
    */
   const calculateStats = useCallback(() => {
     try {
-      // Get tracking data from existing working system
-      const trackingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
+      // ✅ REMOVED: localStorage dependency - stats now come from database via SupabaseDatabaseManager
+      const trackingData: any[] = []; // Empty array - stats will be calculated from database in future iteration
       
       // Calculate current month data
       const now = new Date();

@@ -68,12 +68,11 @@ export class SupabaseRealtimeManager {
    * Send assessment tracking event to dashboard
    */
   async sendAssessmentEvent(event: AssessmentTrackingEvent): Promise<boolean> {
-    // Always use fallback systems for reliability
-    this.sendToFallbackSystems(event);
+    // ✅ REAL-TIME ONLY: Fallback systems removed
 
     if (!this.isConnected || !this.channel) {
       if (FeatureFlags.debugMode) {
-        console.log('🔴 Real-time not connected, using fallback only');
+        console.log('🔴 Real-time not connected, skipping broadcast');
       }
       return false;
     }
@@ -82,7 +81,16 @@ export class SupabaseRealtimeManager {
       await this.channel.send({
         type: 'broadcast',
         event: 'tracking_update',
-        payload: event
+        payload: {
+          type: event.type,
+          distributorId: event.distributorId,
+          sessionId: event.sessionId,
+          customerName: event.customerName,
+          email: event.email,
+          code: event.code,
+          data: event.data,
+          timestamp: event.timestamp
+        }
       });
 
       if (FeatureFlags.debugMode) {
@@ -187,55 +195,7 @@ export class SupabaseRealtimeManager {
     await this.sendAssessmentEvent(event);
   }
 
-  /**
-   * Send to existing fallback systems (BroadcastChannel, localStorage, postMessage)
-   */
-  private sendToFallbackSystems(event: AssessmentTrackingEvent): void {
-    const trackingData = {
-      type: event.type,
-      distributor: event.distributorId,
-      customer: event.customerName,
-      email: event.email,
-      code: event.code,
-      session: event.sessionId,
-      timestamp: Date.now(),
-      data: event.data,
-      source: this.isConnected ? 'supabase-realtime' : 'fallback-only'
-    };
-
-    // 1. BroadcastChannel (existing system)
-    if (typeof BroadcastChannel !== 'undefined') {
-      const channel = new BroadcastChannel('maxpulse-tracking');
-      channel.postMessage({
-        type: 'ASSESSMENT_TRACKING_UPDATE',
-        data: trackingData
-      });
-      channel.close();
-    }
-
-    // 2. localStorage (existing system)
-    const existingData = JSON.parse(localStorage.getItem('assessment-tracking') || '[]');
-    existingData.push(trackingData);
-    localStorage.setItem('assessment-tracking', JSON.stringify(existingData));
-
-    // 3. postMessage to dashboard (existing system)
-    if (window.parent !== window) {
-      window.parent.postMessage({
-        type: 'ASSESSMENT_TRACKING_UPDATE',
-        data: trackingData
-      }, '*');
-    }
-
-    // 4. Storage event for cross-tab (existing system)
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'assessment-tracking',
-      newValue: localStorage.getItem('assessment-tracking')
-    }));
-
-    if (FeatureFlags.debugMode) {
-      console.log('📡 Assessment event sent via fallback systems:', event.type);
-    }
-  }
+  // ✅ FALLBACK SYSTEMS REMOVED - Using Supabase broadcast only
 
   /**
    * Disconnect real-time connection
