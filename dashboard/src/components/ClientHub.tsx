@@ -12,12 +12,31 @@ import { ClientStats } from './ClientStats';
 import { ClientFilters } from './ClientFilters';
 import { ClientTable } from './ClientTable';
 import { FeatureFlags } from '../utils/featureFlags';
-import { Users, RefreshCw, UserPlus } from 'lucide-react';
+import { Users, RefreshCw, UserPlus, Activity, Clock, ShoppingCart, Mail, PhoneCall, Send, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 
 // ✅ REMOVED: Interfaces moved to useClientData hook
+
+// Utility functions for UI styling
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'lead': return 'bg-yellow-100 text-yellow-800';
+    case 'prospect': return 'bg-blue-100 text-blue-800';
+    case 'customer': return 'bg-green-100 text-green-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case 'high': return 'bg-red-100 text-red-800';
+    case 'medium': return 'bg-yellow-100 text-yellow-800';
+    case 'low': return 'bg-green-100 text-green-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
 
 interface ClientHubProps {
   user?: any;
@@ -123,12 +142,20 @@ export function ClientHub({ user }: ClientHubProps) {
           return a.status.localeCompare(b.status);
         case 'priority':
           const priorityOrder = { high: 3, medium: 2, low: 1 };
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
+          const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+          // 🎯 FIX: If same priority, sort by latest activity (most recent first)
+          if (priorityDiff === 0) {
+            return (b.lastActivityTimestamp || 0) - (a.lastActivityTimestamp || 0);
+          }
+          return priorityDiff;
         case 'value':
           return b.value - a.value;
         case 'lastContact':
         default:
-          return new Date(b.lastContact).getTime() - new Date(a.lastContact).getTime();
+          // 🎯 FIX: Prioritize by latest activity timestamp, fallback to lastContact
+          const aTime = a.lastActivityTimestamp || new Date(a.lastContact).getTime();
+          const bTime = b.lastActivityTimestamp || new Date(b.lastContact).getTime();
+          return bTime - aTime;
       }
     });
   }, [clients, debouncedSearchTerm, selectedFilter, sortBy]);

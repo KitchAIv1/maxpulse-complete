@@ -157,7 +157,12 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
     }
     
     // Calculate metrics from assessment_tracking data
-    const uniqueSessions = new Set(assessmentStats?.map(a => a.id) || []).size;
+    // 🎯 FIX: Count unique assessment sessions, not individual question events
+    const uniqueSessions = new Set(
+      assessmentStats
+        ?.filter(a => a.event_data?.original_session_id || a.event_data?.sessionId)
+        ?.map(a => a.event_data?.original_session_id || a.event_data?.sessionId) || []
+    ).size;
     const completedAssessments = assessmentStats?.filter(a => a.event_type === 'assessment_completed').length || 0;
     const totalRevenue = commissionStats?.reduce((sum, c) => sum + (c.commission_amount || 0), 0) || 0;
     const pendingCommissions = commissionStats?.filter(c => c.status === 'pending').length || 0;

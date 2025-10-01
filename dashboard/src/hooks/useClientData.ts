@@ -52,6 +52,7 @@ export interface UnifiedClient {
   currentAssessment?: AssessmentSession;
   assessmentHistory: AssessmentSession[];
   isLive: boolean;
+  lastActivityTimestamp?: number; // For priority sorting
 }
 
 /**
@@ -304,6 +305,7 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
             lastContact: new Date(session.lastActivity).toISOString().split('T')[0],
             value: clientValue,
             priority: clientValue > 500 ? 'high' : session.status === 'completed' ? 'medium' : (session.priority as 'high' | 'medium' | 'low' || 'low'),
+            lastActivityTimestamp: session.lastActivity, // Add timestamp for priority sorting
             source: 'Assessment',
             subscription: purchase ? purchase.productName : undefined,
             currentAssessment: (session.status === 'started' || session.status === 'in_progress') ? session : undefined,
