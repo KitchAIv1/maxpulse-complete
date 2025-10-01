@@ -130,24 +130,41 @@ export class AssessmentCompletionManager {
    */
   private async createAssessmentRecord(data: AssessmentCompletionData): Promise<string | null> {
     try {
+      // 🔧 FIX: Use insert instead of upsert to avoid conflict issues
       const { data: assessment, error } = await supabase
         .from('assessments')
-        .upsert({
+        .insert({
           distributor_id: data.distributorId,
           assessment_type: data.assessmentType,
           status: 'completed',
           started_at: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago estimate
           completed_at: data.completedAt,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'distributor_id,assessment_type,completed_at'
         })
         .select('id')
         .single();
 
       if (error) {
-        console.error('Failed to create assessment record:', error);
+        console.error('❌ DETAILED Assessment Error:', {
+          error: error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          data_sent: {
+            distributor_id: data.distributorId,
+            assessment_type: data.assessmentType,
+            status: 'completed',
+            started_at: new Date(Date.now() - 300000).toISOString(),
+            completed_at: data.completedAt
+          }
+        });
         return null;
+      }
+
+      if (FeatureFlags.debugMode) {
+        console.log('✅ Assessment record created:', assessment?.id);
       }
 
       return assessment?.id || null;
