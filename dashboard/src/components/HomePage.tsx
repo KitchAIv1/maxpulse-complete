@@ -114,14 +114,14 @@ export function HomePage() {
   }, [assessmentAutoPlay, assessmentImages.length]);
 
   // Manual click handlers that pause auto-play temporarily
-  const handleMaxpulseImageClick = (index) => {
+  const handleMaxpulseImageClick = (index: number) => {
     setMaxpulseImageIndex(index);
     setMaxpulseAutoPlay(false);
     // Resume auto-play after 8 seconds of manual interaction
     setTimeout(() => setMaxpulseAutoPlay(true), 8000);
   };
 
-  const handleAssessmentImageClick = (index) => {
+  const handleAssessmentImageClick = (index: number) => {
     setAssessmentImageIndex(index);
     setAssessmentAutoPlay(false);
     // Resume auto-play after 8 seconds of manual interaction
@@ -201,13 +201,16 @@ export function HomePage() {
               loop
               muted
               playsInline
-              preload="auto"
+              preload="metadata"
+              poster={heroBackgroundImage}
               onCanPlay={(e) => {
                 console.log('✅ Hero video loaded successfully!');
-                e.target.play().catch(err => console.log('Hero video play failed:', err));
+                const video = e.target as HTMLVideoElement;
+                video.play().catch((err: Error) => console.log('Hero video play failed:', err));
               }}
               onError={(e) => {
-                console.error('❌ Hero video error:', e.target.error);
+                const video = e.target as HTMLVideoElement;
+                console.error('❌ Hero video error:', video.error);
                 console.error('Video src:', heroBackgroundVideo);
                 setVideoError(true);
               }}
@@ -290,6 +293,7 @@ export function HomePage() {
                   src={aiRobotImage}
                   alt="AI robot assisting elderly person with healthcare - representing Maximum 88's AI revolution"
                   className="w-full h-[400px] object-cover"
+                  loading="lazy"
                   style={{
                     imageRendering: 'crisp-edges',
                     backfaceVisibility: 'hidden',
@@ -415,6 +419,7 @@ export function HomePage() {
                         className={`w-full h-full transition-opacity duration-300 ${
                           maxpulseImageIndex === 1 ? 'object-cover object-top' : 'object-cover'
                         }`}
+                        loading="lazy"
                         onError={(e) => {
                           console.log('Image failed to load:', e.currentTarget.src);
                           // Fallback to first image if current image fails
@@ -553,6 +558,7 @@ export function HomePage() {
                         className={`w-full h-full transition-opacity duration-300 ${
                           assessmentImageIndex === 0 || assessmentImageIndex === 1 ? 'object-cover object-top' : 'object-cover'
                         }`}
+                        loading="lazy"
                         onError={(e) => {
                           console.log('Assessment image failed to load:', e.currentTarget.src);
                           // Fallback to first image if current image fails

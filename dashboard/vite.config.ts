@@ -22,6 +22,29 @@ export default defineConfig({
     build: {
       target: 'esnext',
       outDir: 'dist',
+      // ⚡ PERFORMANCE OPTIMIZATIONS
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // 📦 Vendor chunk for third-party libraries
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            // 🎨 UI chunk for UI components
+            ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+            // 📊 Charts chunk for data visualization
+            charts: ['recharts'],
+          },
+        },
+      },
+      // 🗜️ Enable compression and minification
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true, // Remove console.logs in production
+          drop_debugger: true,
+        },
+      },
+      // 📏 Chunk size warnings
+      chunkSizeWarningLimit: 1000,
     },
     server: {
       port: 3000,

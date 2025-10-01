@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Routes, Route, Navigate, HashRouter } from 'react-router-dom';
-import { DistributorDashboard } from './components/DistributorDashboard';
-import { AdminDashboard } from './components/AdminDashboard';
-import { TrainerDashboard } from './components/TrainerDashboard';
-import { LoginPage } from './components/LoginPage';
 import { Header } from './components/Header';
 import { PublicLayout } from './components/PublicLayout';
-import { HomePage } from './components/HomePage';
-import { AboutPage } from './components/AboutPage';
-import { HowItWorksPage } from './components/HowItWorksPage';
-import { SuccessStoriesPage } from './components/SuccessStoriesPage';
-import { ProfileSettings } from './components/ProfileSettings';
-import { AccountSettings } from './components/AccountSettings';
+import { LoginPage } from './components/LoginPage';
+
+// ⚡ CODE SPLITTING: Lazy load components for better performance
+const DistributorDashboard = React.lazy(() => import('./components/DistributorDashboard').then(module => ({ default: module.DistributorDashboard })));
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
+const TrainerDashboard = React.lazy(() => import('./components/TrainerDashboard').then(module => ({ default: module.TrainerDashboard })));
+const HomePage = React.lazy(() => import('./components/HomePage').then(module => ({ default: module.HomePage })));
+const AboutPage = React.lazy(() => import('./components/AboutPage').then(module => ({ default: module.AboutPage })));
+const HowItWorksPage = React.lazy(() => import('./components/HowItWorksPage').then(module => ({ default: module.HowItWorksPage })));
+const SuccessStoriesPage = React.lazy(() => import('./components/SuccessStoriesPage').then(module => ({ default: module.SuccessStoriesPage })));
+const ProfileSettings = React.lazy(() => import('./components/ProfileSettings').then(module => ({ default: module.ProfileSettings })));
+const AccountSettings = React.lazy(() => import('./components/AccountSettings').then(module => ({ default: module.AccountSettings })));
+
+// 🎯 LOADING COMPONENT: Optimized loading state
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600 font-medium">Loading MAXPULSE...</p>
+    </div>
+  </div>
+);
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -200,7 +212,8 @@ export default function App() {
   return (
     <HashRouter>
       <div className="min-h-screen bg-gray-50">
-        <Routes>
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
           {/* 
             PUBLIC MARKETING PAGES 
           */}
@@ -347,6 +360,7 @@ export default function App() {
             onSave={handleSaveAccountSettings}
           />
         )}
+        </Suspense>
       </div>
     </HashRouter>
   );

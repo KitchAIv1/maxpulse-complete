@@ -139,6 +139,10 @@ export function AboutPage() {
                 alt="Maximum 88 distributors celebrating success with MAXPULSE AI technology"
                 className="w-full h-full object-cover rounded-2xl shadow-xl"
                 loading="lazy"
+                srcSet="https://images.unsplash.com/photo-1752650735509-58f11eaa2e10?w=400&q=80 400w,
+                        https://images.unsplash.com/photo-1752650735509-58f11eaa2e10?w=800&q=80 800w,
+                        https://images.unsplash.com/photo-1752650735509-58f11eaa2e10?w=1200&q=80 1200w"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 style={{
                   imageRendering: 'crisp-edges',
                   backfaceVisibility: 'hidden',
@@ -358,6 +362,7 @@ export function AboutPage() {
                   src={healthTechImage}
                   alt="Healthcare professional with advanced technology integration"
                   className="w-full h-[500px] object-cover"
+                  loading="lazy"
                   style={{
                     imageRendering: 'crisp-edges',
                     backfaceVisibility: 'hidden',
