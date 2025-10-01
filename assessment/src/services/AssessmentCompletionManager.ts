@@ -87,12 +87,16 @@ export class AssessmentCompletionManager {
         return false;
       }
 
-      // Step 2: Create or get client record
-      const clientId = await this.createClientRecord(resolvedData);
-      if (!clientId) {
-        console.error('❌ Failed to create client record');
-        return false;
-      }
+      // Step 2: Create or get client record - TEMPORARILY DISABLED
+      // const clientId = await this.createClientRecord(resolvedData);
+      // if (!clientId) {
+      //   console.error('❌ Failed to create client record');
+      //   return false;
+      // }
+      
+      // TEMPORARY: Skip client record creation to test AI analysis
+      const clientId = 'temp-client-id';
+      console.log('⚠️ TEMPORARY: Skipping client record creation due to user_id ambiguity issue');
 
       // Step 3: Create client_assessment link
       const clientAssessmentId = await this.createClientAssessmentLink(
