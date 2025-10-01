@@ -180,7 +180,22 @@ export class AssessmentCompletionManager {
    */
   private async createClientRecord(data: AssessmentCompletionData): Promise<string | null> {
     try {
-      // 🔧 FIX: Use insert instead of upsert to avoid constraint issues
+      // 🔧 FIX: Check if client already exists first, then insert or return existing
+      const { data: existingClient, error: checkError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('distributor_id', data.distributorId)
+        .eq('email', data.customerEmail)
+        .single();
+
+      if (existingClient && !checkError) {
+        if (FeatureFlags.debugMode) {
+          console.log('✅ Client already exists:', existingClient.id);
+        }
+        return existingClient.id;
+      }
+
+      // Create new client record
       const { data: client, error } = await supabase
         .from('clients')
         .insert({
@@ -191,9 +206,7 @@ export class AssessmentCompletionManager {
           priority: 'medium',
           source: 'assessment',
           notes: `Completed ${data.assessmentType} assessment`,
-          tags: [data.assessmentType, 'assessment_lead'],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          tags: [data.assessmentType, 'assessment_lead']
         })
         .select('id')
         .single();
