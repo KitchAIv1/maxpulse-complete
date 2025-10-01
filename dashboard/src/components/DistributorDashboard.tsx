@@ -11,6 +11,7 @@ import { FinancePage } from './distributor/FinancePage';
 import { Goals } from './Goals';
 import { CompanyAnnouncements } from './CompanyAnnouncements';
 import { WelcomeModal } from './WelcomeModal';
+import { DashboardOverview } from './DashboardOverview';
 // DemoDataManager removed - using real data only
 import { useDashboardStats } from '../hooks/useDashboardStats';
 // Dashboard onboarding removed to prevent conflicts with dual onboarding
@@ -363,226 +364,18 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
       
       <div className="flex-1 overflow-auto">
         <div className="p-4 lg:p-6">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Welcome Section */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h1 className="text-xl lg:text-2xl text-gray-900">Welcome back, {user.name}!</h1>
-                  <p className="text-gray-600 text-sm lg:text-base">Here's your performance overview for this month</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {/* Help Guide button removed - onboarding available in LinkGeneration */}
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    {user.level}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Key Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                <Card className="p-4 lg:p-6 glass-card-brand glass-hover">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs lg:text-sm text-gray-700">Monthly Assessments</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">
-                        {statsLoading ? '...' : (supabaseStats?.assessments?.total || dashboardData?.monthlyStats.assessments.current || fallbackData.monthlyStats.assessments.current)}
-                      </p>
-                    </div>
-                    <Target className="h-6 w-6 lg:h-8 lg:w-8 text-brand-primary" />
-                  </div>
-                  <div className="flex items-center mt-2">
-                    {!statsLoading && (supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? (
-                      <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 lg:h-4 lg:w-4 text-red-600 mr-1" />
-                    )}
-                    <span className={`text-xs lg:text-sm ${
-                      !statsLoading && (supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {statsLoading ? '...' : `${(supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? '+' : ''}${supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0}%`}
-                    </span>
-                  </div>
-                </Card>
-
-                <Card className="p-4 lg:p-6 glass-card-brand glass-hover">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs lg:text-sm text-gray-700">Total Revenue</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">
-                        ${statsLoading ? '...' : (supabaseStats?.revenue?.total || dashboardData?.monthlyStats.revenue.current || fallbackData.monthlyStats.revenue.current)}
-                      </p>
-                    </div>
-                    <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-brand-primary" />
-                  </div>
-                  <div className="flex items-center mt-2">
-                    <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
-                    <span className={`text-xs lg:text-sm ${
-                      !statsLoading && (dashboardData?.monthlyStats.revenue.trend || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {statsLoading ? '...' : `${(dashboardData?.monthlyStats.revenue.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.revenue.trend || 0}%`}
-                    </span>
-                  </div>
-                </Card>
-
-                <Card className="p-4 lg:p-6 glass-card-brand glass-hover">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs lg:text-sm text-gray-700">Active Clients</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">
-                        {statsLoading ? '...' : (supabaseStats?.clients?.total || dashboardData?.monthlyStats.clients.current || fallbackData.monthlyStats.clients.current)}
-                      </p>
-                    </div>
-                    <Users className="h-6 w-6 lg:h-8 lg:w-8 text-brand-secondary" />
-                  </div>
-                  <div className="flex items-center mt-2">
-                    <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
-                    <span className="text-xs lg:text-sm text-green-600">
-{statsLoading ? '...' : `${(dashboardData?.monthlyStats.clients.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.clients.trend || 0}%`}
-                    </span>
-                  </div>
-                </Card>
-
-                <Card className="p-4 lg:p-6 glass-card-brand glass-hover">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs lg:text-sm text-gray-700">Conversion Rate</p>
-                      <p className="text-xl lg:text-2xl text-gray-900">
-                        {statsLoading ? '...' : `${supabaseStats?.assessments?.completionRate?.toFixed(1) || dashboardData?.monthlyStats.conversion.current || fallbackData.monthlyStats.conversion.current}%`}
-                      </p>
-                    </div>
-                    <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-orange-600" />
-                  </div>
-                  <div className="flex items-center mt-2">
-                    <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-green-600 mr-1" />
-                    <span className="text-xs lg:text-sm text-green-600">
-{statsLoading ? '...' : `${(dashboardData?.monthlyStats.conversion.trend || 0) >= 0 ? '+' : ''}${dashboardData?.monthlyStats.conversion.trend || 0}%`}
-                    </span>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Quick Actions */}
-              <Card className="p-4 lg:p-6">
-                <h3 className="text-base lg:text-lg mb-4 text-gray-900">Quick Actions</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                  {(dashboardData?.quickActions || fallbackData.quickActions || []).map((action, index) => (
-                    <Button 
-                      key={index}
-                      className="h-16 lg:h-20 flex flex-col items-center justify-center space-y-1 lg:space-y-2 bg-red-600 hover:bg-red-700 text-white border-0 transition-colors"
-                      onClick={() => handleQuickAction(action.action)}
-                    >
-                      {action.icon === 'Link' && <ArrowUpRight className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
-                      {action.icon === 'Users' && <Users className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
-                      {action.icon === 'BarChart3' && <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
-                      {action.icon === 'BookOpen' && <Star className="h-5 w-5 lg:h-6 lg:w-6 text-white" />}
-                      <span className="text-xs lg:text-sm text-center leading-tight text-white">{action.label}</span>
-                    </Button>
-                  ))}
-                </div>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card className="p-4 lg:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base lg:text-lg">Recent Activity</h3>
-                    <Badge variant="secondary" className="bg-brand-primary/10 text-brand-primary text-xs px-2 py-1">
-                      {recentActivity.length} new
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={loadRecentActivity}
-                      className="hover:bg-brand-primary/5 hover:text-brand-primary transition-colors"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Refresh</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="hover:bg-brand-primary/5 hover:text-brand-primary transition-colors">
-                      <Eye className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">View All</span>
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-2 lg:space-y-3">
-                  {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-                    <div 
-                      key={activity.id} 
-                      className={`group relative flex items-start justify-between p-3 lg:p-4 ${activity.bgColor} border border-gray-100 rounded-lg gap-3 hover:shadow-sm transition-all duration-200 hover:border-brand-primary/20`}
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      {/* Activity Type Indicator */}
-                      <div className="flex items-start min-w-0 flex-1">
-                        <div className={`p-1.5 lg:p-2 rounded-full ${activity.bgColor} border border-white mr-3 mt-0.5 flex-shrink-0 shadow-sm`}>
-                          <activity.icon className={`h-3 w-3 lg:h-4 lg:w-4 ${activity.color}`} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs lg:text-sm leading-relaxed text-gray-900 group-hover:text-gray-800 transition-colors">
-                            {activity.message}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Clock className="h-3 w-3 text-gray-400" />
-                            <p className="text-xs text-gray-500">{activity.time}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Actions */}
-                      <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-                        {activity.priority === 'high' && (
-                          <Badge 
-                            variant="secondary" 
-                            className="bg-red-50 text-red-700 border border-red-200 text-xs animate-pulse"
-                          >
-                            High Priority
-                          </Badge>
-                        )}
-                        {activity.action && (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-xs px-3 py-1 bg-white border-brand-primary/20 text-brand-primary hover:bg-brand-primary hover:text-white transition-all duration-200 shadow-sm"
-                          >
-                            <span className="hidden sm:inline">{activity.action}</span>
-                            <span className="sm:hidden">Follow up</span>
-                          </Button>
-                        )}
-                      </div>
-                      
-                      {/* Subtle gradient overlay for depth */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">                      </div>
-                    </div>
-                  )) : (
-                    <div className="text-center py-8">
-                      <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500 text-sm">No recent activity</p>
-                      <p className="text-gray-400 text-xs mt-1">Assessment activity will appear here in real-time</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Quick Action Footer */}
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Last updated: just now</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-xs h-auto p-1 text-brand-primary hover:text-brand-primary/80"
-                    >
-                      Auto-refresh: ON
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
+          {activeTab === "overview" && (
+            <DashboardOverview
+              user={user}
+              dashboardData={dashboardData}
+              supabaseStats={supabaseStats}
+              statsLoading={statsLoading}
+              recentActivity={recentActivity}
+              onQuickAction={handleQuickAction}
+            />
           )}
-
           {activeTab === 'announcements' && <CompanyAnnouncements />}
-        {activeTab === 'clients' && <ClientHub user={user} />}
+          {activeTab === 'clients' && <ClientHub user={user} />}
           {activeTab === 'link-generator' && <LinkGeneration user={user} />}
           {activeTab === 'analytics' && <RevenueAnalytics />}
           {activeTab === 'training' && <TrainingCenter />}
@@ -590,8 +383,6 @@ export function DistributorDashboard({ user }: DistributorDashboardProps) {
           {activeTab === 'goals' && <Goals />}
         </div>
       </div>
-
-      {/* Dashboard onboarding removed - dual onboarding available in LinkGeneration */}
     </div>
   );
 }
