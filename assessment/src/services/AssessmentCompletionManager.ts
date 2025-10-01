@@ -87,16 +87,12 @@ export class AssessmentCompletionManager {
         return false;
       }
 
-      // Step 2: Create or get client record - TEMPORARILY DISABLED
-      // const clientId = await this.createClientRecord(resolvedData);
-      // if (!clientId) {
-      //   console.error('❌ Failed to create client record');
-      //   return false;
-      // }
-      
-      // TEMPORARY: Skip client record creation to test AI analysis
-      const clientId = 'temp-client-id';
-      console.log('⚠️ TEMPORARY: Skipping client record creation due to user_id ambiguity issue');
+      // Step 2: Create or get client record
+      const clientId = await this.createClientRecord(resolvedData);
+      if (!clientId) {
+        console.error('❌ Failed to create client record');
+        return false;
+      }
 
       // Step 3: Create client_assessment link
       const clientAssessmentId = await this.createClientAssessmentLink(
@@ -134,41 +130,24 @@ export class AssessmentCompletionManager {
    */
   private async createAssessmentRecord(data: AssessmentCompletionData): Promise<string | null> {
     try {
-      // 🔧 FIX: Use insert instead of upsert to avoid conflict issues
       const { data: assessment, error } = await supabase
         .from('assessments')
-        .insert({
+        .upsert({
           distributor_id: data.distributorId,
           assessment_type: data.assessmentType,
           status: 'completed',
           started_at: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago estimate
           completed_at: data.completedAt,
-          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'distributor_id,assessment_type,completed_at'
         })
         .select('id')
         .single();
 
       if (error) {
-        console.error('❌ DETAILED Assessment Error:', {
-          error: error,
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          data_sent: {
-            distributor_id: data.distributorId,
-            assessment_type: data.assessmentType,
-            status: 'completed',
-            started_at: new Date(Date.now() - 300000).toISOString(),
-            completed_at: data.completedAt
-          }
-        });
+        console.error('Failed to create assessment record:', error);
         return null;
-      }
-
-      if (FeatureFlags.debugMode) {
-        console.log('✅ Assessment record created:', assessment?.id);
       }
 
       return assessment?.id || null;
@@ -184,25 +163,9 @@ export class AssessmentCompletionManager {
    */
   private async createClientRecord(data: AssessmentCompletionData): Promise<string | null> {
     try {
-      // 🔧 FIX: Check if client already exists first, then insert or return existing
-      const { data: existingClient, error: checkError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('distributor_id', data.distributorId)
-        .eq('email', data.customerEmail)
-        .single();
-
-      if (existingClient && !checkError) {
-        if (FeatureFlags.debugMode) {
-          console.log('✅ Client already exists:', existingClient.id);
-        }
-        return existingClient.id;
-      }
-
-      // Create new client record
       const { data: client, error } = await supabase
         .from('clients')
-        .insert({
+        .upsert({
           distributor_id: data.distributorId,
           name: data.customerName,
           email: data.customerEmail,
@@ -210,30 +173,17 @@ export class AssessmentCompletionManager {
           priority: 'medium',
           source: 'assessment',
           notes: `Completed ${data.assessmentType} assessment`,
-          tags: [data.assessmentType, 'assessment_lead']
+          tags: [data.assessmentType, 'assessment_lead'],
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'distributor_id,email'
         })
         .select('id')
         .single();
 
       if (error) {
-        console.error('❌ DETAILED Client Error:', {
-          error: error,
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          data_sent: {
-            distributor_id: data.distributorId,
-            name: data.customerName,
-            email: data.customerEmail,
-            status: 'lead'
-          }
-        });
+        console.error('Failed to create client record:', error);
         return null;
-      }
-
-      if (FeatureFlags.debugMode) {
-        console.log('✅ Client record created:', client?.id);
       }
 
       return client?.id || null;
