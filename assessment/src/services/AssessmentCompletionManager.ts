@@ -180,9 +180,10 @@ export class AssessmentCompletionManager {
    */
   private async createClientRecord(data: AssessmentCompletionData): Promise<string | null> {
     try {
+      // 🔧 FIX: Use insert instead of upsert to avoid constraint issues
       const { data: client, error } = await supabase
         .from('clients')
-        .upsert({
+        .insert({
           distributor_id: data.distributorId,
           name: data.customerName,
           email: data.customerEmail,
@@ -191,16 +192,31 @@ export class AssessmentCompletionManager {
           source: 'assessment',
           notes: `Completed ${data.assessmentType} assessment`,
           tags: [data.assessmentType, 'assessment_lead'],
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'distributor_id,email'
         })
         .select('id')
         .single();
 
       if (error) {
-        console.error('Failed to create client record:', error);
+        console.error('❌ DETAILED Client Error:', {
+          error: error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          data_sent: {
+            distributor_id: data.distributorId,
+            name: data.customerName,
+            email: data.customerEmail,
+            status: 'lead'
+          }
+        });
         return null;
+      }
+
+      if (FeatureFlags.debugMode) {
+        console.log('✅ Client record created:', client?.id);
       }
 
       return client?.id || null;

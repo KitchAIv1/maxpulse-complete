@@ -500,7 +500,8 @@ export class IntelligentRecommendationEngine {
           personalized_message: result.personalized_message,
           urgency_level: result.urgency_level,
           confidence_score: result.confidence_score,
-          processing_time_ms: Date.now()
+          processing_time_ms: Date.now(),
+          created_at: new Date().toISOString()
         });
       
       if (error) {
