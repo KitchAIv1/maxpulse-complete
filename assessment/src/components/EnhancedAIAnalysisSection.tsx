@@ -159,21 +159,24 @@ export const EnhancedAIAnalysisSection: React.FC<EnhancedAIAnalysisSectionProps>
         {/* Holistic Assessment */}
         <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 border-2 border-blue-300 p-6 rounded-lg mb-6">
           <h4 style={{color: '#1e40af', fontSize: '17px', fontWeight: 'bold', marginBottom: '16px'}}>
-            🔍 Your Complete Health Reality Check
+            🔍 AI-Generated Health Reality Check
           </h4>
           
           <div className="space-y-5">
             <div className="bg-white p-4 rounded-lg border-l-4 border-blue-500">
               <p style={{color: 'black', fontSize: '15px', lineHeight: '1.7', marginBottom: '12px'}}>
-                <strong>The Frank Truth:</strong> Your current lifestyle pattern is creating a compound effect on your quality of life. 
-                Here's what our AI analysis reveals when we connect all the dots:
+                <strong>AI Analysis:</strong> {analysis.overallMessage || 'Your personalized health analysis has been generated using advanced AI.'}
               </p>
               
-              <p style={{color: '#374151', fontSize: '14px', lineHeight: '1.6', marginBottom: '12px'}}>
-                Your sleep patterns, hydration levels, activity consistency, and stress management aren't operating in isolation—they're creating a 
-                <strong> cascading impact</strong> on your energy, mood, cognitive performance, and overall life satisfaction. Add in factors like 
-                substance use, preventive health practices, and stress resilience, and we see a clear picture of your wellness trajectory.
-              </p>
+              {analysis.areaAnalysis && Array.isArray(analysis.areaAnalysis) && analysis.areaAnalysis.length > 0 && (
+                <div className="space-y-3">
+                  {analysis.areaAnalysis.slice(0, 3).map((area, index) => (
+                    <p key={index} style={{color: '#374151', fontSize: '14px', lineHeight: '1.6'}}>
+                      <strong>{area.area}:</strong> {area.insights || area.recommendations || `Score: ${area.score}/10`}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-300">
@@ -181,41 +184,32 @@ export const EnhancedAIAnalysisSection: React.FC<EnhancedAIAnalysisSectionProps>
                 ⚠️ Quality of Life Impact Analysis
               </h5>
               <p style={{color: '#92400e', fontSize: '13px', lineHeight: '1.6'}}>
-                <strong>Current State:</strong> Based on your responses, you're operating at approximately <strong>68% of your potential quality of life</strong>. 
-                This means you're leaving 32% of your energy, mental clarity, physical vitality, and life satisfaction on the table every single day.
+                <strong>Current State:</strong> Based on your responses, you're operating at approximately <strong>{analysis.overallScore || 68}% of your potential quality of life</strong>. 
+                {analysis.improvementPotential || 'This analysis reveals specific areas for optimization to enhance your daily experience.'}
               </p>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <h5 style={{color: 'black', fontSize: '14px', fontWeight: 'bold', marginBottom: '10px'}}>
-                🧬 The Science Behind Your Experience
-              </h5>
-              <div className="space-y-3 text-sm">
-                <p style={{color: '#374151', lineHeight: '1.6'}}>
-                  <strong>Cellular Level:</strong> Suboptimal hydration reduces cellular energy production by 30%, while inconsistent sleep disrupts 
-                  hormonal balance, affecting everything from appetite regulation to stress response.
-                </p>
-                <p style={{color: '#374151', lineHeight: '1.6'}}>
-                  <strong>Neurological Impact:</strong> Chronic stress elevates cortisol by 23% on average, creating inflammation that impairs 
-                  cognitive function and emotional regulation—explaining why small stressors feel overwhelming.
-                </p>
-                <p style={{color: '#374151', lineHeight: '1.6'}}>
-                  <strong>Metabolic Cascade:</strong> When sleep, hydration, and stress management are suboptimal, your metabolism slows by 15-20%, 
-                  creating the energy crashes and mood swings you experience daily.
+            {analysis.scientificBacking && (
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <h5 style={{color: 'black', fontSize: '14px', fontWeight: 'bold', marginBottom: '10px'}}>
+                  🧬 The Science Behind Your Experience
+                </h5>
+                <p style={{color: '#374151', fontSize: '14px', lineHeight: '1.6'}}>
+                  {analysis.scientificBacking}
                 </p>
               </div>
-            </div>
+            )}
 
-            <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg border border-green-300">
-              <h5 style={{color: '#059669', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px'}}>
-                🎯 Your Quality of Life Optimization Potential
-              </h5>
-              <p style={{color: '#065f46', fontSize: '13px', lineHeight: '1.6'}}>
-                <strong>The Opportunity:</strong> By addressing the interconnected factors our AI identified, you could realistically improve your 
-                daily quality of life by 40-50% within 8-12 weeks. This isn't about perfection—it's about strategic optimization of the factors 
-                that create the biggest compound returns on your life satisfaction.
-              </p>
-            </div>
+            {analysis.optimizationPotential && (
+              <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg border border-green-300">
+                <h5 style={{color: '#059669', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px'}}>
+                  🎯 Your Quality of Life Optimization Potential
+                </h5>
+                <p style={{color: '#065f46', fontSize: '13px', lineHeight: '1.6'}}>
+                  <strong>The Opportunity:</strong> {analysis.optimizationPotential}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

@@ -36,12 +36,13 @@ export class EnhancedAIAnalysisManager {
     try {
       console.log('🧠 Starting Enhanced AI Analysis with Intelligent Recommendations...');
       
-      // Check cache first
-      const cached = this.getCachedAnalysis(input);
-      if (cached) {
-        console.log('📋 Using cached enhanced analysis');
-        return cached;
-      }
+      // TEMPORARILY DISABLED: Skip cache to test real AI
+      // const cached = this.getCachedAnalysis(input);
+      // if (cached) {
+      //   console.log('📋 Using cached enhanced analysis');
+      //   return cached;
+      // }
+      console.log('🔄 Cache disabled - forcing fresh AI analysis');
 
       // Step 1: Generate intelligent recommendations using our new engine
       const recommendationResult = await this.generateIntelligentRecommendations(input);
@@ -69,8 +70,9 @@ export class EnhancedAIAnalysisManager {
       enhancedAnalysis.model = this.config.model;
       enhancedAnalysis.enhancedWithRecommendations = true;
       
-      // Cache the enhanced result
-      this.cacheAnalysis(input, enhancedAnalysis);
+      // TEMPORARILY DISABLED: Skip caching to test real AI
+      // this.cacheAnalysis(input, enhancedAnalysis);
+      console.log('🔄 Caching disabled - not storing result');
       
       console.log('✅ Enhanced AI Analysis completed successfully');
       return enhancedAnalysis;
@@ -230,10 +232,12 @@ export class EnhancedAIAnalysisManager {
       // Core AI Analysis
       overallScore,
       overallGrade,
-      overallMessage: recommendations.personalized_message,
+      overallMessage: aiAnalysis.overallMessage || recommendations.personalized_message,
       
-      // Enhanced with intelligent recommendations
-      areaAnalysis: this.generateAreaAnalysis(aiAnalysis.lifestyle_analysis || {}, input.healthMetrics),
+      // Enhanced with intelligent recommendations - Use AI response if available
+      areaAnalysis: aiAnalysis.areaInsights || aiAnalysis.areaAnalysis || this.generateAreaAnalysis(aiAnalysis.lifestyle_analysis || {}, input.healthMetrics),
+      scientificBacking: aiAnalysis.scientificBacking,
+      optimizationPotential: aiAnalysis.optimizationPotential,
       priorityActions: this.generatePriorityActions(recommendations),
       positiveAspects: this.generatePositiveAspects(recommendations, input.healthMetrics),
       riskFactors: this.generateRiskFactors(recommendations.identified_conditions),
