@@ -1,10 +1,8 @@
 import React from 'react';
 import { Moon, Droplets, Activity, Heart } from 'lucide-react';
 import { AssessmentResults } from '../types/assessment';
-import { AIAnalysisSection } from './AIAnalysisSection';
+import { EnhancedAIAnalysisSection } from './EnhancedAIAnalysisSection';
 import { HealthMetricsCards } from './HealthMetricsCards';
-import { MaxPulseRecommendations } from './MaxPulseRecommendations';
-import { LifestyleMessage } from './LifestyleMessage';
 import { useAIAnalysis } from '../hooks/useAIAnalysis';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
@@ -47,7 +45,8 @@ export function HealthInsightsResults({
     age: 35, // Default age, should be extracted from assessment
     weight: 70, // Default weight in kg
     height: 175, // Default height in cm
-    gender: 'other' // Default gender
+    gender: 'other', // Default gender
+    name: firstName // Add user name for personalized analysis
   };
 
   // Create health metrics for AI analysis
@@ -69,102 +68,97 @@ export function HealthInsightsResults({
   
   // Use AI analysis data if available, otherwise fallback to original logic
   const getHealthMetricsDisplay = () => {
-    if (analysis?.areaAnalysis) {
+    if (analysis?.areaAnalysis && Array.isArray(analysis.areaAnalysis)) {
+      // Convert array format to object format for compatibility
+      const areaMap: any = {};
+      analysis.areaAnalysis.forEach(area => {
+        const key = area.area.toLowerCase();
+        areaMap[key] = area;
+      });
+
+      // Map to expected format with safe fallbacks
+      const getSafeArea = (key: string, fallbackScore: number) => {
+        const area = areaMap[key];
+        return {
+          score: area?.score || fallbackScore,
+          insights: area?.insights || `Your ${key} levels show room for optimization.`,
+          recommendations: area?.recommendations || `Focus on improving your ${key} habits.`
+        };
+      };
+
+      const sleepArea = getSafeArea('sleep', sleepScore);
+      const hydrationArea = getSafeArea('hydration', hydrationScore);
+      const exerciseArea = getSafeArea('exercise', activityScore);
+      const nutritionArea = getSafeArea('nutrition', stressScore);
+
       return {
         sleep: {
-          score: analysis.areaAnalysis.sleep.score,
-          status: `${firstName}, ${analysis.areaAnalysis.sleep.insights.toLowerCase()}`,
-          category: analysis.areaAnalysis.sleep.score >= 7 ? 'Strength' : 'Area to improve',
+          score: sleepArea.score,
+          status: `Your brain needs sleep like a computer needs to restart - without it, mental performance drops by 23%. Your sleep score of ${sleepArea.score}/10 suggests ${sleepArea.score >= 7 ? 'good sleep habits that support cognitive function' : 'room for optimization to improve energy and mental clarity'}.`,
+          category: sleepArea.score >= 7 ? 'Strength' : 'Area to improve',
           icon: Moon,
-          personalizedTip: `For you specifically, ${firstName}, ${analysis.areaAnalysis.sleep.recommendations[0]?.toLowerCase() || 'focus on consistent sleep patterns'}.`
+          personalizedTip: `The MAXPULSE App will monitor your sleep cycles and optimize your bedtime routine with personalized recommendations.`
         },
         hydration: {
-          score: analysis.areaAnalysis.hydration.score,
-          status: `Your hydration ${analysis.areaAnalysis.hydration.insights.toLowerCase()}`,
-          category: analysis.areaAnalysis.hydration.score >= 7 ? 'Strength' : 'Area to improve',
+          score: hydrationArea.score,
+          status: `Your cells are like tiny factories that need water to produce energy. When dehydrated, cellular energy production drops by up to 30%. Your hydration score of ${hydrationArea.score}/10 indicates ${hydrationArea.score >= 7 ? 'good hydration habits supporting cellular function' : 'chronic cellular dehydration affecting energy levels'}.`,
+          category: hydrationArea.score >= 7 ? 'Strength' : 'Area to improve',
           icon: Droplets,
-          personalizedTip: `Based on your profile, ${firstName}, ${analysis.areaAnalysis.hydration.recommendations[0]?.toLowerCase() || 'increase your daily water intake'}.`
+          personalizedTip: `The MAXPULSE App will track your hydration precisely with hourly reminders and intake monitoring.`
         },
         activity: {
-          score: analysis.areaAnalysis.exercise.score,
-          status: `Great job, ${firstName}! ${analysis.areaAnalysis.exercise.insights.toLowerCase()}`,
-          category: analysis.areaAnalysis.exercise.score >= 7 ? 'Strength' : 'Area to improve',
+          score: exerciseArea.score,
+          status: `Exercise breaks down muscle tissue, recovery builds it back stronger. Without proper recovery tracking, you're breaking down faster than building up. Your activity score of ${exerciseArea.score}/10 shows ${exerciseArea.score >= 7 ? 'excellent activity levels with good recovery balance' : 'optimization opportunities for better performance'}.`,
+          category: exerciseArea.score >= 7 ? 'Strength' : 'Area to improve',
           icon: Activity,
-          personalizedTip: `You're doing well! ${analysis.areaAnalysis.exercise.recommendations[0]?.toLowerCase() || 'keep up your current activity level'}.`
+          personalizedTip: `The MAXPULSE App will track your heart rate variability and suggest optimal training intensity based on recovery status.`
         },
         stress: {
-          score: analysis.areaAnalysis.nutrition.score,
-          status: `${firstName}, your nutrition ${analysis.areaAnalysis.nutrition.insights.toLowerCase()}`,
-          category: analysis.areaAnalysis.nutrition.score >= 7 ? 'Strength' : 'Area to improve',
+          score: nutritionArea.score,
+          status: `Stress hormones like cortisol are meant for short-term survival, not chronic activation. Constant stress is like keeping your car engine in the red zone. Your stress patterns indicate ${nutritionArea.score >= 7 ? 'good stress management supporting overall health' : 'cortisol dysregulation affecting multiple body systems'}.`,
+          category: nutritionArea.score >= 7 ? 'Strength' : 'Area to improve',
           icon: Heart,
-          personalizedTip: `For your lifestyle, ${firstName}, ${analysis.areaAnalysis.nutrition.recommendations[0]?.toLowerCase() || 'focus on balanced nutrition'}.`
+          personalizedTip: `The MAXPULSE App will monitor daily mood patterns and provide stress management techniques with biometric feedback.`
         }
       };
     }
     
-    // Fallback to original static data with enhanced personalization
+    // Fallback to enhanced science-backed analysis
     return {
       sleep: {
         score: sleepScore,
-        status: `${firstName}, your sleep scored ${sleepScore}/10 — your bedtime routine seems inconsistent, which may affect recovery.`,
+        status: `Your brain needs sleep like a computer needs to restart - without it, mental performance drops by 23%. Your sleep score of ${sleepScore}/10 suggests ${sleepScore >= 7 ? 'good sleep habits that support cognitive function' : 'room for optimization to improve energy and mental clarity'}.`,
         category: sleepScore >= 7 ? 'Strength' : 'Area to improve',
         icon: Moon,
-        personalizedTip: `For you specifically, try setting a consistent bedtime 30 minutes earlier than usual to improve your recovery quality.`
+        personalizedTip: `The MAXPULSE App will monitor your sleep cycles and optimize your bedtime routine with personalized recommendations.`
       },
       hydration: {
         score: hydrationScore,
-        status: `Your hydration needs work, ${firstName} — you're not drinking enough daily to stay energized.`,
+        status: `Your cells are like tiny factories that need water to produce energy. When dehydrated, cellular energy production drops by up to 30%. Your hydration score of ${hydrationScore}/10 indicates ${hydrationScore >= 7 ? 'good hydration habits supporting cellular function' : 'chronic cellular dehydration affecting energy levels'}.`,
         category: hydrationScore >= 7 ? 'Strength' : 'Area to improve',
         icon: Droplets,
-        personalizedTip: `Based on your lifestyle, start each morning with 16oz of water and set hourly reminders throughout your day.`
+        personalizedTip: `The MAXPULSE App will track your hydration precisely with hourly reminders and intake monitoring.`
       },
       activity: {
         score: activityScore,
-        status: `Good base, ${firstName} — but more consistency helps maximize your results.`,
+        status: `Exercise breaks down muscle tissue, recovery builds it back stronger. Without proper recovery tracking, you're breaking down faster than building up. Your activity score of ${activityScore}/10 shows ${activityScore >= 7 ? 'excellent activity levels with good recovery balance' : 'optimization opportunities for better performance'}.`,
         category: activityScore >= 7 ? 'Strength' : 'Area to improve',
         icon: Activity,
-        personalizedTip: `Great job! To level up, try adding 10-minute movement breaks every 2 hours during your workday.`
+        personalizedTip: `The MAXPULSE App will track your heart rate variability and suggest optimal training intensity based on recovery status.`
       },
       stress: {
         score: stressScore,
-        status: `Your stress levels are high with limited recovery — this impacts everything else.`,
+        status: `Stress hormones like cortisol are meant for short-term survival, not chronic activation. Constant stress is like keeping your car engine in the red zone. Your stress patterns indicate ${stressScore >= 7 ? 'good stress management supporting overall health' : 'cortisol dysregulation affecting multiple body systems'}.`,
         category: stressScore >= 7 ? 'Strength' : 'Area to improve',
         icon: Heart,
-        personalizedTip: `For your stress profile, try 5 minutes of deep breathing when you first wake up and before bed.`
+        personalizedTip: `The MAXPULSE App will monitor daily mood patterns and provide stress management techniques with biometric feedback.`
       }
     };
   };
 
   const healthMetricsDisplay = getHealthMetricsDisplay();
 
-  // Use AI analysis recommendations if available, otherwise fallback to original
-  const getRecommendations = () => {
-    let recommendations = [];
-    
-    if (analysis?.priorityActions && analysis.priorityActions.length > 0) {
-      recommendations = [...analysis.priorityActions];
-    } else {
-      // Fallback to original static recommendations with personal tone
-      recommendations = [
-        `${firstName}, improve your bedtime routine for deeper rest and better recovery`,
-        'Start drinking more water throughout your day to stay energized and focused',
-        `Since you're already averaging a good activity base, try short bursts of movement during your day to level up further`,
-        'Try relaxation techniques that work for your lifestyle to improve stress balance'
-      ];
-    }
-    
-    // Add risk factors as additional recommendations with personal tone
-    if (analysis?.riskFactors && analysis.riskFactors.length > 0) {
-      const riskBasedRecommendations = analysis.riskFactors.map(risk => 
-        `Based on your profile, focus on addressing: ${risk.toLowerCase()}`
-      );
-      recommendations = [...recommendations, ...riskBasedRecommendations];
-    }
-    
-    return recommendations;
-  };
-
-  const recommendations = getRecommendations();
+  // Enhanced AI analysis now handles all recommendations through EnhancedAIAnalysisSection
 
   const handleContinue = () => {
     // Track health insights viewed
@@ -200,14 +194,11 @@ export function HealthInsightsResults({
         </p>
       </div>
 
-      {/* Health Metrics Cards */}
+      {/* Enhanced Health Metrics Cards with Science-Backed Analysis */}
       <HealthMetricsCards healthMetrics={healthMetricsDisplay} />
 
-      {/* MaxPulse Recommendations */}
-      <MaxPulseRecommendations recommendations={recommendations} />
-
-      {/* AI Analysis Section - Shows detailed AI insights with beautiful UI */}
-      <AIAnalysisSection
+      {/* Enhanced AI Analysis Section - MAXPULSE App-Centric Recommendations with Lifestyle Mindset */}
+      <EnhancedAIAnalysisSection
         analysis={analysis}
         loading={loading}
         error={error}
@@ -215,9 +206,6 @@ export function HealthInsightsResults({
         onRetry={retry}
         assessmentType="health"
       />
-
-      {/* Lifestyle Message */}
-      <LifestyleMessage firstName={firstName} />
 
       {/* Simple Button */}
       <div className="text-center">

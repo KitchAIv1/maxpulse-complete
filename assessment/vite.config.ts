@@ -6,6 +6,17 @@
 export default defineConfig({
   base: '/assessment/',
   plugins: [react()],
+  define: {
+    // Enable Real AI for Data Collection Mission
+    'import.meta.env.VITE_USE_SUPABASE': '"true"',
+    'import.meta.env.VITE_AI_EDGE_FUNCTION': '"true"',
+    'import.meta.env.VITE_REALTIME_TRACKING': '"true"',
+    'import.meta.env.VITE_DATABASE_SUBSCRIPTIONS': '"true"',
+    'import.meta.env.VITE_DEBUG_MODE': '"true"',
+    'import.meta.env.VITE_MOCK_DATA': '"false"',
+    'import.meta.env.VITE_SUPABASE_URL': '"https://pdgpktwmqxrljtdbnvyu.supabase.co"',
+    'import.meta.env.VITE_SUPABASE_ANON_KEY': '"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ3BrdHdtcXhybGp0ZGJudnl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzI5NDIsImV4cCI6MjA1MDU0ODk0Mn0.gOKdYHNKmZBxJkDZGZdmJqNJKHtKdqzNJKHtKdqzNJK"'
+  },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {

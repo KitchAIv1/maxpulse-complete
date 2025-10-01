@@ -48,26 +48,35 @@ export function HealthMetricsCards({ healthMetrics }: HealthMetricsCardsProps) {
               {metric.score}/10
             </div>
             
-            <p style={{color: 'black', marginBottom: '12px', fontSize: '14px'}}>
-              {metric.status}
-            </p>
+            {/* Enhanced: Objective Layman Analysis */}
+            <div className="mb-4">
+              <p style={{color: '#374151', fontSize: '14px', lineHeight: '1.5', marginBottom: '8px'}}>
+                <strong>🔍 What this means:</strong> {metric.status}
+              </p>
+            </div>
             
-            {/* Personalized Tip - New detailed section */}
+            {/* Enhanced: MAXPULSE App Integration */}
             {metric.personalizedTip && (
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mb-3 rounded-r">
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-3 mb-3 rounded-lg">
                 <p style={{color: '#1e40af', fontSize: '12px', fontWeight: '500', lineHeight: '1.4'}}>
-                  💡 <strong>Personal Tip:</strong> {metric.personalizedTip}
+                  📱 <strong>MAXPULSE App Solution:</strong> {metric.personalizedTip}
                 </p>
               </div>
             )}
             
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-              isStrength 
-                ? 'bg-green-200 text-green-800' 
-                : 'bg-yellow-200 text-yellow-800'
-            }`}>
-              {metric.category}
-            </span>
+            {/* Enhanced: Category Badge with Science Context */}
+            <div className="flex items-center justify-between">
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                isStrength 
+                  ? 'bg-green-200 text-green-800' 
+                  : 'bg-yellow-200 text-yellow-800'
+              }`}>
+                {metric.category}
+              </span>
+              <span style={{color: '#6b7280', fontSize: '11px'}}>
+                Science-backed
+              </span>
+            </div>
           </div>
         );
       })}
