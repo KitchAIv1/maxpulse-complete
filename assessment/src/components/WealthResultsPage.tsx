@@ -254,14 +254,14 @@ export function WealthResultsPage({
       </motion.div>
 
       {/* AI Analysis Section - Shows detailed AI insights */}
-      <AIAnalysisSection
-        analysis={analysis}
-        loading={loading}
-        error={error}
-        canRetry={canRetry}
-        onRetry={retry}
-        assessmentType="wealth"
-      />
+        <AIAnalysisSection
+          analysis={analysis}
+          loading={loading}
+          error={error}
+          canRetry={canRetry}
+          onRetry={retry}
+          assessmentType="wealth"
+        />
 
       {/* Business Package Recommendation */}
       <motion.div

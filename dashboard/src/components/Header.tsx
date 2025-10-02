@@ -73,8 +73,8 @@ export function Header({ user, onLogout, onShowProfile, onShowAccountSettings }:
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          </div>
         </div>
-      </header>
-    );
-  }
+      </div>
+    </header>
+  );
+}

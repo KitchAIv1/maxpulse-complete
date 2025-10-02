@@ -10,7 +10,7 @@ import {
   Demographics,
   HealthMetrics 
 } from '../types/aiAnalysis';
-import { AIAnalysisManager } from '../services/AIAnalysisManager';
+import { EnhancedAIAnalysisManager } from '../services/EnhancedAIAnalysisManager';
 
 interface UseAIAnalysisProps {
   assessmentType: 'health' | 'wealth' | 'hybrid';
@@ -35,7 +35,7 @@ export const useAIAnalysis = ({
     retryCount: 0
   });
 
-  const aiManager = useMemo(() => new AIAnalysisManager(), []);
+  const aiManager = useMemo(() => new EnhancedAIAnalysisManager(), []);
   const hasRunRef = useRef(false);
 
   // Memoize the input to prevent unnecessary re-renders

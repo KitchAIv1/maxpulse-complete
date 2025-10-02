@@ -6,6 +6,7 @@ export interface Demographics {
   weight: number;    // in kg
   height: number;    // in cm
   gender?: 'male' | 'female' | 'other';
+  name?: string;     // User name for personalized analysis
 }
 
 export interface HealthMetrics {
@@ -51,33 +52,73 @@ export interface AIAnalysisResult {
   // Overall Assessment
   overallGrade: 'A+' | 'A' | 'B+' | 'B' | 'C+' | 'C' | 'D+' | 'D' | 'F';
   overallScore: number;             // 0-100
+  overallMessage: string;           // Personalized overall message
   
-  // Area-Specific Analysis
-  areaAnalysis: {
-    hydration: AreaInsight;
-    sleep: AreaInsight;
-    exercise: AreaInsight;
-    nutrition: AreaInsight;
-  };
+  // Area-Specific Analysis (simplified for enhanced version)
+  areaAnalysis: Array<{
+    area: string;
+    score: number;
+    grade: string;
+    insights: string;
+    recommendations: string;
+  }>;
   
   // Personalized Recommendations
   priorityActions: string[];        // Top 3-5 immediate actions
   riskFactors: string[];           // Health concerns identified
   positiveAspects: string[];       // Things user is doing well
   
-  // Contextual Insights
-  personalizedMessage: string;      // Custom message based on profile
-  improvementPotential: string;     // What could be achieved
-  keyInsights: string[];           // Main takeaways
+  // MAXPULSE App Integration (NEW)
+  maxpulseAppConfiguration?: {
+    primary_focus_areas: string[];
+    hydration_goal_liters?: number;
+    sleep_target_hours?: number;
+    daily_step_goal?: number;
+    mood_tracking_frequency?: string;
+    lifestyle_constraints?: string[];
+  };
+  
+  // Product Recommendations (NEW)
+  recommendedBundles?: Array<{
+    bundle_id: string;
+    name: string;
+    bundle_type: string;
+    price: number;
+    discount_percentage: number;
+    value_proposition: string;
+    expected_results: string;
+    confidence_score: number;
+    customization?: string;
+  }>;
+  
+  alternativeOptions?: Array<{
+    bundle_id: string;
+    name: string;
+    bundle_type: string;
+    price: number;
+    confidence_score: number;
+  }>;
+  
+  // Enhanced Intelligence (NEW)
+  intelligentRecommendations?: any; // Full recommendation result
+  confidenceScore?: number;         // 0-100
+  urgencyLevel?: 'low' | 'moderate' | 'high' | 'urgent';
+  followUpTimeline?: string;
+  
+  // Contextual Insights (LEGACY - kept for compatibility)
+  personalizedMessage?: string;     // Custom message based on profile
+  improvementPotential?: string;    // What could be achieved
+  keyInsights?: string[];          // Main takeaways
   
   // Legal & Compliance
-  disclaimer: string;
+  disclaimer?: string;
   generatedAt: string;
   analysisId: string;
   
   // Metadata
   processingTime?: number;          // milliseconds
   model?: string;                   // AI model used
+  enhancedWithRecommendations?: boolean; // NEW: indicates enhanced analysis
 }
 
 export interface AIAnalysisError {

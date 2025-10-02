@@ -48,7 +48,7 @@ VITE_DATABASE_SUBSCRIPTIONS=false
 
 # Supabase Configuration (both apps)
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
 
 **Deployment Steps:**
@@ -96,7 +96,7 @@ VITE_COMMISSION_BACKEND=true
 VITE_DATABASE_SUBSCRIPTIONS=false
 VITE_MOCK_DATA=false
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 EOF
 
 # Update Assessment Environment
@@ -108,7 +108,7 @@ VITE_ANALYTICS_BACKEND=true
 VITE_REALTIME_TRACKING=true
 VITE_DATABASE_SUBSCRIPTIONS=false
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 EOF
 
 # Restart servers (run in separate terminals)

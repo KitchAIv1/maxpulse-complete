@@ -184,31 +184,55 @@ async function generateAIAnalysis(input: AIAnalysisInput) {
   // Check if we have OpenAI API key
   const openaiKey = Deno.env.get('OPENAI_API_KEY');
   
+  console.log('🔍 DIAGNOSTIC: OpenAI API Key status:', openaiKey ? 'PRESENT' : 'MISSING');
+  console.log('🔍 DIAGNOSTIC: Key length:', openaiKey ? openaiKey.length : 0);
+  console.log('🔍 DIAGNOSTIC: Key prefix:', openaiKey ? openaiKey.substring(0, 7) + '...' : 'N/A');
+  
   if (openaiKey) {
     // Real OpenAI integration (when API key is available)
     try {
+      console.log('🤖 ATTEMPTING: OpenAI API call...');
       const OpenAI = (await import('https://esm.sh/openai@4')).default;
       const openai = new OpenAI({ apiKey: openaiKey });
       
       const prompt = generatePrompt(input);
-      console.log('🤖 Calling OpenAI API...');
+      console.log('🤖 CALLING: OpenAI API with prompt length:', prompt.length);
       
       const response = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 1500,
         temperature: 0.3,
       });
       
+      console.log('✅ SUCCESS: OpenAI API response received');
+      console.log('🔍 RESPONSE: Tokens used:', response.usage?.total_tokens || 'unknown');
+      
       const content = response.choices[0].message.content;
-      return JSON.parse(content || '{}');
+      console.log('🔍 CONTENT: Response length:', content?.length || 0);
+      
+      // Strip markdown code blocks if present
+      let cleanContent = content || '{}';
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\n/, '').replace(/\n```$/, '');
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\n/, '').replace(/\n```$/, '');
+      }
+      
+      console.log('🔍 CLEANED: Content cleaned for JSON parsing');
+      const parsed = JSON.parse(cleanContent);
+      console.log('✅ SUCCESS: JSON parsed successfully');
+      return parsed;
       
     } catch (error) {
-      console.warn('🔄 OpenAI API failed, using fallback:', error);
+      console.error('❌ OPENAI ERROR:', error.message);
+      console.error('❌ ERROR TYPE:', error.constructor.name);
+      console.error('❌ ERROR CODE:', error.code || 'unknown');
+      console.warn('🔄 OpenAI API failed, using fallback analysis');
       return generatePatternBasedAnalysis(input);
     }
   } else {
-    console.log('🔄 No OpenAI API key, using pattern-based analysis');
+    console.log('🔄 No OpenAI API key found, using pattern-based analysis');
     return generatePatternBasedAnalysis(input);
   }
 }
@@ -306,24 +330,68 @@ Health Metrics (1-10 scale):
 - Exercise Level: ${input.healthMetrics.exercise}/10
 - Nutrition Quality: ${input.healthMetrics.nutrition}/10
 
+Complete Assessment Responses:
+${input.answers ? input.answers.map(answer => `- ${answer.questionId}: ${answer.answer}`).join('\n') : 'No detailed answers available'}
+
+IMPORTANT: Base your analysis on ALL the user's responses above, not just the core 4 health metrics. Include insights about:
+- Smoking habits and substance use patterns
+- Medical checkup frequency and preventive care approach  
+- Health priorities and urgency levels
+- Risk factors and lifestyle combinations
+- Any concerning patterns or positive behaviors from their responses
+
 Provide analysis in this exact JSON format:
 {
   "overallGrade": "A+|A|B+|B|C+|C|D+|D|F",
-  "overallMessage": "Encouraging message based on grade and age",
+  "overallMessage": "Frank but encouraging message in layman's terms about their current state",
   "areaInsights": [
     {
-      "area": "hydration|sleep|exercise|nutrition",
+      "area": "Lifestyle Foundation",
       "score": 1-10,
-      "message": "Specific insight about this area",
-      "recommendation": "Actionable advice tailored to demographics"
+      "insights": "Comprehensive assessment of their core habits (hydration, sleep, exercise, nutrition) and how they work together",
+      "recommendations": "Priority actions for foundational health optimization"
+    },
+    {
+      "area": "Risk Management", 
+      "score": 1-10,
+      "insights": "Analysis of smoking, substance use, and other risk factors from their responses",
+      "recommendations": "Specific steps to address identified risk factors"
+    },
+    {
+      "area": "Preventive Care",
+      "score": 1-10, 
+      "insights": "Assessment of their medical checkup patterns and preventive health approach",
+      "recommendations": "Actions to optimize their preventive care strategy"
+    },
+    {
+      "area": "Health Priorities & Mindset",
+      "score": 1-10,
+      "insights": "Analysis of their health priorities, urgency levels, and readiness for change",
+      "recommendations": "Strategies aligned with their priorities and readiness level"
     }
   ],
+  "scientificBacking": "Explain in layman's terms the science behind their health issues and how they interconnect (cellular, neurological, metabolic impacts)",
+  "optimizationPotential": "Frank but motivational message about what their life could look like with optimization - paint a picture of the transformation they could experience",
   "priorityActions": ["Most important action", "Second priority", "Third priority"],
   "keyInsights": ["Key insight 1", "Key insight 2"],
-  "improvementPotential": "Motivational message about potential improvements"
+  "improvementPotential": "Specific timeline and realistic expectations for improvement"
 }
 
-Make insights specific to age ${input.demographics.age} and BMI category ${getBMICategory(input.demographics.weight, input.demographics.height)}.
+CRITICAL REQUIREMENTS:
+- ANALYZE THE COMPLETE HEALTH PICTURE - not just core habits, but ALL assessment responses
+- Be FRANK but ENCOURAGING - tell them what they NEED to hear, not what they want to hear
+- Use LAYMAN'S TERMS - no medical jargon, explain like talking to a friend
+- Generate DETAILED, SPECIFIC content based on their actual responses
+- Address smoking, medical checkups, health priorities, urgency levels, and risk factors
+- Paint a vivid picture of their OPTIMIZED LIFE - what awaits them with lifestyle changes
+- Be specific to age ${input.demographics.age} and BMI category ${getBMICategory(input.demographics.weight, input.demographics.height)}
+- Each "insights" field should reference their specific answers and patterns
+- "scientificBacking" should explain how ALL their responses interconnect (not just core 4)
+- "optimizationPotential" should address their complete lifestyle transformation
+- Include realistic timelines based on their current patterns and priorities
+- Focus on the compound effects of addressing ALL identified issues
+
+SYNTHESIZE their complete assessment - core habits + smoking + preventive care + priorities + risk awareness!
 `;
 }
 
