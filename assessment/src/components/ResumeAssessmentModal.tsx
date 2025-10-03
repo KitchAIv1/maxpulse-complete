@@ -117,7 +117,7 @@ export const ResumeAssessmentModal: React.FC<ResumeAssessmentModalProps> = ({
               style={{
                 width: `${progressPercentage}%`,
                 height: '100%',
-                backgroundColor: '#10b981',
+                background: 'linear-gradient(to right, #581c87, #9333ea)',
                 transition: 'width 0.3s ease'
               }}
             />
@@ -132,31 +132,31 @@ export const ResumeAssessmentModal: React.FC<ResumeAssessmentModalProps> = ({
             flexDirection: 'column'
           }}
         >
-          {/* Continue Button */}
+          {/* Continue Button - Matches assessment purple gradient */}
           <button
             onClick={onResume}
             style={{
               width: '100%',
               padding: '16px 24px',
-              backgroundColor: '#10b981',
+              background: 'linear-gradient(to right, #581c87, #9333ea)',
               color: 'white',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '12px',
               fontSize: '16px',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+              boxShadow: '0 4px 12px rgba(147, 51, 234, 0.3)'
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#059669';
+              e.currentTarget.style.background = 'linear-gradient(to right, #6b21a8, #a855f7)';
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(147, 51, 234, 0.4)';
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#10b981';
+              e.currentTarget.style.background = 'linear-gradient(to right, #581c87, #9333ea)';
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(147, 51, 234, 0.3)';
             }}
           >
             Continue from Question {currentStep + 1}
