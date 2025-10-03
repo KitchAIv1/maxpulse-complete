@@ -4,6 +4,7 @@ import { AssessmentResults } from '../types/assessment';
 import { EnhancedAIAnalysisSection } from './EnhancedAIAnalysisSection';
 import { HealthMetricsCards } from './HealthMetricsCards';
 import { useAIAnalysis } from '../hooks/useAIAnalysis';
+import { usePersonalDetails } from '../hooks/usePersonalDetails';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
 interface HealthInsightsResultsProps {
@@ -34,20 +35,34 @@ export function HealthInsightsResults({
   const fullName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
   const firstName = fullName.split(' ')[0]; // Get first name only
   
+  // 🆕 PHASE 1B: Fetch real personal details from database
+  const sessionId = distributorInfo?.code;
+  const { 
+    demographics, 
+    healthGoals, 
+    loading: detailsLoading 
+  } = usePersonalDetails(sessionId, firstName);
+
+  // Log real demographics being used
+  if (demographics.age !== 35) {
+    console.log('✅ Using REAL demographics for AI analysis:', {
+      age: demographics.age,
+      weight: demographics.weight,
+      height: demographics.height,
+      gender: demographics.gender,
+      hydrationGoal: healthGoals.hydrationGoalLiters + 'L',
+      sleepTarget: `${healthGoals.sleepHoursMin}-${healthGoals.sleepHoursMax}hrs`,
+      stepGoal: healthGoals.dailyStepGoal,
+      bmi: healthGoals.bmi,
+      bmiCategory: healthGoals.bmiCategory
+    });
+  }
+  
   // Calculate health metrics based on user answers and profile
   const sleepScore = Math.floor(Math.random() * 4) + 5; // 5-8 range
   const hydrationScore = Math.floor(Math.random() * 3) + 6; // 6-8 range
   const activityScore = Math.floor(Math.random() * 2) + 7; // 7-8 range
   const stressScore = Math.floor(Math.random() * 3) + 4; // 4-6 range
-
-  // Extract demographics for AI analysis (mock data for now)
-  const demographics: Demographics = {
-    age: 35, // Default age, should be extracted from assessment
-    weight: 70, // Default weight in kg
-    height: 175, // Default height in cm
-    gender: 'other', // Default gender
-    name: firstName // Add user name for personalized analysis
-  };
 
   // Create health metrics for AI analysis
   const healthMetrics: HealthMetrics = {
@@ -57,13 +72,13 @@ export function HealthInsightsResults({
     nutrition: stressScore // Using stress as nutrition proxy for now
   };
 
-  // Use AI Analysis hook
+  // Use AI Analysis hook with REAL demographics
   const { analysis, loading, error, canRetry, retry } = useAIAnalysis({
     assessmentType: 'health',
-    demographics,
+    demographics, // 🆕 Now uses real data from database!
     healthMetrics,
     answers: [], // Should pass actual answers from results
-    enabled: true
+    enabled: !detailsLoading // Wait for details to load first
   });
   
   // Use AI analysis data if available, otherwise fallback to original logic
@@ -196,6 +211,91 @@ export function HealthInsightsResults({
 
       {/* Enhanced Health Metrics Cards with Science-Backed Analysis */}
       <HealthMetricsCards healthMetrics={healthMetricsDisplay} />
+
+      {/* 🆕 PHASE 1B: Personalized Daily Health Goals */}
+      {demographics.age !== 35 && (
+        <div style={{
+          marginBottom: '32px',
+          padding: '20px',
+          backgroundColor: '#f0fdf4',
+          border: '2px solid #86efac',
+          borderRadius: '12px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: '#15803d',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span>🎯</span> Your Personalized Daily Goals
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.hydrationGoalLiters}L
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                Daily Water
+              </div>
+            </div>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.sleepHoursMin}-{healthGoals.sleepHoursMax}hrs
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                Sleep Target
+              </div>
+            </div>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.dailyStepGoal.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                Daily Steps
+              </div>
+            </div>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.bmi.toFixed(1)}
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                BMI ({healthGoals.bmiCategory})
+              </div>
+            </div>
+          </div>
+          <p style={{
+            fontSize: '13px',
+            color: '#166534',
+            marginTop: '12px',
+            fontStyle: 'italic'
+          }}>
+            ✨ Based on your age ({demographics.age}), weight ({demographics.weight}kg), and height ({demographics.height}cm)
+          </p>
+        </div>
+      )}
 
       {/* Enhanced AI Analysis Section - MAXPULSE App-Centric Recommendations with Lifestyle Mindset */}
       <EnhancedAIAnalysisSection
