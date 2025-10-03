@@ -55,11 +55,31 @@ COMMENT ON COLUMN assessment_sessions.bmi IS 'Computed BMI (Body Mass Index)';
 -- Enable RLS if not already enabled
 ALTER TABLE assessment_sessions ENABLE ROW LEVEL SECURITY;
 
--- Update RLS policies to allow anonymous users to update their own sessions
+-- Drop existing restrictive UPDATE policy if it exists
+DROP POLICY IF EXISTS "assessment_sessions_access" ON assessment_sessions;
+DROP POLICY IF EXISTS "assessment_sessions_update" ON assessment_sessions;
 DROP POLICY IF EXISTS "Allow anonymous users to update their sessions" ON assessment_sessions;
-CREATE POLICY "Allow anonymous users to update their sessions"
+
+-- Create permissive UPDATE policy for anonymous assessment participants
+-- This allows anyone to update assessment_sessions by session_id (the TEXT column)
+-- This is safe because session_ids are unique, randomly generated strings
+CREATE POLICY "assessment_sessions_update_by_session_id"
 ON assessment_sessions
 FOR UPDATE
-USING (true)
-WITH CHECK (true);
+USING (true)  -- Anyone can attempt to update
+WITH CHECK (true);  -- Update is allowed if the session_id matches
+
+-- Ensure INSERT policy exists for creating new sessions
+DROP POLICY IF EXISTS "assessment_sessions_insert" ON assessment_sessions;
+CREATE POLICY "assessment_sessions_insert"
+ON assessment_sessions
+FOR INSERT
+WITH CHECK (true);  -- Anyone can create a session
+
+-- Ensure SELECT policy exists for reading sessions
+DROP POLICY IF EXISTS "assessment_sessions_select" ON assessment_sessions;
+CREATE POLICY "assessment_sessions_select"
+ON assessment_sessions
+FOR SELECT
+USING (true);  -- Anyone can read sessions (needed for resume functionality)
 

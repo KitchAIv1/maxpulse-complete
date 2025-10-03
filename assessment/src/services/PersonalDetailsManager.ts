@@ -90,7 +90,16 @@ export class PersonalDetailsManager {
     try {
       const bmi = this.calculateBMI(details.weightKg, details.heightCm);
       
-      const { error } = await supabase
+      console.log('💾 Saving personal details for session:', sessionId);
+      console.log('📊 Details:', {
+        age: details.age,
+        weight: details.weightKg,
+        height: details.heightCm,
+        gender: details.gender,
+        conditions: details.medicalConditions.length
+      });
+      
+      const { data, error } = await supabase
         .from('assessment_sessions')
         .update({
           age: details.age,
@@ -100,17 +109,28 @@ export class PersonalDetailsManager {
           medical_conditions: details.medicalConditions,
           current_medications: details.currentMedications || null,
           allergies: details.allergies || null,
-          details_completed_at: new Date().toISOString(),
-          status: 'completed'
+          details_completed_at: new Date().toISOString()
         })
-        .eq('session_id', sessionId);
+        .eq('session_id', sessionId)
+        .select();
 
       if (error) {
-        console.error('❌ Error saving personal details:', error);
+        console.error('❌ DETAILED Error saving personal details:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         return { success: false, error: error.message };
       }
 
-      console.log('✅ Personal details saved successfully');
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows updated - session may not exist:', sessionId);
+        return { success: false, error: 'Session not found' };
+      }
+
+      console.log('✅ Personal details saved successfully:', data);
       return { success: true };
     } catch (error: any) {
       console.error('❌ Exception saving personal details:', error);
