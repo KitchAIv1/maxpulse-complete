@@ -14,8 +14,9 @@ export default defineConfig({
     'import.meta.env.VITE_DATABASE_SUBSCRIPTIONS': '"true"',
     'import.meta.env.VITE_DEBUG_MODE': '"true"',
     'import.meta.env.VITE_MOCK_DATA': '"false"',
-    'import.meta.env.VITE_SUPABASE_URL': '"https://pdgpktwmqxrljtdbnvyu.supabase.co"',
-    'import.meta.env.VITE_SUPABASE_ANON_KEY': '"YOUR_SUPABASE_ANON_KEY"'
+    // 🔒 SECURITY: Let Vite read from .env.local instead of hardcoding
+    // REMOVED: 'import.meta.env.VITE_SUPABASE_URL' and 'VITE_SUPABASE_ANON_KEY'
+    // These will now be read from .env.local file (which is in .gitignore)
   },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
