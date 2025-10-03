@@ -43,41 +43,55 @@ export function HealthInsightsResults({
     loading: detailsLoading 
   } = usePersonalDetails(sessionId, firstName);
 
-  // Log real demographics being used
-  if (demographics.age !== 35) {
-    console.log('✅ Using REAL demographics for AI analysis:', {
-      age: demographics.age,
-      weight: demographics.weight,
-      height: demographics.height,
-      gender: demographics.gender,
-      hydrationGoal: healthGoals.hydrationGoalLiters + 'L',
-      sleepTarget: `${healthGoals.sleepHoursMin}-${healthGoals.sleepHoursMax}hrs`,
-      stepGoal: healthGoals.dailyStepGoal,
-      bmi: healthGoals.bmi,
-      bmiCategory: healthGoals.bmiCategory
-    });
-  }
-  
-  // Calculate health metrics based on user answers and profile
-  const sleepScore = Math.floor(Math.random() * 4) + 5; // 5-8 range
-  const hydrationScore = Math.floor(Math.random() * 3) + 6; // 6-8 range
-  const activityScore = Math.floor(Math.random() * 2) + 7; // 7-8 range
-  const stressScore = Math.floor(Math.random() * 3) + 4; // 4-6 range
-
-  // Create health metrics for AI analysis
-  const healthMetrics: HealthMetrics = {
-    hydration: hydrationScore,
-    sleep: sleepScore,
-    exercise: activityScore,
-    nutrition: stressScore // Using stress as nutrition proxy for now
+  // 🆕 PHASE 1B: Extract real health metrics from assessment answers
+  const extractHealthMetrics = (): HealthMetrics => {
+    const userAnswers = results.answers || {};
+    const profile = results.userProfile || {};
+    
+    // Map scores from userProfile (calculated during assessment)
+    // These are derived from actual assessment responses
+    return {
+      hydration: profile.hydrationLevel === 'optimal' ? 8 : 
+                profile.hydrationLevel === 'good' ? 6 : 4,
+      sleep: profile.sleepQuality === 'optimal' ? 8 : 
+             profile.sleepQuality === 'suboptimal' ? 5 : 3,
+      exercise: profile.exerciseLevel === 'high' ? 8 : 
+               profile.exerciseLevel === 'medium' ? 6 : 
+               profile.exerciseLevel === 'low' ? 3 : 5,
+      nutrition: profile.nutritionQuality === 'excellent' ? 8 : 
+                profile.nutritionQuality === 'good' ? 6 : 4
+    };
   };
 
-  // Use AI Analysis hook with REAL demographics
+  const healthMetrics = extractHealthMetrics();
+
+  // Log real demographics AND answers being used
+  if (demographics.age !== 35) {
+    console.log('✅ Using REAL DATA for AI analysis:', {
+      demographics: {
+        age: demographics.age,
+        weight: demographics.weight,
+        height: demographics.height,
+        gender: demographics.gender,
+        bmi: healthGoals.bmi,
+        bmiCategory: healthGoals.bmiCategory
+      },
+      healthGoals: {
+        hydration: healthGoals.hydrationGoalLiters + 'L',
+        sleep: `${healthGoals.sleepHoursMin}-${healthGoals.sleepHoursMax}hrs`,
+        steps: healthGoals.dailyStepGoal
+      },
+      healthMetrics,
+      answersCount: Object.keys(results.answers || {}).length
+    });
+  }
+
+  // Use AI Analysis hook with REAL demographics, metrics, and answers
   const { analysis, loading, error, canRetry, retry } = useAIAnalysis({
     assessmentType: 'health',
-    demographics, // 🆕 Now uses real data from database!
-    healthMetrics,
-    answers: [], // Should pass actual answers from results
+    demographics, // 🆕 Real data from database!
+    healthMetrics, // 🆕 Real scores from assessment!
+    answers: results.answers || {}, // 🆕 Actual question responses!
     enabled: !detailsLoading // Wait for details to load first
   });
   
