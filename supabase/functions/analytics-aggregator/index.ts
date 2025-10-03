@@ -104,7 +104,7 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
     // Get assessment statistics from assessment_tracking table
     const { data: assessmentStats, error: assessmentError } = await supabase
       .from('assessment_tracking')
-      .select('id, event_type, event_data, timestamp')
+      .select('id, session_id, event_type, event_data, timestamp')
       .eq('distributor_id', distributorUuid)
       .gte('timestamp', periodStart);
     
@@ -157,12 +157,14 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
     }
     
     // Calculate metrics from assessment_tracking data
-    // 🎯 FIX: Count unique assessment sessions, not individual question events
+    // 🎯 FIX: Use session_id UUID column to count unique assessment sessions
     const uniqueSessions = new Set(
       assessmentStats
-        ?.filter(a => a.event_data?.original_session_id || a.event_data?.sessionId)
-        ?.map(a => a.event_data?.original_session_id || a.event_data?.sessionId) || []
+        ?.filter(a => a.session_id !== null)
+        ?.map(a => a.session_id) || []
     ).size;
+    
+    console.log(`🎯 DEBUG: Unique sessions counted: ${uniqueSessions} from ${assessmentStats?.length || 0} records`);
     const completedAssessments = assessmentStats?.filter(a => a.event_type === 'assessment_completed').length || 0;
     const totalRevenue = commissionStats?.reduce((sum, c) => sum + (c.commission_amount || 0), 0) || 0;
     const pendingCommissions = commissionStats?.filter(c => c.status === 'pending').length || 0;

@@ -262,10 +262,10 @@ export class SupabaseDatabaseManager {
 
       const { data, error } = await supabase
         .from('assessment_tracking')
-        .select('id, event_data, event_type, timestamp, distributor_id')
+        .select('id, session_id, event_data, event_type, timestamp, distributor_id, client_info')
         .eq('distributor_id', distributorUuid)
         .order('timestamp', { ascending: false })
-        .limit(100);
+        .limit(1000);
 
       if (error) {
         console.error('❌ Error fetching assessment tracking data:', error);

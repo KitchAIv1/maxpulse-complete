@@ -129,29 +129,19 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
       console.log('📊 Loading tracking data from DATABASE (PRODUCTION):', trackingData.length, `events for ${distributorId}`);
       
       // Convert database records to TrackingEvent format (using ACTUAL schema)
+      // 🎯 FIX: Use session_id UUID column as the primary session identifier
       const convertedEvents: TrackingEvent[] = trackingData
-        .filter(record => {
-          // ✅ FILTER: Only include records with new format (WB2025991-XXXXX)
-          const sessionCode = record.event_data?.code || record.event_data?.original_session_id || `${distributorId}-${record.id}`;
-          const isNewFormat = sessionCode.startsWith(`${distributorId}-`) && !sessionCode.startsWith('session_');
-          
-          if (!isNewFormat && FeatureFlags.debugMode) {
-            console.log('🗑️ Filtering out old format session:', sessionCode);
-          }
-          
-          return isNewFormat;
-        })
         .map(record => ({
           distributorId: distributorId,
-          code: record.event_data?.code || record.event_data?.original_session_id || `${distributorId}-${record.id}`,
-          customerName: record.event_data?.customerName || record.event_data?.customer_name || 'Unknown',
-          customerEmail: record.event_data?.customerEmail || record.event_data?.customer_email || 'unknown@email.com',
-          event: record.event_data?.event || record.event_data?.metadata?.event || record.event_type,
+          code: record.session_id || record.event_data?.original_session_id || `${distributorId}-${record.id}`,
+          customerName: record.event_data?.customer_name || record.client_info?.name || 'Unknown',
+          customerEmail: record.event_data?.customer_email || record.client_info?.email || 'unknown@email.com',
+          event: record.event_data?.metadata?.event || record.event_type,
           timestamp: new Date(record.timestamp).getTime(),
-          priority: record.event_data?.priority || record.event_data?.metadata?.priority || record.event_data?.assessment_type || 'health',
-          questionNumber: record.event_data?.questionNumber || record.event_data?.metadata?.questionNumber || record.event_data?.current_step,
-          totalQuestions: record.event_data?.totalQuestions || record.event_data?.metadata?.totalQuestions || record.event_data?.total_steps,
-          score: record.event_data?.score
+          priority: record.event_data?.assessment_type || record.event_data?.priority || record.event_data?.metadata?.priority || 'health',
+          questionNumber: record.event_data?.current_step || record.event_data?.metadata?.questionNumber,
+          totalQuestions: record.event_data?.total_steps || record.event_data?.metadata?.totalQuestions,
+          score: record.event_data?.metadata?.score || record.event_data?.score
         }));
 
       console.log('📊 Converted database records to events:', convertedEvents.length);
