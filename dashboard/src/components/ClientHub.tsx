@@ -12,7 +12,8 @@ import { ClientStats } from './ClientStats';
 import { ClientFilters } from './ClientFilters';
 import { ClientTable } from './ClientTable';
 import { FeatureFlags } from '../utils/featureFlags';
-import { Users, RefreshCw, UserPlus, Activity, Clock, ShoppingCart, Mail, PhoneCall, Send, Edit } from 'lucide-react';
+import { reconstructAssessmentLink, copyToClipboard } from '../utils/assessmentLinkHelper';
+import { Users, RefreshCw, UserPlus, Activity, Clock, ShoppingCart, Mail, PhoneCall, Send, Edit, Link2, Copy, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
@@ -101,9 +102,26 @@ export function ClientHub({ user }: ClientHubProps) {
   const [selectedClient, setSelectedClient] = useState<UnifiedClient | null>(null);
   const [showAddClient, setShowAddClient] = useState(false);
   const [editingClient, setEditingClient] = useState<UnifiedClient | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Client data now comes entirely from real-time assessment tracking and commission data
   // No mock data - all clients are generated from actual assessment sessions
+
+  // Handle copy assessment link
+  const handleCopyLink = async (client: UnifiedClient) => {
+    const link = reconstructAssessmentLink(
+      client.currentAssessment!.code,
+      user.distributorCode,
+      client.name,
+      client.email
+    );
+    const success = await copyToClipboard(link);
+    
+    if (success) {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
 
 
 
@@ -323,6 +341,47 @@ export function ClientHub({ user }: ClientHubProps) {
                         {new Date(selectedClient.currentAssessment.startTime).toLocaleString()}
                       </p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Assessment Link */}
+              {selectedClient.currentAssessment && (
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link2 className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-purple-900">Assessment Link</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-md p-3 border border-purple-200">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={reconstructAssessmentLink(selectedClient.currentAssessment.code, user.distributorCode, selectedClient.name, selectedClient.email)}
+                          className="flex-1 text-sm text-gray-700 bg-transparent border-none outline-none"
+                        />
+                        <button
+                          onClick={() => handleCopyLink(selectedClient)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
+                        >
+                          {copiedLink ? (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4" />
+                              Copy
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-purple-700">
+                      Share this link with your client to resume their assessment
+                    </p>
                   </div>
                 </div>
               )}

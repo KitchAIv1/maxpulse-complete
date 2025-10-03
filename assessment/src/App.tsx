@@ -31,6 +31,8 @@ import { SupabaseDualWriteManager, AssessmentTrackingData } from './services/Sup
 import { SupabaseRealtimeManager } from './services/SupabaseRealtimeManager';
 import { AssessmentCompletionManager, AssessmentCompletionData } from './services/AssessmentCompletionManager';
 import { FeatureFlags } from './utils/featureFlags';
+import { useAssessmentResume } from './hooks/useAssessmentResume';
+import { ResumeAssessmentModal } from './components/ResumeAssessmentModal';
 
 // Import video to ensure it's properly bundled
 import assessmentBackgroundVideoSrc from '/videoversion.mp4?url';
@@ -94,7 +96,39 @@ export default function App() {
   const [realtimeManager] = useState(() => new SupabaseRealtimeManager());
   const [completionManager] = useState(() => new AssessmentCompletionManager());
   const [distributorInfo, setDistributorInfo] = useState<DistributorInfo | null>(null);
+  const [showResumeModal, setShowResumeModal] = useState(false);
   const isMobile = useIsMobile();
+
+  // Get code parameter from URL for resume check
+  const urlParams = new URLSearchParams(window.location.search);
+  const codeParam = urlParams.get('code');
+  
+  // Resume assessment hook - checks if user can continue from previous session
+  const { resumeData, isLoading: isResumeLoading, canResume, handleResume, handleRestart } = useAssessmentResume(
+    codeParam,  // Use code from URL, not distributorInfo.code
+    distributorInfo?.code?.split('-')[0] || '',
+    (responses) => {
+      // Resume: Load previous responses and jump to current step
+      setAnswers(responses);
+      setCurrentQuestionIndex(resumeData?.currentStep || 0);
+      setAppState('assessment');
+      setSelectedPriority(resumeData?.assessmentType as Priority || null);
+      setShowResumeModal(false);
+    },
+    () => {
+      // Restart: Clear everything and start fresh
+      setAnswers({});
+      setCurrentQuestionIndex(0);
+      setShowResumeModal(false);
+    }
+  );
+
+  // Show resume modal if eligible
+  useEffect(() => {
+    if (canResume && resumeData && appState === 'welcome') {
+      setShowResumeModal(true);
+    }
+  }, [canResume, resumeData, appState]);
 
   // Initialize Supabase managers
   useEffect(() => {
@@ -1044,6 +1078,15 @@ export default function App() {
 
         {/* Toast Notifications */}
         <Toaster />
+
+        {/* Resume Assessment Modal */}
+        {showResumeModal && resumeData && (
+          <ResumeAssessmentModal
+            resumeData={resumeData}
+            onResume={handleResume}
+            onRestart={handleRestart}
+          />
+        )}
       </div>
     } />
   );
