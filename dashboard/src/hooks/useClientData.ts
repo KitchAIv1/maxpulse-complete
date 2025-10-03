@@ -133,7 +133,8 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
       const convertedEvents: TrackingEvent[] = trackingData
         .map(record => ({
           distributorId: distributorId,
-          code: record.session_id || record.event_data?.original_session_id || `${distributorId}-${record.id}`,
+          // ✅ FIX: Use original_session_id (string code) for links, not session_id (UUID)
+          code: record.event_data?.original_session_id || record.session_id || `${distributorId}-${record.id}`,
           customerName: record.event_data?.customer_name || record.client_info?.name || 'Unknown',
           customerEmail: record.event_data?.customer_email || record.client_info?.email || 'unknown@email.com',
           event: record.event_data?.metadata?.event || record.event_type,
