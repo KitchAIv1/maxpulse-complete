@@ -3,7 +3,7 @@
 // Purpose: Custom hook for assessment resume functionality
 // .cursorrules compliant: Hook <100 lines, single responsibility
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AssessmentResumeManager, ResumeData } from '../services/AssessmentResumeManager';
 
 interface UseAssessmentResumeReturn {
@@ -28,22 +28,17 @@ export function useAssessmentResume(
   const [isLoading, setIsLoading] = useState(true);
   const [resumeManager] = useState(() => AssessmentResumeManager.getInstance());
 
-  // Check resume eligibility on mount
-  useEffect(() => {
+  const checkResume = useCallback(async () => {
     if (!sessionId || !distributorCode) {
       setIsLoading(false);
       return;
     }
 
-    checkResume();
-  }, [sessionId, distributorCode]);
-
-  const checkResume = async () => {
     setIsLoading(true);
 
     try {
       const data = await resumeManager.checkResumeEligibility(
-        sessionId!,
+        sessionId,
         distributorCode
       );
 
@@ -63,7 +58,12 @@ export function useAssessmentResume(
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sessionId, distributorCode, resumeManager]);
+
+  // Check resume eligibility on mount
+  useEffect(() => {
+    checkResume();
+  }, [checkResume]);
 
   const handleResume = () => {
     if (!resumeData || !resumeData.canResume) return;

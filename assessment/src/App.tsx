@@ -104,7 +104,7 @@ export default function App() {
   const codeParam = urlParams.get('code');
   
   // Resume assessment hook - checks if user can continue from previous session
-  const { resumeData, isLoading: isResumeLoading, canResume, handleResume, handleRestart } = useAssessmentResume(
+  const { resumeData, canResume, handleResume, handleRestart } = useAssessmentResume(
     codeParam,  // Use code from URL, not distributorInfo.code
     distributorInfo?.code?.split('-')[0] || '',
     (responses) => {
