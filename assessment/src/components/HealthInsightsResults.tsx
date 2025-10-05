@@ -115,10 +115,10 @@ export function HealthInsightsResults({
         };
       };
 
-      const sleepArea = getSafeArea('sleep', sleepScore);
-      const hydrationArea = getSafeArea('hydration', hydrationScore);
-      const exerciseArea = getSafeArea('exercise', activityScore);
-      const nutritionArea = getSafeArea('nutrition', stressScore);
+      const sleepArea = getSafeArea('sleep', healthMetrics.sleep);
+      const hydrationArea = getSafeArea('hydration', healthMetrics.hydration);
+      const exerciseArea = getSafeArea('exercise', healthMetrics.exercise);
+      const nutritionArea = getSafeArea('nutrition', healthMetrics.nutrition);
 
       return {
         sleep: {
@@ -152,33 +152,33 @@ export function HealthInsightsResults({
       };
     }
     
-    // Fallback to enhanced science-backed analysis
+    // Fallback to enhanced science-backed analysis using real health metrics
     return {
       sleep: {
-        score: sleepScore,
-        status: `Your brain needs sleep like a computer needs to restart - without it, mental performance drops by 23%. Your sleep score of ${sleepScore}/10 suggests ${sleepScore >= 7 ? 'good sleep habits that support cognitive function' : 'room for optimization to improve energy and mental clarity'}.`,
-        category: sleepScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.sleep,
+        status: `Your brain needs sleep like a computer needs to restart - without it, mental performance drops by 23%. Your sleep score of ${healthMetrics.sleep}/10 suggests ${healthMetrics.sleep >= 7 ? 'good sleep habits that support cognitive function' : 'room for optimization to improve energy and mental clarity'}.`,
+        category: healthMetrics.sleep >= 7 ? 'Strength' : 'Area to improve',
         icon: Moon,
         personalizedTip: `The MAXPULSE App will monitor your sleep cycles and optimize your bedtime routine with personalized recommendations.`
       },
       hydration: {
-        score: hydrationScore,
-        status: `Your cells are like tiny factories that need water to produce energy. When dehydrated, cellular energy production drops by up to 30%. Your hydration score of ${hydrationScore}/10 indicates ${hydrationScore >= 7 ? 'good hydration habits supporting cellular function' : 'chronic cellular dehydration affecting energy levels'}.`,
-        category: hydrationScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.hydration,
+        status: `Your cells are like tiny factories that need water to produce energy. When dehydrated, cellular energy production drops by up to 30%. Your hydration score of ${healthMetrics.hydration}/10 indicates ${healthMetrics.hydration >= 7 ? 'good hydration habits supporting cellular function' : 'chronic cellular dehydration affecting energy levels'}.`,
+        category: healthMetrics.hydration >= 7 ? 'Strength' : 'Area to improve',
         icon: Droplets,
         personalizedTip: `The MAXPULSE App will track your hydration precisely with hourly reminders and intake monitoring.`
       },
       activity: {
-        score: activityScore,
-        status: `Exercise breaks down muscle tissue, recovery builds it back stronger. Without proper recovery tracking, you're breaking down faster than building up. Your activity score of ${activityScore}/10 shows ${activityScore >= 7 ? 'excellent activity levels with good recovery balance' : 'optimization opportunities for better performance'}.`,
-        category: activityScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.exercise,
+        status: `Exercise breaks down muscle tissue, recovery builds it back stronger. Without proper recovery tracking, you're breaking down faster than building up. Your activity score of ${healthMetrics.exercise}/10 shows ${healthMetrics.exercise >= 7 ? 'excellent activity levels with good recovery balance' : 'optimization opportunities for better performance'}.`,
+        category: healthMetrics.exercise >= 7 ? 'Strength' : 'Area to improve',
         icon: Activity,
         personalizedTip: `The MAXPULSE App will track your heart rate variability and suggest optimal training intensity based on recovery status.`
       },
       stress: {
-        score: stressScore,
-        status: `Stress hormones like cortisol are meant for short-term survival, not chronic activation. Constant stress is like keeping your car engine in the red zone. Your stress patterns indicate ${stressScore >= 7 ? 'good stress management supporting overall health' : 'cortisol dysregulation affecting multiple body systems'}.`,
-        category: stressScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.nutrition,
+        status: `Stress hormones like cortisol are meant for short-term survival, not chronic activation. Constant stress is like keeping your car engine in the red zone. Your stress patterns indicate ${healthMetrics.nutrition >= 7 ? 'good stress management supporting overall health' : 'cortisol dysregulation affecting multiple body systems'}.`,
+        category: healthMetrics.nutrition >= 7 ? 'Strength' : 'Area to improve',
         icon: Heart,
         personalizedTip: `The MAXPULSE App will monitor daily mood patterns and provide stress management techniques with biometric feedback.`
       }
