@@ -37,13 +37,18 @@ export function mapAssessmentToV2Input(
     nutrition: healthMetrics.nutrition || 5
   };
   
-  // Map answers to V2 format
+  // Map answers to V2 format (with all required fields for PersonalizedNarrativeBuilder)
   const v2Answers = {
     sleepDuration: mapSleepDuration(results.answers),
     sleepQuality: mapSleepQuality(results.answers),
+    sleepIssues: mapSleepIssues(results.answers),
     hydrationLevel: mapHydrationLevel(results.answers),
+    waterIntake: mapWaterIntake(results.answers),
+    hydrationAwareness: mapHydrationAwareness(results.answers),
     exerciseFrequency: mapExerciseFrequency(results.answers),
+    activityLevel: mapActivityLevel(results.answers),
     nutritionQuality: mapNutritionQuality(results.answers),
+    dietPattern: mapDietPattern(results.answers),
     urgencyLevel: lifestyleFactors.urgencyLevel
   };
   
@@ -177,4 +182,78 @@ function mapExerciseFrequency(answers: Record<string, string>): string {
 function mapNutritionQuality(answers: Record<string, string>): string {
   const nutritionAnswer = answers['nutrition'] || answers['diet'] || '';
   return nutritionAnswer || 'balanced';
+}
+
+/**
+ * Map sleep issues from answers
+ */
+function mapSleepIssues(answers: Record<string, string>): string {
+  const issuesAnswer = answers['sleep-issues'] || answers['sleep-problems'] || '';
+  if (issuesAnswer) return issuesAnswer;
+  
+  // Default based on sleep quality
+  const quality = answers['sleep-quality'] || '';
+  if (quality.toLowerCase().includes('poor') || quality.toLowerCase().includes('bad')) {
+    return 'have difficulty falling asleep';
+  }
+  return 'sometimes wake up during the night';
+}
+
+/**
+ * Map water intake from answers
+ */
+function mapWaterIntake(answers: Record<string, string>): string {
+  const waterAnswer = answers['hydration'] || answers['water'] || answers['water-intake'] || '';
+  return waterAnswer || '2-3 glasses daily';
+}
+
+/**
+ * Map hydration awareness from answers
+ */
+function mapHydrationAwareness(answers: Record<string, string>): string {
+  const awarenessAnswer = answers['hydration-awareness'] || answers['water-awareness'] || '';
+  if (awarenessAnswer) return awarenessAnswer;
+  
+  // Default based on hydration level
+  const level = answers['hydration'] || '';
+  if (level.includes('1-2') || level.includes('rarely')) {
+    return 'often forget to drink water';
+  }
+  return 'try to stay hydrated but not consistent';
+}
+
+/**
+ * Map activity level from answers
+ */
+function mapActivityLevel(answers: Record<string, string>): string {
+  const activityAnswer = answers['activity-level'] || answers['daily-activity'] || '';
+  if (activityAnswer) return activityAnswer;
+  
+  // Default based on exercise frequency
+  const exercise = answers['exercise'] || '';
+  if (exercise.includes('sedentary') || exercise.includes('rarely')) {
+    return 'mostly sedentary during the day';
+  }
+  if (exercise.includes('active') || exercise.includes('often')) {
+    return 'moderately active throughout the day';
+  }
+  return 'lightly active during the day';
+}
+
+/**
+ * Map diet pattern from answers
+ */
+function mapDietPattern(answers: Record<string, string>): string {
+  const dietAnswer = answers['diet-pattern'] || answers['eating-habits'] || '';
+  if (dietAnswer) return dietAnswer;
+  
+  // Default based on nutrition quality
+  const nutrition = answers['nutrition'] || answers['diet'] || '';
+  if (nutrition.toLowerCase().includes('fast food') || nutrition.toLowerCase().includes('processed')) {
+    return 'eat fast food 3-4 times per week';
+  }
+  if (nutrition.toLowerCase().includes('healthy') || nutrition.toLowerCase().includes('balanced')) {
+    return 'try to eat balanced meals most days';
+  }
+  return 'eat a mix of healthy and convenience foods';
 }
