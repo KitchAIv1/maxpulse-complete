@@ -6,6 +6,15 @@ import { HealthMetricsCards } from './HealthMetricsCards';
 import { useAIAnalysis } from '../hooks/useAIAnalysis';
 import { usePersonalDetails } from '../hooks/usePersonalDetails';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
+// 🆕 V2 Analysis Engine Imports
+import { usePersonalizedAnalysisV2 } from '../hooks-v2/usePersonalizedAnalysisV2';
+import { mapAssessmentToV2Input } from '../utils/v2DataMapper';
+import { CurrentRealityCard } from '../components-v2/CurrentRealityCard';
+import { LifestyleBreakdownSection } from '../components-v2/LifestyleBreakdownSection';
+import { PersonalizedTargetsTable } from '../components-v2/PersonalizedTargetsTable';
+import { RiskFactorCards } from '../components-v2/RiskFactorCards';
+import { TransformationRoadmap } from '../components-v2/TransformationRoadmap';
+import { ProjectionTable } from '../components-v2/ProjectionTable';
 
 interface HealthInsightsResultsProps {
   results: AssessmentResults;
@@ -65,9 +74,21 @@ export function HealthInsightsResults({
 
   const healthMetrics = extractHealthMetrics();
 
+  // 🆕 Check V2 feature flag
+  const useV2Analysis = import.meta.env.VITE_USE_V2_ANALYSIS === 'true';
+
+  // 🆕 V2 Analysis Engine (if enabled)
+  const v2Input = useV2Analysis ? mapAssessmentToV2Input(results, demographics, healthMetrics) : null;
+  const v2Analysis = usePersonalizedAnalysisV2({
+    input: v2Input!,
+    userName: firstName,
+    enabled: useV2Analysis && !detailsLoading && v2Input !== null
+  });
+
   // Log real demographics AND answers being used
   if (demographics.age !== 35) {
     console.log('✅ Using REAL DATA for AI analysis:', {
+      v2Enabled: useV2Analysis,
       demographics: {
         age: demographics.age,
         weight: demographics.weight,
@@ -86,13 +107,13 @@ export function HealthInsightsResults({
     });
   }
 
-  // Use AI Analysis hook with REAL demographics, metrics, and answers
+  // V1 AI Analysis hook (if V2 is disabled)
   const { analysis, loading, error, canRetry, retry } = useAIAnalysis({
     assessmentType: 'health',
     demographics, // 🆕 Real data from database!
     healthMetrics, // 🆕 Real scores from assessment!
     answers: results.answers || {}, // 🆕 Actual question responses!
-    enabled: !detailsLoading // Wait for details to load first
+    enabled: !useV2Analysis && !detailsLoading // Only enable if V2 is disabled
   });
   
   // Use AI analysis data if available, otherwise fallback to original logic
@@ -311,15 +332,57 @@ export function HealthInsightsResults({
         </div>
       )}
 
-      {/* Enhanced AI Analysis Section - MAXPULSE App-Centric Recommendations with Lifestyle Mindset */}
-      <EnhancedAIAnalysisSection
-        analysis={analysis}
-        loading={loading}
-        error={error}
-        canRetry={canRetry}
-        onRetry={retry}
-        assessmentType="health"
-      />
+      {/* 🆕 V2 Analysis Engine OR V1 AI Analysis */}
+      {useV2Analysis ? (
+        // V2 Analysis Components
+        v2Analysis.loading ? (
+          <div style={{padding: '24px', textAlign: 'center', backgroundColor: 'white'}}>
+            <h2 style={{color: 'black', fontSize: '24px', marginBottom: '16px'}}>Generating Your Personalized Analysis...</h2>
+            <p style={{color: 'black', fontSize: '16px'}}>Processing your health data with V2 engine</p>
+          </div>
+        ) : v2Analysis.error ? (
+          <div style={{padding: '24px', textAlign: 'center', backgroundColor: '#fee2e2', borderRadius: '8px'}}>
+            <h2 style={{color: '#991b1b', fontSize: '20px', marginBottom: '16px'}}>Analysis Error</h2>
+            <p style={{color: '#7f1d1d', fontSize: '14px'}}>{v2Analysis.error.message}</p>
+          </div>
+        ) : v2Analysis.analysis ? (
+          <>
+            <CurrentRealityCard
+              userProfile={v2Analysis.analysis.userProfile}
+              overallScore={v2Analysis.analysis.overallScore}
+              overallGrade={v2Analysis.analysis.overallGrade}
+              currentReality={v2Analysis.analysis.currentReality}
+            />
+            <LifestyleBreakdownSection
+              lifestyleBreakdown={v2Analysis.analysis.lifestyleBreakdown}
+            />
+            <PersonalizedTargetsTable
+              targets={v2Analysis.analysis.personalizedTargets}
+            />
+            <RiskFactorCards
+              riskAnalysis={v2Analysis.analysis.riskAnalysis}
+              hardTruth={v2Analysis.analysis.hardTruth}
+            />
+            <TransformationRoadmap
+              roadmap={v2Analysis.analysis.transformationRoadmap}
+            />
+            <ProjectionTable
+              projection={v2Analysis.analysis.ninetyDayProjection}
+              priorityActions={v2Analysis.analysis.priorityActions}
+            />
+          </>
+        ) : null
+      ) : (
+        // V1 Enhanced AI Analysis Section
+        <EnhancedAIAnalysisSection
+          analysis={analysis}
+          loading={loading}
+          error={error}
+          canRetry={canRetry}
+          onRetry={retry}
+          assessmentType="health"
+        />
+      )}
 
       {/* Simple Button */}
       <div className="text-center">
