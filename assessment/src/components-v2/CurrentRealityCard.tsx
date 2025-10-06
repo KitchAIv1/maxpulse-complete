@@ -51,8 +51,17 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
 
   return (
     <div className="bg-white">
+      {/* MAXPULSE Logo at Top */}
+      <div className="px-6 pt-6 pb-4 flex justify-center">
+        <img 
+          src="/images/branding/logo-horizontal.png" 
+          alt="MAXPULSE" 
+          className="h-8"
+        />
+      </div>
+
       {/* Header */}
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-6 pt-4 pb-4">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Your Health Assessment
         </h2>

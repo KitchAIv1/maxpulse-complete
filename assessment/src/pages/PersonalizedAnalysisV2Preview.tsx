@@ -136,8 +136,23 @@ export const PersonalizedAnalysisV2Preview: React.FC = () => {
           priorityActions={analysis.priorityActions}
         />
 
-        {/* Footer */}
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+        {/* Footer with MAXPULSE Logo */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+          {/* Logo */}
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/images/branding/logo-horizontal.png" 
+              alt="MAXPULSE" 
+              className="h-10"
+            />
+          </div>
+          
+          {/* Powered by text */}
+          <div className="text-xs text-gray-500 mb-4">
+            Powered by MAXPULSE Health Intelligence
+          </div>
+          
+          {/* Preview info */}
           <div className="text-sm text-gray-900 font-semibold mb-2">
             V2 AI Analysis System - Standalone Preview
           </div>
