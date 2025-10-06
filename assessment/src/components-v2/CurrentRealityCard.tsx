@@ -28,12 +28,12 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
   currentReality
 }) => {
   
-  // Determine score color (Cal AI style: simple colors)
+  // Determine score color with red for poor health
   const getScoreColor = (score: number): string => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-blue-600';
     if (score >= 40) return 'text-orange-500';
-    return 'text-red-500';
+    return 'text-red-600'; // Red for poor health (below 40)
   };
 
   // Determine BMI category color (minimal, clean)
@@ -46,7 +46,7 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
 
   // Calculate progress percentage for circular ring
   const progressPercentage = overallScore;
-  const circumference = 2 * Math.PI * 45; // radius = 45
+  const circumference = 2 * Math.PI * 52; // radius = 52 (increased from 45)
   const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
   return (
@@ -85,26 +85,26 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
         {/* Overall Health Score - Circular Progress (Cal AI style) */}
         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
           <div className="flex flex-col items-center">
-            {/* Circular Progress Ring */}
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 mb-4">
-              <svg className="transform -rotate-90 w-full h-full">
+            {/* Circular Progress Ring - Larger size */}
+            <div className="relative w-40 h-40 sm:w-48 sm:h-48 mb-6">
+              <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 120 120">
                 {/* Background circle */}
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="45"
+                  cx="60"
+                  cy="60"
+                  r="52"
                   stroke="currentColor"
-                  strokeWidth="8"
+                  strokeWidth="10"
                   fill="none"
                   className="text-gray-100"
                 />
                 {/* Progress circle */}
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="45"
+                  cx="60"
+                  cy="60"
+                  r="52"
                   stroke="currentColor"
-                  strokeWidth="8"
+                  strokeWidth="10"
                   fill="none"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
@@ -112,15 +112,18 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
                   strokeLinecap="round"
                 />
               </svg>
-              {/* Score in center */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl sm:text-3xl font-bold text-gray-900">{overallScore}</span>
+              {/* Score in center - larger and colored */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-5xl sm:text-6xl font-bold ${getScoreColor(overallScore)}`}>
+                  {overallScore}
+                </span>
+                <span className="text-xs text-gray-500 mt-1">/ 100</span>
               </div>
             </div>
             
             <div className="text-center">
-              <div className="text-gray-500 text-xs sm:text-sm mb-1">Overall Health Score</div>
-              <div className={`text-xl sm:text-2xl font-bold ${getScoreColor(overallScore)}`}>
+              <div className="text-gray-500 text-sm mb-1">Overall Health Score</div>
+              <div className={`text-2xl font-bold ${getScoreColor(overallScore)}`}>
                 Grade {overallGrade}
               </div>
             </div>
