@@ -1,0 +1,300 @@
+/**
+ * ProjectionCalculator - 90-Day Outcome Projections Service
+ * Following .cursorrules: <200 lines, single responsibility, Manager pattern
+ * Purpose: Calculate realistic 90-day health outcome projections
+ */
+
+export interface NinetyDayProjection {
+  weight: {
+    current: number;
+    projected: number;
+    change: number;
+  };
+  bmi: {
+    current: number;
+    projected: number;
+    change: number;
+  };
+  sleep: {
+    current: number;
+    projected: number;
+    change: number;
+  };
+  energyLevel: {
+    current: number;
+    projected: number;
+    change: number;
+  };
+  healthScore: {
+    current: number;
+    projected: number;
+    change: number;
+  };
+  dailyLifeImprovements: string[];
+  milestones: {
+    week: number;
+    description: string;
+  }[];
+}
+
+export class ProjectionCalculator {
+  
+  /**
+   * Calculate 90-day weight projection
+   * Realistic: 0.5-1kg per week with lifestyle changes
+   */
+  calculateWeightProjection(
+    currentWeight: number,
+    bmi: number,
+    complianceLevel: 'high' | 'moderate' | 'low' = 'moderate'
+  ): { projected: number; change: number } {
+    let weeklyLoss = 0;
+
+    // Base weight loss potential
+    if (bmi >= 35) weeklyLoss = 1.0; // Higher starting weight = faster initial loss
+    else if (bmi >= 30) weeklyLoss = 0.8;
+    else if (bmi >= 25) weeklyLoss = 0.6;
+    else weeklyLoss = 0.3;
+
+    // Adjust for compliance
+    if (complianceLevel === 'high') weeklyLoss *= 1.2;
+    else if (complianceLevel === 'low') weeklyLoss *= 0.6;
+
+    const totalLoss = weeklyLoss * 12; // 12 weeks
+    const projected = Math.max(currentWeight - totalLoss, currentWeight * 0.9); // Cap at 10% loss
+
+    return {
+      projected: Math.round(projected * 10) / 10,
+      change: Math.round((currentWeight - projected) * 10) / 10
+    };
+  }
+
+  /**
+   * Calculate BMI projection based on weight change
+   */
+  calculateBMIProjection(
+    currentBMI: number,
+    weightChange: number,
+    height: number
+  ): { projected: number; change: number } {
+    const heightM = height / 100;
+    const bmiChange = weightChange / (heightM ** 2);
+    const projected = currentBMI - bmiChange;
+
+    return {
+      projected: Math.round(projected * 10) / 10,
+      change: Math.round(bmiChange * 10) / 10
+    };
+  }
+
+  /**
+   * Calculate sleep improvement projection
+   */
+  calculateSleepProjection(
+    currentHours: number,
+    targetHours: number
+  ): { projected: number; change: number } {
+    // Realistic improvement: 80% of deficit in 90 days
+    const deficit = targetHours - currentHours;
+    const improvement = deficit * 0.8;
+    const projected = Math.min(currentHours + improvement, targetHours);
+
+    return {
+      projected: Math.round(projected * 10) / 10,
+      change: Math.round((projected - currentHours) * 10) / 10
+    };
+  }
+
+  /**
+   * Calculate energy level projection (1-10 scale)
+   */
+  calculateEnergyProjection(
+    currentScore: number,
+    sleepImprovement: number,
+    hydrationImprovement: number
+  ): { projected: number; change: number } {
+    // Energy improves with better sleep and hydration
+    let improvement = 0;
+    
+    if (sleepImprovement >= 2) improvement += 3;
+    else if (sleepImprovement >= 1) improvement += 2;
+    else improvement += 1;
+
+    if (hydrationImprovement >= 1.5) improvement += 1;
+
+    const projected = Math.min(currentScore + improvement, 10);
+
+    return {
+      projected,
+      change: projected - currentScore
+    };
+  }
+
+  /**
+   * Calculate overall health score projection (0-100)
+   */
+  calculateHealthScoreProjection(
+    currentScore: number,
+    improvements: {
+      sleep: number;
+      hydration: number;
+      exercise: number;
+      nutrition: number;
+    }
+  ): { projected: number; change: number } {
+    // Each area contributes 25 points max
+    const sleepPoints = Math.min(improvements.sleep * 2.5, 6);
+    const hydrationPoints = Math.min(improvements.hydration * 2.5, 6);
+    const exercisePoints = Math.min(improvements.exercise * 2.5, 7);
+    const nutritionPoints = Math.min(improvements.nutrition * 2.5, 6);
+
+    const totalImprovement = sleepPoints + hydrationPoints + exercisePoints + nutritionPoints;
+    const projected = Math.min(currentScore + totalImprovement, 100);
+
+    return {
+      projected: Math.round(projected),
+      change: Math.round(projected - currentScore)
+    };
+  }
+
+  /**
+   * Generate daily life improvements based on changes
+   */
+  generateDailyLifeImprovements(
+    weightChange: number,
+    sleepChange: number,
+    energyChange: number,
+    bmi: number
+  ): string[] {
+    const improvements: string[] = [];
+
+    if (sleepChange >= 2) {
+      improvements.push('You wake up refreshed instead of groggy');
+      improvements.push('You think more clearly at work');
+    } else if (sleepChange >= 1) {
+      improvements.push('You feel more rested in the mornings');
+    }
+
+    if (weightChange >= 5) {
+      improvements.push('You climb stairs without being winded');
+      improvements.push('Your clothes fit better');
+      improvements.push('You have more confidence in your appearance');
+    } else if (weightChange >= 3) {
+      improvements.push('You notice clothes fitting slightly looser');
+    }
+
+    if (energyChange >= 3) {
+      improvements.push('You have energy to play with kids/grandkids');
+      improvements.push('You don\'t need afternoon coffee to stay alert');
+    } else if (energyChange >= 2) {
+      improvements.push('You feel less tired throughout the day');
+    }
+
+    if (bmi >= 30 && weightChange >= 5) {
+      improvements.push('You experience less joint pain');
+      improvements.push('You sleep better (less snoring/apnea)');
+    }
+
+    improvements.push('You don\'t crave junk food constantly');
+
+    return improvements;
+  }
+
+  /**
+   * Generate weekly milestones
+   */
+  generateMilestones(
+    weightChange: number,
+    sleepChange: number
+  ): { week: number; description: string }[] {
+    return [
+      { week: 1, description: 'Better morning alertness' },
+      { week: 2, description: 'Reduced headaches, less afternoon fatigue' },
+      { week: 3, description: 'Clearer thinking, better appetite control' },
+      { week: 4, description: `${Math.round(weightChange / 3)}kg water weight loss, improved energy` },
+      { week: 6, description: 'Easier breathing, less winded' },
+      { week: 8, description: 'Clothes fitting slightly looser, better mood' },
+      { week: 10, description: 'Reduced cravings, more stable energy' },
+      { week: 12, description: `${Math.round(weightChange)}kg total loss, better digestion` }
+    ];
+  }
+
+  /**
+   * Generate complete 90-day projection
+   */
+  calculateNinetyDayProjection(
+    currentWeight: number,
+    height: number,
+    currentBMI: number,
+    currentSleep: number,
+    targetSleep: number,
+    currentHydration: number,
+    targetHydration: number,
+    currentHealthScore: number
+  ): NinetyDayProjection {
+    // Calculate weight and BMI projections
+    const weightProj = this.calculateWeightProjection(currentWeight, currentBMI);
+    const bmiProj = this.calculateBMIProjection(currentBMI, weightProj.change, height);
+
+    // Calculate sleep projection
+    const sleepProj = this.calculateSleepProjection(currentSleep, targetSleep);
+
+    // Calculate energy projection
+    const energyProj = this.calculateEnergyProjection(
+      3, // Assume current energy is low (3/10)
+      sleepProj.change,
+      targetHydration - currentHydration
+    );
+
+    // Calculate health score projection
+    const healthScoreProj = this.calculateHealthScoreProjection(
+      currentHealthScore,
+      {
+        sleep: sleepProj.change,
+        hydration: (targetHydration - currentHydration) / targetHydration * 10,
+        exercise: 3, // Assume moderate improvement
+        nutrition: 2 // Assume some improvement
+      }
+    );
+
+    // Generate improvements and milestones
+    const dailyLifeImprovements = this.generateDailyLifeImprovements(
+      weightProj.change,
+      sleepProj.change,
+      energyProj.change,
+      currentBMI
+    );
+
+    const milestones = this.generateMilestones(weightProj.change, sleepProj.change);
+
+    return {
+      weight: {
+        current: currentWeight,
+        projected: weightProj.projected,
+        change: weightProj.change
+      },
+      bmi: {
+        current: currentBMI,
+        projected: bmiProj.projected,
+        change: bmiProj.change
+      },
+      sleep: {
+        current: currentSleep,
+        projected: sleepProj.projected,
+        change: sleepProj.change
+      },
+      energyLevel: {
+        current: 3,
+        projected: energyProj.projected,
+        change: energyProj.change
+      },
+      healthScore: {
+        current: currentHealthScore,
+        projected: healthScoreProj.projected,
+        change: healthScoreProj.change
+      },
+      dailyLifeImprovements,
+      milestones
+    };
+  }
+}
