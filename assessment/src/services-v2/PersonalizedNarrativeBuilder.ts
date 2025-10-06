@@ -38,6 +38,15 @@ export interface PersonalizedAnalysisInput {
     medicalCheckups: string;
     smokingStatus: string;
     alcoholConsumption: string;
+    urgencyLevel: string; // NEW: How eager to start
+  };
+  // NEW: Parsed lifestyle factors
+  lifestyleFactors: {
+    isSmoker: boolean;
+    alcoholLevel: 'none' | 'light' | 'moderate' | 'heavy';
+    stressLevel: 'low' | 'moderate' | 'high';
+    checkupFrequency: 'never' | 'rare' | 'annual' | 'biannual';
+    urgencyLevel: 'low' | 'moderate' | 'high';
   };
 }
 
@@ -85,10 +94,10 @@ export class PersonalizedNarrativeBuilder {
   private roadmapGen = new PhaseRoadmapGenerator();
   
   /**
-   * Generate complete personalized analysis
+   * Generate complete personalized analysis with ALL variables
    */
   generateAnalysis(input: PersonalizedAnalysisInput, userName: string = 'there'): PersonalizedAnalysisResult {
-    const { demographics, healthMetrics, answers } = input;
+    const { demographics, healthMetrics, answers, lifestyleFactors } = input;
     
     // Calculate core metrics
     const bmi = this.riskCalc.calculateBMI(demographics.weight, demographics.height);
@@ -96,14 +105,19 @@ export class PersonalizedNarrativeBuilder {
     const overallScore = this.calculateOverallScore(healthMetrics);
     const overallGrade = this.calculateGrade(overallScore);
     
-    // Generate analysis components
+    // Generate analysis components with ALL lifestyle factors
     const riskAnalysis = this.riskCalc.analyzeCompoundRisk(
       demographics.age,
       demographics.weight,
       demographics.height,
       healthMetrics.sleep,
       healthMetrics.hydration,
-      healthMetrics.exercise
+      healthMetrics.exercise,
+      demographics.gender,
+      lifestyleFactors.isSmoker,
+      lifestyleFactors.alcoholLevel,
+      lifestyleFactors.stressLevel,
+      lifestyleFactors.checkupFrequency
     );
     
     const personalizedTargets = this.targetCalc.calculateAllTargets(
@@ -112,7 +126,8 @@ export class PersonalizedNarrativeBuilder {
       demographics.height,
       healthMetrics.hydration,
       healthMetrics.sleep,
-      healthMetrics.exercise
+      healthMetrics.exercise,
+      demographics.gender
     );
     
     const ninetyDayProjection = this.projectionCalc.calculateNinetyDayProjection(
@@ -133,7 +148,8 @@ export class PersonalizedNarrativeBuilder {
       personalizedTargets.sleep.targetMinHours,
       personalizedTargets.hydration.targetLiters,
       personalizedTargets.steps.targetDaily,
-      answers.fastFoodFrequency
+      answers.fastFoodFrequency,
+      lifestyleFactors.urgencyLevel
     );
     
     // Generate narrative sections

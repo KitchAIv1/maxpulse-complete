@@ -34,6 +34,14 @@ export interface TestProfile {
     medicalCheckups: string;
     smokingStatus: string;
     alcoholConsumption: string;
+    urgencyLevel: string; // NEW
+  };
+  lifestyleFactors: {
+    isSmoker: boolean;
+    alcoholLevel: 'none' | 'light' | 'moderate' | 'heavy';
+    stressLevel: 'low' | 'moderate' | 'high';
+    checkupFrequency: 'never' | 'rare' | 'annual' | 'biannual';
+    urgencyLevel: 'low' | 'moderate' | 'high';
   };
 }
 
@@ -68,7 +76,15 @@ export const testProfiles: TestProfile[] = [
       stressLevel: 'High - work pressure and family responsibilities',
       medicalCheckups: 'Once every 2-3 years',
       smokingStatus: 'Non-smoker',
-      alcoholConsumption: '2-3 drinks per week'
+      alcoholConsumption: '2-3 drinks per week',
+      urgencyLevel: 'Very eager - want to start immediately'
+    },
+    lifestyleFactors: {
+      isSmoker: false,
+      alcoholLevel: 'light',
+      stressLevel: 'high',
+      checkupFrequency: 'rare',
+      urgencyLevel: 'high'
     }
   },
   {
@@ -101,7 +117,15 @@ export const testProfiles: TestProfile[] = [
       stressLevel: 'Moderate - manageable work-life balance',
       medicalCheckups: 'Annually',
       smokingStatus: 'Non-smoker',
-      alcoholConsumption: '1-2 drinks per week'
+      alcoholConsumption: '1-2 drinks per week',
+      urgencyLevel: 'Moderately interested - willing to try'
+    },
+    lifestyleFactors: {
+      isSmoker: false,
+      alcoholLevel: 'light',
+      stressLevel: 'moderate',
+      checkupFrequency: 'annual',
+      urgencyLevel: 'moderate'
     }
   },
   {
@@ -134,7 +158,56 @@ export const testProfiles: TestProfile[] = [
       stressLevel: 'Low - good stress management',
       medicalCheckups: 'Annually with preventive screenings',
       smokingStatus: 'Non-smoker',
-      alcoholConsumption: 'Occasional - social events only'
+      alcoholConsumption: 'Occasional - social events only',
+      urgencyLevel: 'Interested in optimizing further'
+    },
+    lifestyleFactors: {
+      isSmoker: false,
+      alcoholLevel: 'none',
+      stressLevel: 'low',
+      checkupFrequency: 'biannual',
+      urgencyLevel: 'moderate'
+    }
+  },
+  {
+    id: 'critical-carlos',
+    name: 'Critical Carlos (Smoker)',
+    demographics: {
+      age: 52,
+      weight: 115,
+      height: 178,
+      gender: 'male'
+    },
+    healthMetrics: {
+      hydration: 3,
+      sleep: 4,
+      exercise: 3,
+      nutrition: 3
+    },
+    answers: {
+      sleepDuration: '5-6 hours per night',
+      sleepQuality: 'Poor - wake up tired, cough in morning',
+      sleepIssues: 'Difficulty breathing at night, frequent waking',
+      waterIntake: '1-2 glasses daily (300-500ml)',
+      hydrationAwareness: 'Often feel dehydrated, dry mouth',
+      exerciseFrequency: '0-1 times per week',
+      exerciseType: 'None - too tired',
+      exerciseIntensity: 'Winded after walking short distances',
+      fastFoodFrequency: '4-5 times per week',
+      mealTiming: 'Irregular meals, skip breakfast',
+      snackingHabits: 'Heavy late-night snacking',
+      stressLevel: 'Very high - financial and health worries',
+      medicalCheckups: 'Rarely - last checkup 5+ years ago',
+      smokingStatus: 'Smoker - 1 pack per day for 20 years',
+      alcoholConsumption: '4-6 drinks per week',
+      urgencyLevel: 'Doctor told me I need to change now'
+    },
+    lifestyleFactors: {
+      isSmoker: true,
+      alcoholLevel: 'moderate',
+      stressLevel: 'high',
+      checkupFrequency: 'never',
+      urgencyLevel: 'high'
     }
   }
 ];

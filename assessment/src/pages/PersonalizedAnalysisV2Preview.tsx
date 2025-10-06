@@ -18,11 +18,12 @@ export const PersonalizedAnalysisV2Preview: React.FC = () => {
   const [selectedProfileId, setSelectedProfileId] = useState<string>('high-risk-richard');
   const selectedProfile = getTestProfile(selectedProfileId) || testProfiles[0];
 
-  // Convert test profile to analysis input
+  // Convert test profile to analysis input (with lifestyleFactors)
   const analysisInput = {
     demographics: selectedProfile.demographics,
     healthMetrics: selectedProfile.healthMetrics,
-    answers: selectedProfile.answers
+    answers: selectedProfile.answers,
+    lifestyleFactors: selectedProfile.lifestyleFactors
   };
 
   // Generate analysis

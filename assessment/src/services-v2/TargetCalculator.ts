@@ -43,11 +43,13 @@ export interface PersonalizedTargets {
 export class TargetCalculator {
   
   /**
-   * Calculate hydration goal based on weight
-   * Formula: weight (kg) × 0.033 = liters per day
+   * Calculate hydration goal based on weight and gender
+   * Science-backed: National Academies - Men ~3.7L/day, Women ~2.7L/day
+   * Formula: weight (kg) × gender-specific multiplier
    */
-  calculateHydrationGoal(weightKg: number): number {
-    return Math.round(weightKg * 0.033 * 10) / 10; // Round to 1 decimal
+  calculateHydrationGoal(weightKg: number, gender: 'male' | 'female' | 'other' = 'male'): number {
+    const multiplier = gender === 'female' ? 0.031 : 0.035; // Gender-specific
+    return Math.round(weightKg * multiplier * 10) / 10; // Round to 1 decimal
   }
 
   /**
@@ -129,13 +131,20 @@ export class TargetCalculator {
   }
 
   /**
-   * Calculate healthy weight range based on height
-   * Using BMI 18.5-24.9 as healthy range
+   * Calculate healthy weight range based on height and gender
+   * Science-backed: Women naturally have 6-11% higher body fat
+   * Using BMI 18.5-24.9 as healthy range (gender-adjusted)
    */
-  calculateHealthyWeightRange(heightCm: number): { min: number; max: number } {
+  calculateHealthyWeightRange(
+    heightCm: number, 
+    gender: 'male' | 'female' | 'other' = 'male'
+  ): { min: number; max: number } {
     const heightM = heightCm / 100;
-    const minWeight = Math.round(18.5 * (heightM ** 2));
-    const maxWeight = Math.round(24.9 * (heightM ** 2));
+    // Women can be slightly higher in BMI range due to natural body composition
+    const minBMI = gender === 'female' ? 18.5 : 18.5;
+    const maxBMI = gender === 'female' ? 25.5 : 24.9;
+    const minWeight = Math.round(minBMI * (heightM ** 2));
+    const maxWeight = Math.round(maxBMI * (heightM ** 2));
     return { min: minWeight, max: maxWeight };
   }
 
@@ -147,7 +156,7 @@ export class TargetCalculator {
   }
 
   /**
-   * Generate complete personalized targets
+   * Generate complete personalized targets with gender-specific calculations
    */
   calculateAllTargets(
     age: number,
@@ -155,14 +164,15 @@ export class TargetCalculator {
     height: number,
     hydrationScore: number,
     sleepScore: number,
-    exerciseScore: number
+    exerciseScore: number,
+    gender: 'male' | 'female' | 'other' = 'male'
   ): PersonalizedTargets {
     // Calculate BMI
     const currentBMI = weight / ((height / 100) ** 2);
     const bmiCategory = this.getBMICategory(currentBMI);
 
-    // Hydration targets
-    const targetHydration = this.calculateHydrationGoal(weight);
+    // Hydration targets (gender-specific)
+    const targetHydration = this.calculateHydrationGoal(weight, gender);
     const currentHydration = this.estimateCurrentHydration(hydrationScore);
     const hydrationDeficit = Math.round(
       ((targetHydration - currentHydration) / targetHydration) * 100
@@ -183,8 +193,8 @@ export class TargetCalculator {
     const currentSteps = this.estimateCurrentSteps(exerciseScore);
     const stepsDeficit = Math.max(0, targetSteps - currentSteps);
 
-    // Weight targets
-    const weightRange = this.calculateHealthyWeightRange(height);
+    // Weight targets (gender-specific)
+    const weightRange = this.calculateHealthyWeightRange(height, gender);
     const excessWeight = Math.max(0, weight - weightRange.max);
 
     return {

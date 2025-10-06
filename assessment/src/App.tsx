@@ -114,8 +114,7 @@ export default function App() {
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails | null>(null);
   const isMobile = useIsMobile();
 
-  // Get code parameter from URL for resume check
-  const urlParams = new URLSearchParams(window.location.search);
+  // Get code parameter from URL for resume check (reuse urlParams from above)
   const codeParam = urlParams.get('code');
   
   // Resume assessment hook - checks if user can continue from previous session

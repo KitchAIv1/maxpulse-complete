@@ -37,16 +37,22 @@ export class PhaseRoadmapGenerator {
   
   /**
    * Generate Phase 1: Foundation (Weeks 1-4)
+   * Urgency-adjusted: High urgency = aggressive goals, Low urgency = gradual
    */
   generatePhase1(
     targetSleep: number,
     targetHydration: number,
-    currentSleep: number
+    currentSleep: number,
+    urgencyLevel: 'low' | 'moderate' | 'high' = 'moderate'
   ): TransformationPhase {
+    // Adjust timeline based on urgency
+    const weeksLabel = urgencyLevel === 'high' ? 'Weeks 1-3' : 'Weeks 1-4';
+    const hydrationRampUp = urgencyLevel === 'high' ? '500ml every 2 days' : '500ml every 3 days';
+    const targetWeek = urgencyLevel === 'high' ? 'Week 3' : 'Week 4';
     return {
       phase: 1,
       name: 'Foundation',
-      weeks: 'Weeks 1-4',
+      weeks: weeksLabel,
       focus: ['Sleep', 'Hydration'],
       actions: [
         {
@@ -57,7 +63,7 @@ export class PhaseRoadmapGenerator {
         },
         {
           action: 'Hydration Protocol',
-          how: `Start: 1L daily (Week 1), Increase: 500ml every 3 days, Target: ${targetHydration}L by Week 4`,
+          how: `Start: 1L daily (Week 1), Increase: ${hydrationRampUp}, Target: ${targetHydration}L by ${targetWeek}`,
           why: 'Easiest win. You\'ll feel difference in 48 hours. Reduces false hunger, improves energy',
           tracking: `Drink ${Math.ceil(targetHydration * 4)} glasses daily (500ml at wake, before meals, mid-morning/afternoon)`
         }
