@@ -28,9 +28,9 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
     },
     {
       metric: 'BMI',
-      current: projection.bmi.current.toString(),
-      projected: projection.bmi.projected.toString(),
-      change: Math.abs(projection.bmi.change).toFixed(1),
+      current: Math.round(projection.bmi.current).toString(),
+      projected: Math.round(projection.bmi.projected).toString(),
+      change: Math.abs(Math.round(projection.bmi.change)).toString(),
       isImprovement: projection.bmi.change < 0
     },
     {
@@ -57,18 +57,18 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
   ];
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white">
       {/* Header */}
-      <div className="px-6 py-8 border-b border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900 text-center">
+      <div className="px-6 pt-8 pb-4">
+        <h2 className="text-2xl font-bold text-gray-900">
           90-Day Projection
-        </h1>
-        <p className="text-center text-gray-500 text-sm mt-2">
+        </h2>
+        <p className="text-gray-500 text-sm mt-2">
           If you follow the transformation plan
         </p>
       </div>
 
-      <div className="px-6 py-8 space-y-6">
+      <div className="px-6 pb-8 space-y-6">
         
         {/* All Projection Metrics in ONE Container */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
@@ -147,8 +147,8 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
           </div>
         </div>
 
-        {/* Start Button (Cal AI style) */}
-        <button className="w-full py-4 bg-black text-white rounded-full font-semibold text-center shadow-sm hover:bg-gray-800 transition-colors">
+        {/* Start Button (Cal AI style with color) */}
+        <button className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-center shadow-md hover:from-blue-700 hover:to-purple-700 transition-all">
           Start Your Transformation
         </button>
       </div>

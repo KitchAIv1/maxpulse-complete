@@ -100,89 +100,92 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
   );
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white">
       {/* Header */}
-      <div className="px-6 py-8 border-b border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900 text-center">
+      <div className="px-6 pt-8 pb-4">
+        <h2 className="text-2xl font-bold text-gray-900">
           Daily Health Targets
-        </h1>
+        </h2>
       </div>
 
-      {/* Goals with Circular Progress (Cal AI style) */}
-      <div className="px-6 py-8 space-y-6">
+      {/* Goals with Circular Progress (Cal AI style) - 2x2 Grid */}
+      <div className="px-6 pb-8 space-y-6">
         
-        {/* Hydration Goal */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <CircularProgress
-            percentage={hydrationProgress}
-            icon="💧"
-            label="Hydration goal"
-            value={`${targets.hydration.targetLiters}L`}
-            color={getProgressColor(hydrationProgress)}
-          />
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Current</span>
-              <span className="text-gray-900 font-semibold">
-                {targets.hydration.currentLiters}L ({Math.round(targets.hydration.currentLiters * 4)} glasses)
-              </span>
+        {/* 2x2 Grid for first 4 goals */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Hydration Goal */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <CircularProgress
+              percentage={hydrationProgress}
+              icon="💧"
+              label="Hydration goal"
+              value={`${targets.hydration.targetLiters}L`}
+              color={getProgressColor(hydrationProgress)}
+            />
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Current</span>
+                <span className="text-gray-900 font-semibold">
+                  {targets.hydration.currentLiters}L ({Math.round(targets.hydration.currentLiters * 4)} glasses)
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Sleep Goal */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <CircularProgress
-            percentage={sleepProgress}
-            icon="😴"
-            label="Sleep goal"
-            value={`${targets.sleep.targetMinHours}-${targets.sleep.targetMaxHours} hours`}
-            color={getProgressColor(sleepProgress)}
-          />
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Current</span>
-              <span className="text-gray-900 font-semibold">
-                {targets.sleep.currentHours} hours
-              </span>
+          {/* Sleep Goal */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <CircularProgress
+              percentage={sleepProgress}
+              icon="😴"
+              label="Sleep goal"
+              value={`${targets.sleep.targetMinHours}-${targets.sleep.targetMaxHours} hours`}
+              color={getProgressColor(sleepProgress)}
+            />
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Current</span>
+                <span className="text-gray-900 font-semibold">
+                  {targets.sleep.currentHours} hours
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Exercise Goal */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <CircularProgress
-            percentage={exerciseProgress}
-            icon="🏃"
-            label="Exercise goal"
-            value={`${targets.exercise.targetMinutesWeekly} min/week`}
-            color={getProgressColor(exerciseProgress)}
-          />
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Current</span>
-              <span className="text-gray-900 font-semibold">
-                {targets.exercise.currentMinutesWeekly} min/week
-              </span>
+          {/* Exercise Goal */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <CircularProgress
+              percentage={exerciseProgress}
+              icon="🏃"
+              label="Exercise goal"
+              value={`${targets.exercise.targetMinutesWeekly} min/week`}
+              color={getProgressColor(exerciseProgress)}
+            />
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Current</span>
+                <span className="text-gray-900 font-semibold">
+                  {targets.exercise.currentMinutesWeekly} min/week
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Steps Goal */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <CircularProgress
-            percentage={stepsProgress}
-            icon="👟"
-            label="Daily step goal"
-            value={`${targets.steps.targetDaily.toLocaleString()} steps`}
-            color={getProgressColor(stepsProgress)}
-          />
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Current</span>
-              <span className="text-gray-900 font-semibold">
-                ~{targets.steps.currentDaily.toLocaleString()} steps
-              </span>
+          {/* Steps Goal */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <CircularProgress
+              percentage={stepsProgress}
+              icon="👟"
+              label="Daily step goal"
+              value={`${targets.steps.targetDaily.toLocaleString()} steps`}
+              color={getProgressColor(stepsProgress)}
+            />
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Current</span>
+                <span className="text-gray-900 font-semibold">
+                  ~{targets.steps.currentDaily.toLocaleString()} steps
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -50,19 +50,19 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
   const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white">
       {/* Header */}
-      <div className="px-6 py-8 border-b border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">
+      <div className="px-6 pt-8 pb-4">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Your Health Assessment
-        </h1>
-        <p className="text-center text-gray-500 text-sm">
+        </h2>
+        <p className="text-gray-500 text-sm">
           {userProfile.name}
         </p>
       </div>
 
       {/* Main Content */}
-      <div className="px-6 py-8 space-y-6">
+      <div className="px-6 pb-8 space-y-6">
         
         {/* Overall Health Score - Circular Progress (Cal AI style) */}
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">

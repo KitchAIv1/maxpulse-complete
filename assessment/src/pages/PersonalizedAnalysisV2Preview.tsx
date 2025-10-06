@@ -137,11 +137,11 @@ export const PersonalizedAnalysisV2Preview: React.FC = () => {
         />
 
         {/* Footer */}
-        <div className="bg-gray-800 text-white rounded-lg p-6 text-center">
-          <div className="text-sm text-gray-400 mb-2">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+          <div className="text-sm text-gray-900 font-semibold mb-2">
             V2 AI Analysis System - Standalone Preview
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-600">
             This is a test environment using hardcoded data. Ready for integration with real assessment flow.
           </div>
         </div>
