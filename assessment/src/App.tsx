@@ -35,6 +35,7 @@ import { useAssessmentResume } from './hooks/useAssessmentResume';
 import { ResumeAssessmentModal } from './components/ResumeAssessmentModal';
 import { PersonalDetailsModal, PersonalDetails } from './components/PersonalDetailsModal';
 import { PersonalDetailsManager } from './services/PersonalDetailsManager';
+import { PersonalizedAnalysisV2Preview } from './pages/PersonalizedAnalysisV2Preview';
 
 // Import video to ensure it's properly bundled
 import assessmentBackgroundVideoSrc from '/videoversion.mp4?url';
@@ -77,6 +78,15 @@ const useIsMobile = () => {
 
 
 export default function App() {
+  // Check if V2 preview mode is enabled via URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const isV2Preview = urlParams.get('v2') === 'true';
+  
+  // If V2 preview mode, render V2 preview page instead of assessment
+  if (isV2Preview) {
+    return <PersonalizedAnalysisV2Preview />;
+  }
+  
   const [appState, setAppState] = useState<AppState>('welcome');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
