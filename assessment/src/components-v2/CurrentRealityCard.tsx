@@ -54,9 +54,18 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
       {/* MAXPULSE Logo at Top */}
       <div className="px-6 pt-6 pb-4 flex justify-center">
         <img 
-          src="/images/branding/logo-horizontal.png" 
+          src="/assessment/images/branding/logo-horizontal.png" 
           alt="MAXPULSE" 
           className="h-8"
+          onError={(e) => {
+            // Fallback to text if logo fails to load
+            const target = e.currentTarget;
+            target.style.display = 'none';
+            const fallback = document.createElement('div');
+            fallback.className = 'text-2xl font-bold text-gray-900';
+            fallback.textContent = 'MAXPULSE';
+            target.parentElement?.appendChild(fallback);
+          }}
         />
       </div>
 

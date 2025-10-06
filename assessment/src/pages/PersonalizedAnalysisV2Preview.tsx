@@ -141,9 +141,18 @@ export const PersonalizedAnalysisV2Preview: React.FC = () => {
           {/* Logo */}
           <div className="flex justify-center mb-4">
             <img 
-              src="/images/branding/logo-horizontal.png" 
+              src="/assessment/images/branding/logo-horizontal.png" 
               alt="MAXPULSE" 
               className="h-10"
+              onError={(e) => {
+                // Fallback to text if logo fails to load
+                const target = e.currentTarget;
+                target.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'text-2xl font-bold text-gray-900';
+                fallback.textContent = 'MAXPULSE';
+                target.parentElement?.appendChild(fallback);
+              }}
             />
           </div>
           
