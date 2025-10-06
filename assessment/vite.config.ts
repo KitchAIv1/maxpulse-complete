@@ -14,8 +14,8 @@ export default defineConfig({
     'import.meta.env.VITE_DATABASE_SUBSCRIPTIONS': '"true"',
     'import.meta.env.VITE_DEBUG_MODE': '"true"',
     'import.meta.env.VITE_MOCK_DATA': '"false"',
-    // 🆕 V2 Analysis Engine Feature Flag (default: false for safety)
-    'import.meta.env.VITE_USE_V2_ANALYSIS': '"false"',
+    // 🆕 V2 Analysis Engine Feature Flag (ENABLED for testing)
+    'import.meta.env.VITE_USE_V2_ANALYSIS': '"true"',
     // 🔒 SECURITY: Let Vite read from .env.local instead of hardcoding
     // REMOVED: 'import.meta.env.VITE_SUPABASE_URL' and 'VITE_SUPABASE_ANON_KEY'
     // These will now be read from .env.local file (which is in .gitignore)
