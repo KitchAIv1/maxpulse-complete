@@ -78,11 +78,35 @@ export function HealthInsightsResults({
   const useV2Analysis = import.meta.env.VITE_USE_V2_ANALYSIS === 'true';
 
   // 🆕 V2 Analysis Engine (if enabled)
-  const v2Input = useV2Analysis ? mapAssessmentToV2Input(results, demographics, healthMetrics) : null;
+  // Create a default input to avoid null issues with hook dependencies
+  const defaultV2Input = {
+    demographics: { age: 35, weight: 70, height: 175, gender: 'other' as const },
+    healthMetrics: { hydration: 5, sleep: 5, exercise: 5, nutrition: 5 },
+    answers: {
+      sleepDuration: '7-8 hours',
+      sleepQuality: 'fair',
+      hydrationLevel: '4-6 glasses',
+      exerciseFrequency: '2-3 times per week',
+      nutritionQuality: 'balanced',
+      urgencyLevel: 'moderate' as const
+    },
+    lifestyleFactors: {
+      isSmoker: false,
+      alcoholLevel: 'none' as const,
+      stressLevel: 'moderate' as const,
+      checkupFrequency: 'rarely' as const,
+      urgencyLevel: 'moderate' as const
+    }
+  };
+  
+  const v2Input = useV2Analysis && !detailsLoading 
+    ? mapAssessmentToV2Input(results, demographics, healthMetrics) 
+    : defaultV2Input;
+    
   const v2Analysis = usePersonalizedAnalysisV2({
-    input: v2Input!,
+    input: v2Input,
     userName: firstName,
-    enabled: useV2Analysis && !detailsLoading && v2Input !== null
+    enabled: useV2Analysis && !detailsLoading
   });
 
   // Log real demographics AND answers being used
