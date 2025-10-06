@@ -87,9 +87,9 @@ export function HealthInsightsResults({
     demographics: { age: 35, weight: 70, height: 175, gender: 'other' as const },
     healthMetrics: { hydration: 5, sleep: 5, exercise: 5, nutrition: 5 },
     answers: {
-      sleepDuration: '7-8 hours',
-      sleepQuality: 'fair',
-      sleepIssues: 'sometimes wake up during the night',
+      sleepDuration: '7-9 hours per night',
+      sleepQuality: 'refreshed',
+      sleepIssues: 'sleep relatively well',
       hydrationLevel: '4-6 glasses',
       waterIntake: '4-6 glasses',
       hydrationAwareness: 'try to stay hydrated but not consistent',

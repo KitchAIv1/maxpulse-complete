@@ -75,15 +75,20 @@ export function mapAssessmentToV2Input(
   
   // Map answers to V2 format using REAL assessment data
   const v2Answers = {
-    // h3: Sleep duration question
-    sleepDuration: getOptionText('h3') || '7-9 hours',
+    // h3: Sleep duration question - Convert Yes/No to actual hours
+    sleepDuration: answers['h3'] === 'a' ? '7-9 hours per night' : 
+                   answers['h3'] === 'b' ? 'less than 7 hours per night' :
+                   getOptionText('h3') || '7-9 hours',
     
-    // h3: Sleep quality (from metadata or infer from answer)
+    // h3: Sleep quality (from metadata)
     sleepQuality: getOptionMetadata('h3', 'sleepQuality') || 
-                  (answers['h3'] === 'a' ? 'good' : 'poor'),
+                  (answers['h3'] === 'a' ? 'refreshed' : 'tired'),
     
-    // h10: Burnout/overwhelm (sleep issues proxy)
-    sleepIssues: getOptionText('h10') || 'sometimes wake up during the night',
+    // h10: Burnout/overwhelm - Better text for sleep context
+    sleepIssues: answers['h10'] === 'a' ? 'have difficulty falling asleep due to stress' :
+                 answers['h10'] === 'b' ? 'sometimes wake up during the night' :
+                 answers['h10'] === 'c' ? 'sleep relatively well' :
+                 getOptionText('h10') || 'sometimes wake up during the night',
     
     // h4: Water intake question
     hydrationLevel: getOptionText('h4') || '4-7 cups',
@@ -111,21 +116,23 @@ export function mapAssessmentToV2Input(
     // h7: Energy level (activity proxy)
     activityLevel: getOptionText('h7') || 'lightly active during the day',
     
-    // h2: Nutrition question
-    nutritionQuality: getOptionText('h2') || 'sometimes eat healthy',
+    // h2: Nutrition question - Use actual answer text
+    nutritionQuality: getOptionText('h2') || 'sometimes eat fruits and vegetables',
     
-    // Fast food frequency (not asked - infer from h2)
-    fastFoodFrequency: answers['h2'] === 'a' ? '3-4 times per week' :
-                       answers['h2'] === 'b' ? '1-2 times per week' :
-                       'rarely',
+    // Fast food frequency (infer from h2 - for internal calculations only)
+    fastFoodFrequency: answers['h2'] === 'a' ? 'fast food 3-4 times per week' :
+                       answers['h2'] === 'b' ? 'fast food 1-2 times per week' :
+                       'rarely eat fast food',
     
-    // Meal timing (not asked - provide default)
+    // Meal timing (infer from h2)
     mealTiming: answers['h2'] === 'a' ? 'skip breakfast regularly' :
-                'eat 3 meals daily',
+                answers['h2'] === 'b' ? 'eat 3 meals daily' :
+                'eat regular balanced meals',
     
-    // Snacking habits (not asked - infer from nutrition)
+    // Snacking habits (infer from nutrition)
     snackingHabits: answers['h2'] === 'a' ? 'snack late at night' :
-                    'snack occasionally',
+                    answers['h2'] === 'b' ? 'snack occasionally' :
+                    'snack on healthy options',
     
     // Infer from h2 answer
     dietPattern: answers['h2'] === 'a' ? 'eat fast food 3-4 times per week' :
