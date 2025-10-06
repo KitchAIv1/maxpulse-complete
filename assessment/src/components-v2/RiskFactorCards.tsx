@@ -143,7 +143,7 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
         ))}
 
         {/* Hard Truth Section (Inverted: Black bg, white text) */}
-        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-800">
+        <div className="rounded-3xl p-6 shadow-sm border border-gray-800" style={{ backgroundColor: '#111827' }}>
           <h3 className="text-lg font-bold mb-4 text-white">
             The Reality
           </h3>
