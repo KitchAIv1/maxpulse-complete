@@ -147,9 +147,22 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
           <h3 className="text-lg font-bold mb-4 text-white">
             The Reality
           </h3>
-          <p className="text-gray-300 leading-relaxed">
+          <p className="text-gray-300 text-sm leading-relaxed">
             {hardTruth}
           </p>
+        </div>
+
+        {/* Secondary CTA - After Hard Truth */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-6 shadow-md text-center">
+          <h3 className="text-lg font-bold text-white mb-2">
+            Ready to Change?
+          </h3>
+          <p className="text-blue-100 text-sm mb-4">
+            Your transformation starts with a single decision
+          </p>
+          <button className="w-full py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
+            Start Your Journey Now
+          </button>
         </div>
       </div>
     </div>
