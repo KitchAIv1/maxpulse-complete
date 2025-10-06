@@ -43,13 +43,13 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
   return (
     <div className="bg-white">
       {/* Header */}
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-6 pt-6 pb-4">
         <h2 className="text-2xl font-bold text-gray-900">
           Health Risk Factors
         </h2>
       </div>
 
-      <div className="px-6 pb-8 space-y-6">
+      <div className="px-6 pb-6 space-y-4">
         
         {/* Overall Risk Summary */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">

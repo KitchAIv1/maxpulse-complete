@@ -19,7 +19,7 @@ export const TransformationRoadmap: React.FC<TransformationRoadmapProps> = ({
   return (
     <div className="bg-white">
       {/* Header */}
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-6 pt-6 pb-4">
         <h2 className="text-2xl font-bold text-gray-900">
           Transformation Plan
         </h2>
@@ -28,7 +28,7 @@ export const TransformationRoadmap: React.FC<TransformationRoadmapProps> = ({
         </p>
       </div>
 
-      <div className="px-6 pb-8 space-y-4">
+      <div className="px-6 pb-6 space-y-4">
         
         {/* Phases with transition animation */}
         {roadmap.phases.map((phase, phaseIndex) => (

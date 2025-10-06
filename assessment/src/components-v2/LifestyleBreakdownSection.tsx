@@ -55,13 +55,13 @@ export const LifestyleBreakdownSection: React.FC<LifestyleBreakdownSectionProps>
   return (
     <div className="bg-white">
       {/* Header */}
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-6 pt-6 pb-4">
         <h2 className="text-2xl font-bold text-gray-900">
           Lifestyle Analysis
         </h2>
       </div>
 
-      <div className="px-6 pb-8 space-y-6">
+      <div className="px-6 pb-6 space-y-4">
         {areas.map((area) => (
           <div
             key={area.key}

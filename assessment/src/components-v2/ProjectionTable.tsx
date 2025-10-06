@@ -59,7 +59,7 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
   return (
     <div className="bg-white">
       {/* Header */}
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-6 pt-6 pb-4">
         <h2 className="text-2xl font-bold text-gray-900">
           90-Day Projection
         </h2>
@@ -68,7 +68,7 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
         </p>
       </div>
 
-      <div className="px-6 pb-8 space-y-6">
+      <div className="px-6 pb-6 space-y-4">
         
         {/* All Projection Metrics in ONE Container */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">

@@ -102,14 +102,14 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
   return (
     <div className="bg-white">
       {/* Header */}
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-6 pt-6 pb-4">
         <h2 className="text-2xl font-bold text-gray-900">
           Daily Health Targets
         </h2>
       </div>
 
       {/* Goals with Circular Progress (Cal AI style) - 2x2 Grid */}
-      <div className="px-6 pb-8 space-y-6">
+      <div className="px-6 pb-6 space-y-4">
         
         {/* 2x2 Grid for first 4 goals */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
