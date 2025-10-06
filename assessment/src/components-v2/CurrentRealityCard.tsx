@@ -83,7 +83,7 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
       <div className="px-6 pb-8 space-y-6">
         
         {/* Overall Health Score - Circular Progress (Cal AI style) */}
-        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
           <div className="flex flex-col items-center">
             {/* Circular Progress Ring */}
             <div className="relative w-28 h-28 sm:w-32 sm:h-32 mb-4">
@@ -128,7 +128,7 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
         </div>
 
         {/* Personal Details Card (Cal AI style) */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Details</h3>
           
           <div className="space-y-4">
@@ -164,7 +164,7 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
         </div>
 
         {/* Current Reality Narrative */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
             Your Current Reality
           </h3>

@@ -15,6 +15,7 @@ interface PersonalizedTargetsTableProps {
 export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> = ({
   targets
 }) => {
+  const [showBreakdown, setShowBreakdown] = React.useState(false);
   
   // Calculate progress percentage for each metric
   const getProgressPercentage = (current: number, target: number): number => {
@@ -114,7 +115,7 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
         {/* 2x2 Grid for first 4 goals - Mobile: 1 column, Tablet+: 2 columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Hydration Goal */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
             <CircularProgress
               percentage={hydrationProgress}
               icon="💧"
@@ -133,7 +134,7 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
           </div>
 
           {/* Sleep Goal */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
             <CircularProgress
               percentage={sleepProgress}
               icon="😴"
@@ -152,7 +153,7 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
           </div>
 
           {/* Exercise Goal */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
             <CircularProgress
               percentage={exerciseProgress}
               icon="🏃"
@@ -171,7 +172,7 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
           </div>
 
           {/* Steps Goal */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
             <CircularProgress
               percentage={stepsProgress}
               icon="👟"
@@ -191,7 +192,7 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
         </div>
 
         {/* Weight Target */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
           <div className="flex items-start gap-4">
             <div className="text-4xl">⚖️</div>
             <div className="flex-1">
@@ -219,12 +220,39 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
 
         {/* View detailed breakdown button (Cal AI style) */}
         <button 
-          onClick={() => alert('Detailed breakdown coming soon!')}
-          className="w-full py-4 text-gray-500 text-sm flex items-center justify-center gap-2 hover:text-gray-700 transition-colors"
+          onClick={() => setShowBreakdown(!showBreakdown)}
+          className="w-full py-4 text-gray-500 text-sm flex items-center justify-center gap-2 hover:text-gray-700 transition-all duration-200 hover:bg-gray-50 rounded-2xl"
         >
-          View detailed breakdown
-          <span className="text-xs">▼</span>
+          {showBreakdown ? 'Hide' : 'View'} detailed breakdown
+          <span className={`text-xs transition-transform duration-200 ${showBreakdown ? 'rotate-180' : ''}`}>▼</span>
         </button>
+
+        {/* Detailed Breakdown (Expandable) */}
+        {showBreakdown && (
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 animate-fadeIn">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Weekly Breakdown</h3>
+            <div className="space-y-4">
+              <div className="border-l-4 border-blue-500 pl-4">
+                <div className="text-sm font-semibold text-gray-900 mb-1">Week 1-2: Foundation</div>
+                <div className="text-xs text-gray-600">
+                  Focus on establishing baseline habits. Start with {targets.hydration.targetLiters}L water daily and {targets.sleep.targetMinHours}+ hours sleep.
+                </div>
+              </div>
+              <div className="border-l-4 border-green-500 pl-4">
+                <div className="text-sm font-semibold text-gray-900 mb-1">Week 3-4: Build Momentum</div>
+                <div className="text-xs text-gray-600">
+                  Add {targets.exercise.targetMinutesWeekly} minutes of weekly exercise. Aim for {targets.steps.targetDaily.toLocaleString()} daily steps.
+                </div>
+              </div>
+              <div className="border-l-4 border-purple-500 pl-4">
+                <div className="text-sm font-semibold text-gray-900 mb-1">Week 5+: Optimize</div>
+                <div className="text-xs text-gray-600">
+                  Fine-tune all metrics. Target weight range: {targets.weight.targetMinKg}-{targets.weight.targetMaxKg} kg.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

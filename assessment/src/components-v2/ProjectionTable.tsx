@@ -148,7 +148,7 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
         </div>
 
         {/* Start Button (Cal AI style with color) */}
-        <button className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-center shadow-md hover:from-blue-700 hover:to-purple-700 transition-all">
+        <button className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold text-center shadow-md hover:from-blue-700 hover:to-purple-700 hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
           Start Your Transformation
         </button>
       </div>
