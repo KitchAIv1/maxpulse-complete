@@ -74,13 +74,12 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-gray-900 mb-6">Your Progress</h3>
           
-          <div className="space-y-8">
+          <div className="space-y-6">
             {projectionRows.map((row, index) => (
               <div key={row.metric}>
-                {/* Metric Name and Change Badge */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-gray-900 font-semibold text-base">{row.metric}</span>
-                  <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-gray-600 text-sm">{row.metric}</span>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                     row.isImprovement 
                       ? 'bg-green-50 text-green-700 border border-green-200' 
                       : 'bg-gray-50 text-gray-700 border border-gray-200'
@@ -89,18 +88,17 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
                   </span>
                 </div>
                 
-                {/* Current → 90 days comparison */}
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 sm:gap-8">
-                  <div className="flex-1">
-                    <div className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Current</div>
-                    <div className="text-3xl sm:text-4xl font-bold text-gray-900">{row.current}</div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Current</div>
+                    <div className="text-2xl font-bold text-gray-900">{row.current}</div>
                   </div>
                   
-                  <div className="text-gray-300 text-2xl hidden sm:block self-center">→</div>
+                  <div className="text-gray-300 text-2xl">→</div>
                   
-                  <div className="flex-1 sm:text-right">
-                    <div className="text-xs text-gray-500 mb-2 uppercase tracking-wide">90 days</div>
-                    <div className={`text-3xl sm:text-4xl font-bold ${
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-1">90 days</div>
+                    <div className={`text-2xl font-bold ${
                       row.isImprovement ? 'text-green-600' : 'text-gray-900'
                     }`}>
                       {row.projected}
@@ -110,7 +108,7 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
                 
                 {/* Divider between metrics (except last one) */}
                 {index < projectionRows.length - 1 && (
-                  <div className="mt-8 border-t border-gray-100"></div>
+                  <div className="mt-6 border-t border-gray-100"></div>
                 )}
               </div>
             ))}
@@ -132,15 +130,15 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
           </ul>
         </div>
 
-        {/* Priority Actions - Inverted: Black bg, white text */}
-        <div className="bg-black rounded-3xl p-6 shadow-sm border border-gray-800">
+        {/* Priority Actions - Inverted: Dark bg, white text */}
+        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm border border-gray-800">
           <h3 className="text-lg font-bold mb-4 text-white">
             Your Top 3 Priority Actions
           </h3>
           <div className="space-y-4">
             {priorityActions.map((action, index) => (
               <div key={index} className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center font-bold text-sm flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-white text-gray-900 flex items-center justify-center font-bold text-sm flex-shrink-0">
                   {index + 1}
                 </div>
                 <p className="text-white text-sm leading-relaxed">{action}</p>
