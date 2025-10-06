@@ -54,7 +54,7 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
         {/* Overall Risk Summary */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-gray-600">Overall Risk Level</span>
+            <span className="text-gray-600 text-sm">Overall Risk Level</span>
             <span className={`px-4 py-2 rounded-full text-sm font-bold border ${getSeverityColor(riskAnalysis.overallRiskLevel)}`}>
               {riskAnalysis.overallRiskLevel.toUpperCase()}
             </span>
@@ -66,12 +66,12 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
 
         {/* Individual Risk Metrics (Cal AI style) */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Risk Breakdown</h2>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Risk Breakdown</h3>
           
           <div className="space-y-4">
             {/* Diabetes Risk */}
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
-              <span className="text-gray-600">Diabetes Risk</span>
+              <span className="text-gray-600 text-sm">Diabetes Risk</span>
               <span className={`font-bold text-lg ${getRiskColor(riskAnalysis.diabetesRisk)}`}>
                 {riskAnalysis.diabetesRisk}%
               </span>
@@ -79,7 +79,7 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
             
             {/* Cardiovascular Risk */}
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
-              <span className="text-gray-600">Cardiovascular Risk</span>
+              <span className="text-gray-600 text-sm">Cardiovascular Risk</span>
               <span className={`font-bold text-lg ${getRiskColor(riskAnalysis.cardiovascularRisk)}`}>
                 {riskAnalysis.cardiovascularRisk}%
               </span>
@@ -87,7 +87,7 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
             
             {/* Metabolic Syndrome Risk */}
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-600">Metabolic Syndrome</span>
+              <span className="text-gray-600 text-sm">Metabolic Syndrome</span>
               <span className={`font-bold text-lg ${getRiskColor(riskAnalysis.metabolicSyndromeRisk)}`}>
                 {riskAnalysis.metabolicSyndromeRisk}%
               </span>

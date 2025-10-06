@@ -129,32 +129,32 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
 
         {/* Personal Details Card (Cal AI style) */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Personal Details</h2>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Details</h3>
           
           <div className="space-y-4">
             {/* Age */}
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
-              <span className="text-gray-600">Age</span>
-              <span className="text-gray-900 font-semibold">{userProfile.age} years</span>
+              <span className="text-gray-600 text-sm">Age</span>
+              <span className="text-gray-900 font-semibold text-sm">{userProfile.age} years</span>
             </div>
             
             {/* Weight */}
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
-              <span className="text-gray-600">Current weight</span>
-              <span className="text-gray-900 font-semibold">{userProfile.weight} kg</span>
+              <span className="text-gray-600 text-sm">Current weight</span>
+              <span className="text-gray-900 font-semibold text-sm">{userProfile.weight} kg</span>
             </div>
             
             {/* Height */}
             <div className="flex justify-between items-center py-3 border-b border-gray-100">
-              <span className="text-gray-600">Height</span>
-              <span className="text-gray-900 font-semibold">{userProfile.height} cm</span>
+              <span className="text-gray-600 text-sm">Height</span>
+              <span className="text-gray-900 font-semibold text-sm">{userProfile.height} cm</span>
             </div>
             
             {/* BMI */}
             <div className="flex justify-between items-center py-3">
-              <span className="text-gray-600">BMI</span>
+              <span className="text-gray-600 text-sm">BMI</span>
               <div className="flex items-center gap-2">
-                <span className="text-gray-900 font-semibold">{userProfile.bmi}</span>
+                <span className="text-gray-900 font-semibold text-sm">{userProfile.bmi}</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getBMIColor(userProfile.bmiCategory)}`}>
                   {userProfile.bmiCategory}
                 </span>
@@ -165,10 +165,10 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
 
         {/* Current Reality Narrative */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">
             Your Current Reality
-          </h2>
-          <p className="text-gray-700 leading-relaxed">
+          </h3>
+          <p className="text-gray-700 text-sm leading-relaxed">
             {currentReality}
           </p>
         </div>
