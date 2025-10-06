@@ -131,10 +131,18 @@ export class ProgressiveTargetCalculator {
   
   /**
    * Calculate progressive hydration target for a given week
+   * Safety: If already at/above target, maintain current level
    */
   private calculateProgressiveHydration(targets: PersonalizedTargets, rate: number): number {
     const current = targets.hydration.currentLiters;
     const target = targets.hydration.targetLiters;
+    
+    // If already at or above target, maintain current level
+    if (current >= target) {
+      return Math.round(current * 10) / 10;
+    }
+    
+    // Otherwise, progressively improve towards target
     const gap = target - current;
     const progressive = current + (gap * rate);
     return Math.round(progressive * 10) / 10; // Round to 1 decimal
@@ -142,10 +150,18 @@ export class ProgressiveTargetCalculator {
   
   /**
    * Calculate progressive sleep target for a given week
+   * FIX: If sleep is already optimal (≥ target), maintain current hours instead of reducing
    */
   private calculateProgressiveSleep(targets: PersonalizedTargets, rate: number): number {
     const current = targets.sleep.currentHours;
     const target = targets.sleep.targetMinHours;
+    
+    // If already at or above target, maintain current sleep (don't reduce it!)
+    if (current >= target) {
+      return Math.round(current * 10) / 10;
+    }
+    
+    // Otherwise, progressively improve towards target
     const gap = target - current;
     const progressive = current + (gap * rate);
     return Math.round(progressive * 10) / 10; // Round to 1 decimal
@@ -153,10 +169,18 @@ export class ProgressiveTargetCalculator {
   
   /**
    * Calculate progressive step target for a given week
+   * Safety: If already at/above target, maintain current level
    */
   private calculateProgressiveSteps(targets: PersonalizedTargets, rate: number): number {
     const current = targets.steps.currentDaily;
     const target = targets.steps.targetDaily;
+    
+    // If already at or above target, maintain current level
+    if (current >= target) {
+      return Math.round(current / 100) * 100;
+    }
+    
+    // Otherwise, progressively improve towards target
     const gap = target - current;
     const progressive = current + (gap * rate);
     return Math.round(progressive / 100) * 100; // Round to nearest 100
@@ -164,10 +188,18 @@ export class ProgressiveTargetCalculator {
   
   /**
    * Calculate progressive exercise target for a given week
+   * Safety: If already at/above target, maintain current level
    */
   private calculateProgressiveExercise(targets: PersonalizedTargets, rate: number): number {
     const current = targets.exercise.currentMinutesWeekly;
     const target = targets.exercise.targetMinutesWeekly;
+    
+    // If already at or above target, maintain current level
+    if (current >= target) {
+      return Math.round(current / 5) * 5;
+    }
+    
+    // Otherwise, progressively improve towards target
     const gap = target - current;
     const progressive = current + (gap * rate);
     return Math.round(progressive / 5) * 5; // Round to nearest 5 minutes
