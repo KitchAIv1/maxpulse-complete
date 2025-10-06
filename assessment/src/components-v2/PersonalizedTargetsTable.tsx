@@ -111,8 +111,8 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
       {/* Goals with Circular Progress (Cal AI style) - 2x2 Grid */}
       <div className="px-6 pb-6 space-y-4">
         
-        {/* 2x2 Grid for first 4 goals */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 2x2 Grid for first 4 goals - Mobile: 1 column, Tablet+: 2 columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Hydration Goal */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
             <CircularProgress

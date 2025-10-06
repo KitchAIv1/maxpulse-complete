@@ -83,11 +83,11 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
       <div className="px-6 pb-8 space-y-6">
         
         {/* Overall Health Score - Circular Progress (Cal AI style) */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
           <div className="flex flex-col items-center">
             {/* Circular Progress Ring */}
-            <div className="relative w-32 h-32 mb-4">
-              <svg className="transform -rotate-90 w-32 h-32">
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 mb-4">
+              <svg className="transform -rotate-90 w-full h-full">
                 {/* Background circle */}
                 <circle
                   cx="64"
@@ -114,13 +114,13 @@ export const CurrentRealityCard: React.FC<CurrentRealityCardProps> = ({
               </svg>
               {/* Score in center */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-3xl font-bold text-gray-900">{overallScore}</span>
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">{overallScore}</span>
               </div>
             </div>
             
             <div className="text-center">
-              <div className="text-gray-500 text-sm mb-1">Overall Health Score</div>
-              <div className={`text-2xl font-bold ${getScoreColor(overallScore)}`}>
+              <div className="text-gray-500 text-xs sm:text-sm mb-1">Overall Health Score</div>
+              <div className={`text-xl sm:text-2xl font-bold ${getScoreColor(overallScore)}`}>
                 Grade {overallGrade}
               </div>
             </div>

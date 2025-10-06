@@ -88,17 +88,17 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Current</div>
-                    <div className="text-2xl font-bold text-gray-900">{row.current}</div>
+                    <div className="text-xl sm:text-2xl font-bold text-gray-900">{row.current}</div>
                   </div>
                   
-                  <div className="text-gray-300 text-2xl">→</div>
+                  <div className="text-gray-300 text-xl sm:text-2xl hidden sm:block">→</div>
                   
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <div className="text-xs text-gray-500 mb-1">90 days</div>
-                    <div className={`text-2xl font-bold ${
+                    <div className={`text-xl sm:text-2xl font-bold ${
                       row.isImprovement ? 'text-green-600' : 'text-gray-900'
                     }`}>
                       {row.projected}
