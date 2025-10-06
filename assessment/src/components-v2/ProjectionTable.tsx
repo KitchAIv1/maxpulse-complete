@@ -130,18 +130,18 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
           </ul>
         </div>
 
-        {/* Priority Actions - Fixed text color */}
-        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm">
-          <h3 className="text-lg font-bold mb-4 text-white">
+        {/* Priority Actions - Light background with black text */}
+        <div className="bg-gray-50 rounded-3xl p-6 shadow-sm border border-gray-200">
+          <h3 className="text-lg font-bold mb-4 text-gray-900">
             Your Top 3 Priority Actions
           </h3>
           <div className="space-y-4">
             {priorityActions.map((action, index) => (
               <div key={index} className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-white text-gray-900 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
                   {index + 1}
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed">{action}</p>
+                <p className="text-gray-700 text-sm leading-relaxed">{action}</p>
               </div>
             ))}
           </div>
