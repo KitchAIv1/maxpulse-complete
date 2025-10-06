@@ -4,6 +4,7 @@ import { AssessmentResults } from '../types/assessment';
 import { EnhancedAIAnalysisSection } from './EnhancedAIAnalysisSection';
 import { HealthMetricsCards } from './HealthMetricsCards';
 import { useAIAnalysis } from '../hooks/useAIAnalysis';
+import { usePersonalDetails } from '../hooks/usePersonalDetails';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
 interface HealthInsightsResultsProps {
@@ -34,36 +35,64 @@ export function HealthInsightsResults({
   const fullName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
   const firstName = fullName.split(' ')[0]; // Get first name only
   
-  // Calculate health metrics based on user answers and profile
-  const sleepScore = Math.floor(Math.random() * 4) + 5; // 5-8 range
-  const hydrationScore = Math.floor(Math.random() * 3) + 6; // 6-8 range
-  const activityScore = Math.floor(Math.random() * 2) + 7; // 7-8 range
-  const stressScore = Math.floor(Math.random() * 3) + 4; // 4-6 range
+  // 🆕 PHASE 1B: Fetch real personal details from database
+  const sessionId = distributorInfo?.code;
+  const { 
+    demographics, 
+    healthGoals, 
+    loading: detailsLoading 
+  } = usePersonalDetails(sessionId, firstName);
 
-  // Extract demographics for AI analysis (mock data for now)
-  const demographics: Demographics = {
-    age: 35, // Default age, should be extracted from assessment
-    weight: 70, // Default weight in kg
-    height: 175, // Default height in cm
-    gender: 'other', // Default gender
-    name: firstName // Add user name for personalized analysis
+  // 🆕 PHASE 1B: Extract real health metrics from assessment answers
+  const extractHealthMetrics = (): HealthMetrics => {
+    const userAnswers = results.answers || {};
+    const profile = results.userProfile || {};
+    
+    // Map scores from userProfile (calculated during assessment)
+    // These are derived from actual assessment responses
+    return {
+      hydration: profile.hydrationLevel === 'optimal' ? 8 : 
+                profile.hydrationLevel === 'good' ? 6 : 4,
+      sleep: profile.sleepQuality === 'optimal' ? 8 : 
+             profile.sleepQuality === 'suboptimal' ? 5 : 3,
+      exercise: profile.exerciseLevel === 'high' ? 8 : 
+               profile.exerciseLevel === 'medium' ? 6 : 
+               profile.exerciseLevel === 'low' ? 3 : 5,
+      nutrition: profile.nutritionQuality === 'excellent' ? 8 : 
+                profile.nutritionQuality === 'good' ? 6 : 4
+    };
   };
 
-  // Create health metrics for AI analysis
-  const healthMetrics: HealthMetrics = {
-    hydration: hydrationScore,
-    sleep: sleepScore,
-    exercise: activityScore,
-    nutrition: stressScore // Using stress as nutrition proxy for now
-  };
+  const healthMetrics = extractHealthMetrics();
 
-  // Use AI Analysis hook
+  // Log real demographics AND answers being used
+  if (demographics.age !== 35) {
+    console.log('✅ Using REAL DATA for AI analysis:', {
+      demographics: {
+        age: demographics.age,
+        weight: demographics.weight,
+        height: demographics.height,
+        gender: demographics.gender,
+        bmi: healthGoals.bmi,
+        bmiCategory: healthGoals.bmiCategory
+      },
+      healthGoals: {
+        hydration: healthGoals.hydrationGoalLiters + 'L',
+        sleep: `${healthGoals.sleepHoursMin}-${healthGoals.sleepHoursMax}hrs`,
+        steps: healthGoals.dailyStepGoal
+      },
+      healthMetrics,
+      answersCount: Object.keys(results.answers || {}).length
+    });
+  }
+
+  // Use AI Analysis hook with REAL demographics, metrics, and answers
   const { analysis, loading, error, canRetry, retry } = useAIAnalysis({
     assessmentType: 'health',
-    demographics,
-    healthMetrics,
-    answers: [], // Should pass actual answers from results
-    enabled: true
+    demographics, // 🆕 Real data from database!
+    healthMetrics, // 🆕 Real scores from assessment!
+    answers: results.answers || {}, // 🆕 Actual question responses!
+    enabled: !detailsLoading // Wait for details to load first
   });
   
   // Use AI analysis data if available, otherwise fallback to original logic
@@ -86,10 +115,10 @@ export function HealthInsightsResults({
         };
       };
 
-      const sleepArea = getSafeArea('sleep', sleepScore);
-      const hydrationArea = getSafeArea('hydration', hydrationScore);
-      const exerciseArea = getSafeArea('exercise', activityScore);
-      const nutritionArea = getSafeArea('nutrition', stressScore);
+      const sleepArea = getSafeArea('sleep', healthMetrics.sleep);
+      const hydrationArea = getSafeArea('hydration', healthMetrics.hydration);
+      const exerciseArea = getSafeArea('exercise', healthMetrics.exercise);
+      const nutritionArea = getSafeArea('nutrition', healthMetrics.nutrition);
 
       return {
         sleep: {
@@ -123,33 +152,33 @@ export function HealthInsightsResults({
       };
     }
     
-    // Fallback to enhanced science-backed analysis
+    // Fallback to enhanced science-backed analysis using real health metrics
     return {
       sleep: {
-        score: sleepScore,
-        status: `Your brain needs sleep like a computer needs to restart - without it, mental performance drops by 23%. Your sleep score of ${sleepScore}/10 suggests ${sleepScore >= 7 ? 'good sleep habits that support cognitive function' : 'room for optimization to improve energy and mental clarity'}.`,
-        category: sleepScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.sleep,
+        status: `Your brain needs sleep like a computer needs to restart - without it, mental performance drops by 23%. Your sleep score of ${healthMetrics.sleep}/10 suggests ${healthMetrics.sleep >= 7 ? 'good sleep habits that support cognitive function' : 'room for optimization to improve energy and mental clarity'}.`,
+        category: healthMetrics.sleep >= 7 ? 'Strength' : 'Area to improve',
         icon: Moon,
         personalizedTip: `The MAXPULSE App will monitor your sleep cycles and optimize your bedtime routine with personalized recommendations.`
       },
       hydration: {
-        score: hydrationScore,
-        status: `Your cells are like tiny factories that need water to produce energy. When dehydrated, cellular energy production drops by up to 30%. Your hydration score of ${hydrationScore}/10 indicates ${hydrationScore >= 7 ? 'good hydration habits supporting cellular function' : 'chronic cellular dehydration affecting energy levels'}.`,
-        category: hydrationScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.hydration,
+        status: `Your cells are like tiny factories that need water to produce energy. When dehydrated, cellular energy production drops by up to 30%. Your hydration score of ${healthMetrics.hydration}/10 indicates ${healthMetrics.hydration >= 7 ? 'good hydration habits supporting cellular function' : 'chronic cellular dehydration affecting energy levels'}.`,
+        category: healthMetrics.hydration >= 7 ? 'Strength' : 'Area to improve',
         icon: Droplets,
         personalizedTip: `The MAXPULSE App will track your hydration precisely with hourly reminders and intake monitoring.`
       },
       activity: {
-        score: activityScore,
-        status: `Exercise breaks down muscle tissue, recovery builds it back stronger. Without proper recovery tracking, you're breaking down faster than building up. Your activity score of ${activityScore}/10 shows ${activityScore >= 7 ? 'excellent activity levels with good recovery balance' : 'optimization opportunities for better performance'}.`,
-        category: activityScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.exercise,
+        status: `Exercise breaks down muscle tissue, recovery builds it back stronger. Without proper recovery tracking, you're breaking down faster than building up. Your activity score of ${healthMetrics.exercise}/10 shows ${healthMetrics.exercise >= 7 ? 'excellent activity levels with good recovery balance' : 'optimization opportunities for better performance'}.`,
+        category: healthMetrics.exercise >= 7 ? 'Strength' : 'Area to improve',
         icon: Activity,
         personalizedTip: `The MAXPULSE App will track your heart rate variability and suggest optimal training intensity based on recovery status.`
       },
       stress: {
-        score: stressScore,
-        status: `Stress hormones like cortisol are meant for short-term survival, not chronic activation. Constant stress is like keeping your car engine in the red zone. Your stress patterns indicate ${stressScore >= 7 ? 'good stress management supporting overall health' : 'cortisol dysregulation affecting multiple body systems'}.`,
-        category: stressScore >= 7 ? 'Strength' : 'Area to improve',
+        score: healthMetrics.nutrition,
+        status: `Stress hormones like cortisol are meant for short-term survival, not chronic activation. Constant stress is like keeping your car engine in the red zone. Your stress patterns indicate ${healthMetrics.nutrition >= 7 ? 'good stress management supporting overall health' : 'cortisol dysregulation affecting multiple body systems'}.`,
+        category: healthMetrics.nutrition >= 7 ? 'Strength' : 'Area to improve',
         icon: Heart,
         personalizedTip: `The MAXPULSE App will monitor daily mood patterns and provide stress management techniques with biometric feedback.`
       }
@@ -196,6 +225,91 @@ export function HealthInsightsResults({
 
       {/* Enhanced Health Metrics Cards with Science-Backed Analysis */}
       <HealthMetricsCards healthMetrics={healthMetricsDisplay} />
+
+      {/* 🆕 PHASE 1B: Personalized Daily Health Goals */}
+      {demographics.age !== 35 && (
+        <div style={{
+          marginBottom: '32px',
+          padding: '20px',
+          backgroundColor: '#f0fdf4',
+          border: '2px solid #86efac',
+          borderRadius: '12px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: '#15803d',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span>🎯</span> Your Personalized Daily Goals
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.hydrationGoalLiters}L
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                Daily Water
+              </div>
+            </div>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.sleepHoursMin}-{healthGoals.sleepHoursMax}hrs
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                Sleep Target
+              </div>
+            </div>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.dailyStepGoal.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                Daily Steps
+              </div>
+            </div>
+            <div style={{
+              padding: '12px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              border: '1px solid #bbf7d0'
+            }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
+                {healthGoals.bmi.toFixed(1)}
+              </div>
+              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
+                BMI ({healthGoals.bmiCategory})
+              </div>
+            </div>
+          </div>
+          <p style={{
+            fontSize: '13px',
+            color: '#166534',
+            marginTop: '12px',
+            fontStyle: 'italic'
+          }}>
+            ✨ Based on your age ({demographics.age}), weight ({demographics.weight}kg), and height ({demographics.height}cm)
+          </p>
+        </div>
+      )}
 
       {/* Enhanced AI Analysis Section - MAXPULSE App-Centric Recommendations with Lifestyle Mindset */}
       <EnhancedAIAnalysisSection

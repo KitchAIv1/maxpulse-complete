@@ -164,6 +164,7 @@ export const calculateResults = (
     totalParticipants: 10000, // Mock total
     achievements,
     userProfile,
+    answers, // 🆕 PHASE 1B: Include raw answers for AI analysis
   };
 };
 

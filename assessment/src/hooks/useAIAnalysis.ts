@@ -16,7 +16,7 @@ interface UseAIAnalysisProps {
   assessmentType: 'health' | 'wealth' | 'hybrid';
   demographics: Demographics;
   healthMetrics: HealthMetrics;
-  answers?: any[];
+  answers?: Record<string, string> | any[]; // 🆕 Accept both object and array formats
   enabled?: boolean;
 }
 
@@ -39,13 +39,23 @@ export const useAIAnalysis = ({
   const hasRunRef = useRef(false);
 
   // Memoize the input to prevent unnecessary re-renders
-  const analysisInput = useMemo((): AIAnalysisInput => ({
-    assessmentType,
-    demographics: { ...demographics },
-    healthMetrics: { ...healthMetrics },
-    answers: [...answers],
-    sessionId: `session_${Date.now()}`
-  }), [
+  const analysisInput = useMemo((): AIAnalysisInput => {
+    // Convert answers from Record<string, string> to AssessmentAnswer[]
+    const answersArray = Array.isArray(answers) 
+      ? answers 
+      : Object.entries(answers || {}).map(([questionId, answer]) => ({
+          questionId,
+          answer
+        }));
+
+    return {
+      assessmentType,
+      demographics: { ...demographics },
+      healthMetrics: { ...healthMetrics },
+      answers: answersArray,
+      sessionId: `session_${Date.now()}`
+    };
+  }, [
     assessmentType,
     demographics.age,
     demographics.weight, 

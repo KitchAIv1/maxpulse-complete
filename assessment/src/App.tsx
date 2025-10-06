@@ -33,6 +33,8 @@ import { AssessmentCompletionManager, AssessmentCompletionData } from './service
 import { FeatureFlags } from './utils/featureFlags';
 import { useAssessmentResume } from './hooks/useAssessmentResume';
 import { ResumeAssessmentModal } from './components/ResumeAssessmentModal';
+import { PersonalDetailsModal, PersonalDetails } from './components/PersonalDetailsModal';
+import { PersonalDetailsManager } from './services/PersonalDetailsManager';
 
 // Import video to ensure it's properly bundled
 import assessmentBackgroundVideoSrc from '/videoversion.mp4?url';
@@ -95,8 +97,11 @@ export default function App() {
   const [dualWriteManager] = useState(() => new SupabaseDualWriteManager());
   const [realtimeManager] = useState(() => new SupabaseRealtimeManager());
   const [completionManager] = useState(() => new AssessmentCompletionManager());
+  const [personalDetailsManager] = useState(() => new PersonalDetailsManager());
   const [distributorInfo, setDistributorInfo] = useState<DistributorInfo | null>(null);
   const [showResumeModal, setShowResumeModal] = useState(false);
+  const [showPersonalDetailsModal, setShowPersonalDetailsModal] = useState(false);
+  const [personalDetails, setPersonalDetails] = useState<PersonalDetails | null>(null);
   const isMobile = useIsMobile();
 
   // Get code parameter from URL for resume check
@@ -606,6 +611,21 @@ export default function App() {
   const handleContinueFromLongevityInsight = useCallback(() => {
     if (isTransitioning) return; // Prevent multiple rapid clicks
     
+    // Show personal details modal before proceeding to results
+    setShowPersonalDetailsModal(true);
+  }, [isTransitioning]);
+
+  const handlePersonalDetailsSubmit = async (details: PersonalDetails) => {
+    setPersonalDetails(details);
+    setShowPersonalDetailsModal(false);
+    
+    // Save to database
+    const sessionId = distributorInfo?.code || '';
+    await personalDetailsManager.savePersonalDetails(sessionId, details);
+    
+    // Lock assessment to prevent restart
+    await personalDetailsManager.lockAssessment(sessionId);
+    
     // Route to priority-specific results pages
     if (selectedPriority === 'health') {
       setAppState('health-insights');
@@ -616,7 +636,7 @@ export default function App() {
     } else {
       setAppState('results'); // Fallback
     }
-  }, [isTransitioning, selectedPriority]);
+  };
 
   const getResults = () => {
     console.log('getResults called with:', {
@@ -1085,6 +1105,13 @@ export default function App() {
             resumeData={resumeData}
             onResume={handleResume}
             onRestart={handleRestart}
+          />
+        )}
+
+        {showPersonalDetailsModal && (
+          <PersonalDetailsModal
+            onSubmit={handlePersonalDetailsSubmit}
+            userName={distributorInfo?.customerName?.split(' ')[0] || 'there'}
           />
         )}
       </div>

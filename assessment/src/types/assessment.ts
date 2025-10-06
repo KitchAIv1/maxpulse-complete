@@ -81,6 +81,7 @@ export interface AssessmentResults {
   totalParticipants: number;
   achievements: string[];
   userProfile: UserProfile;
+  answers?: Record<string, string>; // 🆕 PHASE 1B: Include raw answers for AI analysis
 }
 
 export interface DistributorInfo {

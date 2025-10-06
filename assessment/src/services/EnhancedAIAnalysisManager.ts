@@ -151,12 +151,19 @@ export class EnhancedAIAnalysisManager {
    * Call enhanced AI analysis with intelligent context
    */
   private async callEnhancedAIAnalysis(prompt: string, input: AIAnalysisInput): Promise<any> {
+    console.log('🔍 AI Edge Function Check:', {
+      useAIEdgeFunction: FeatureFlags.useAIEdgeFunction,
+      useSupabase: FeatureFlags.useSupabase,
+      willUseEdgeFunction: FeatureFlags.useAIEdgeFunction && FeatureFlags.useSupabase
+    });
+    
     if (FeatureFlags.useAIEdgeFunction && FeatureFlags.useSupabase) {
+      console.log('📡 Calling Supabase Edge Function for REAL AI...');
       return this.callSupabaseEnhancedAI(prompt, input);
     }
     
     // Fallback to mock response with enhanced structure
-    console.log('🔄 Using enhanced mock response');
+    console.warn('⚠️ Using enhanced mock response - AI Edge Function disabled');
     await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing
     
     return {
@@ -207,6 +214,16 @@ export class EnhancedAIAnalysisManager {
       if (error) throw error;
       
       console.log('🤖 Enhanced AI analysis from Supabase Edge Function');
+      console.log('📊 AI Response Structure:', {
+        hasAnalysis: !!data.analysis,
+        hasOverallMessage: !!data.analysis?.overallMessage,
+        hasAreaInsights: !!data.analysis?.areaInsights,
+        areaInsightsCount: data.analysis?.areaInsights?.length || 0,
+        hasScientificBacking: !!data.analysis?.scientificBacking,
+        cached: data.cached,
+        processingTime: data.processingTime
+      });
+      console.log('🔍 Raw AI Analysis:', data.analysis);
       return data.analysis;
       
     } catch (error) {
