@@ -9,6 +9,7 @@ import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 // 🆕 V2 Analysis Engine Imports
 import { usePersonalizedAnalysisV2 } from '../hooks-v2/usePersonalizedAnalysisV2';
 import { mapAssessmentToV2Input } from '../utils/v2DataMapper';
+import { getCurrentQuestions } from '../utils/assessment';
 import { CurrentRealityCard } from '../components-v2/CurrentRealityCard';
 import { LifestyleBreakdownSection } from '../components-v2/LifestyleBreakdownSection';
 import { PersonalizedTargetsTable } from '../components-v2/PersonalizedTargetsTable';
@@ -77,6 +78,9 @@ export function HealthInsightsResults({
   // 🆕 Check V2 feature flag
   const useV2Analysis = import.meta.env.VITE_USE_V2_ANALYSIS === 'true';
 
+  // 🆕 Get current questions array for V2 mapper
+  const currentQuestions = getCurrentQuestions('health');
+
   // 🆕 V2 Analysis Engine (if enabled)
   // Create a default input to avoid null issues with hook dependencies
   const defaultV2Input = {
@@ -85,9 +89,14 @@ export function HealthInsightsResults({
     answers: {
       sleepDuration: '7-8 hours',
       sleepQuality: 'fair',
+      sleepIssues: 'sometimes wake up during the night',
       hydrationLevel: '4-6 glasses',
+      waterIntake: '4-6 glasses',
+      hydrationAwareness: 'try to stay hydrated but not consistent',
       exerciseFrequency: '2-3 times per week',
+      activityLevel: 'lightly active during the day',
       nutritionQuality: 'balanced',
+      dietPattern: 'eat a mix of healthy and convenience foods',
       urgencyLevel: 'moderate' as const
     },
     lifestyleFactors: {
@@ -100,7 +109,7 @@ export function HealthInsightsResults({
   };
   
   const v2Input = useV2Analysis && !detailsLoading 
-    ? mapAssessmentToV2Input(results, demographics, healthMetrics) 
+    ? mapAssessmentToV2Input(results, demographics, healthMetrics, currentQuestions) 
     : defaultV2Input;
     
   const v2Analysis = usePersonalizedAnalysisV2({

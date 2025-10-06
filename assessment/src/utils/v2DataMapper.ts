@@ -1,25 +1,61 @@
 /**
  * V2 Data Mapper - Assessment to V2 Analysis Input
  * Following .cursorrules: <200 lines, single responsibility, utility pattern
- * Purpose: Map assessment data to V2 PersonalizedAnalysisInput format
+ * Purpose: Map REAL assessment data to V2 PersonalizedAnalysisInput format
  */
 
-import { AssessmentResults } from '../types/assessment';
+import { AssessmentResults, Question } from '../types/assessment';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 import { PersonalizedAnalysisInput } from '../services-v2/PersonalizedNarrativeBuilder';
 
 /**
- * Map assessment results to V2 analysis input
- * Handles missing data gracefully with sensible defaults
+ * Map assessment results to V2 analysis input using REAL question data
+ * @param results - Assessment results with answers (question ID -> option ID)
+ * @param demographics - User demographics from personal details
+ * @param healthMetrics - Health scores calculated from assessment
+ * @param currentQuestions - The actual questions array to look up answer text
  */
 export function mapAssessmentToV2Input(
   results: AssessmentResults,
   demographics: Demographics,
-  healthMetrics: HealthMetrics
+  healthMetrics: HealthMetrics,
+  currentQuestions: Question[]
 ): PersonalizedAnalysisInput {
   
-  // Extract lifestyle factors from assessment answers
-  const lifestyleFactors = extractLifestyleFactors(results);
+  const answers = results.answers || {};
+  
+  // Helper to get selected option text
+  const getOptionText = (questionId: string): string => {
+    const question = currentQuestions.find(q => q.id === questionId);
+    if (!question) return '';
+    
+    const selectedOptionId = answers[questionId];
+    if (!selectedOptionId) return '';
+    
+    const option = question.options?.find(opt => opt.id === selectedOptionId);
+    return option?.text || '';
+  };
+  
+  // Helper to get selected option metadata
+  const getOptionMetadata = (questionId: string, metadataKey: string): any => {
+    const question = currentQuestions.find(q => q.id === questionId);
+    if (!question) return undefined;
+    
+    const selectedOptionId = answers[questionId];
+    if (!selectedOptionId) return undefined;
+    
+    const option = question.options?.find(opt => opt.id === selectedOptionId);
+    return option ? (option as any)[metadataKey] : undefined;
+  };
+  
+  // Extract lifestyle factors from actual assessment answers
+  const lifestyleFactors = {
+    isSmoker: extractSmokingStatus(answers, getOptionText),
+    alcoholLevel: extractAlcoholLevel(answers, getOptionText),
+    stressLevel: extractStressLevel(answers, getOptionText),
+    checkupFrequency: extractCheckupFrequency(answers, getOptionText),
+    urgencyLevel: extractUrgencyLevel(answers, getOptionText)
+  };
   
   // Map demographics
   const v2Demographics = {
@@ -37,18 +73,43 @@ export function mapAssessmentToV2Input(
     nutrition: healthMetrics.nutrition || 5
   };
   
-  // Map answers to V2 format (with all required fields for PersonalizedNarrativeBuilder)
+  // Map answers to V2 format using REAL assessment data
   const v2Answers = {
-    sleepDuration: mapSleepDuration(results.answers),
-    sleepQuality: mapSleepQuality(results.answers),
-    sleepIssues: mapSleepIssues(results.answers),
-    hydrationLevel: mapHydrationLevel(results.answers),
-    waterIntake: mapWaterIntake(results.answers),
-    hydrationAwareness: mapHydrationAwareness(results.answers),
-    exerciseFrequency: mapExerciseFrequency(results.answers),
-    activityLevel: mapActivityLevel(results.answers),
-    nutritionQuality: mapNutritionQuality(results.answers),
-    dietPattern: mapDietPattern(results.answers),
+    // h3: Sleep duration question
+    sleepDuration: getOptionText('h3') || '7-9 hours',
+    
+    // h3: Sleep quality (from metadata or infer from answer)
+    sleepQuality: getOptionMetadata('h3', 'sleepQuality') || 
+                  (answers['h3'] === 'a' ? 'good' : 'poor'),
+    
+    // h10: Burnout/overwhelm (sleep issues proxy)
+    sleepIssues: getOptionText('h10') || 'sometimes wake up during the night',
+    
+    // h4: Water intake question
+    hydrationLevel: getOptionText('h4') || '4-7 cups',
+    
+    // h4: Same as hydration level
+    waterIntake: getOptionText('h4') || '4-7 cups',
+    
+    // Infer from h4 answer
+    hydrationAwareness: answers['h4'] === 'a' ? 'often forget to drink water' : 
+                        'try to stay hydrated but not consistent',
+    
+    // h1: Exercise frequency question
+    exerciseFrequency: getOptionText('h1') || '1-2 days per week',
+    
+    // h7: Energy level (activity proxy)
+    activityLevel: getOptionText('h7') || 'lightly active during the day',
+    
+    // h2: Nutrition question
+    nutritionQuality: getOptionText('h2') || 'sometimes eat healthy',
+    
+    // Infer from h2 answer
+    dietPattern: answers['h2'] === 'a' ? 'eat fast food 3-4 times per week' :
+                 answers['h2'] === 'c' ? 'try to eat balanced meals most days' :
+                 'eat a mix of healthy and convenience foods',
+    
+    // h15: Readiness level
     urgencyLevel: lifestyleFactors.urgencyLevel
   };
   
@@ -61,199 +122,82 @@ export function mapAssessmentToV2Input(
 }
 
 /**
- * Extract lifestyle factors from assessment answers
+ * Extract smoking status from h5 (smoking/alcohol question)
  */
-function extractLifestyleFactors(results: AssessmentResults) {
-  const answers = results.answers || {};
+function extractSmokingStatus(
+  answers: Record<string, string>,
+  getOptionText: (id: string) => string
+): boolean {
+  const h5Answer = getOptionText('h5').toLowerCase();
+  return h5Answer.includes('yes') || answers['h5'] === 'a';
+}
+
+/**
+ * Extract alcohol consumption level from h5
+ */
+function extractAlcoholLevel(
+  answers: Record<string, string>,
+  getOptionText: (id: string) => string
+): 'none' | 'light' | 'moderate' | 'heavy' {
+  const h5Answer = getOptionText('h5').toLowerCase();
   
-  return {
-    isSmoker: extractSmokingStatus(answers),
-    alcoholLevel: extractAlcoholLevel(answers),
-    stressLevel: extractStressLevel(answers),
-    checkupFrequency: extractCheckupFrequency(answers),
-    urgencyLevel: extractUrgencyLevel(answers)
-  };
-}
-
-/**
- * Extract smoking status from answers
- */
-function extractSmokingStatus(answers: Record<string, string>): boolean {
-  // Look for smoking-related questions
-  const smokingAnswer = answers['smoking'] || answers['tobacco'] || '';
-  return smokingAnswer.toLowerCase().includes('yes') || 
-         smokingAnswer.toLowerCase().includes('smoke');
-}
-
-/**
- * Extract alcohol consumption level
- */
-function extractAlcoholLevel(answers: Record<string, string>): 'none' | 'light' | 'moderate' | 'heavy' {
-  const alcoholAnswer = answers['alcohol'] || answers['drinking'] || '';
-  const lower = alcoholAnswer.toLowerCase();
-  
-  if (lower.includes('never') || lower.includes('none')) return 'none';
-  if (lower.includes('heavy') || lower.includes('daily')) return 'heavy';
-  if (lower.includes('moderate') || lower.includes('week')) return 'moderate';
-  if (lower.includes('light') || lower.includes('occasional')) return 'light';
-  
-  return 'none'; // Default
-}
-
-/**
- * Extract stress level
- */
-function extractStressLevel(answers: Record<string, string>): 'low' | 'moderate' | 'high' {
-  const stressAnswer = answers['stress'] || answers['anxiety'] || '';
-  const lower = stressAnswer.toLowerCase();
-  
-  if (lower.includes('high') || lower.includes('severe')) return 'high';
-  if (lower.includes('moderate') || lower.includes('some')) return 'moderate';
-  if (lower.includes('low') || lower.includes('minimal')) return 'low';
-  
-  return 'moderate'; // Default
-}
-
-/**
- * Extract medical checkup frequency
- */
-function extractCheckupFrequency(answers: Record<string, string>): 'never' | 'rarely' | 'yearly' | 'regular' {
-  const checkupAnswer = answers['checkup'] || answers['doctor'] || '';
-  const lower = checkupAnswer.toLowerCase();
-  
-  if (lower.includes('never')) return 'never';
-  if (lower.includes('rarely') || lower.includes('years')) return 'rarely';
-  if (lower.includes('regular') || lower.includes('often')) return 'regular';
-  if (lower.includes('annual') || lower.includes('yearly')) return 'yearly';
-  
-  return 'rarely'; // Default
-}
-
-/**
- * Extract urgency/motivation level
- */
-function extractUrgencyLevel(answers: Record<string, string>): 'low' | 'moderate' | 'high' {
-  const urgencyAnswer = answers['urgency'] || answers['motivation'] || answers['readiness'] || '';
-  const lower = urgencyAnswer.toLowerCase();
-  
-  if (lower.includes('urgent') || lower.includes('immediately') || lower.includes('very ready')) return 'high';
-  if (lower.includes('moderate') || lower.includes('somewhat')) return 'moderate';
-  if (lower.includes('low') || lower.includes('not sure')) return 'low';
-  
-  return 'moderate'; // Default
-}
-
-/**
- * Map sleep duration from answers
- */
-function mapSleepDuration(answers: Record<string, string>): string {
-  const sleepAnswer = answers['sleep'] || answers['sleep-duration'] || '';
-  // Extract hours if present, otherwise return descriptive answer
-  return sleepAnswer || '7-8 hours';
-}
-
-/**
- * Map sleep quality from answers
- */
-function mapSleepQuality(answers: Record<string, string>): string {
-  const qualityAnswer = answers['sleep-quality'] || '';
-  return qualityAnswer || 'fair';
-}
-
-/**
- * Map hydration level from answers
- */
-function mapHydrationLevel(answers: Record<string, string>): string {
-  const hydrationAnswer = answers['hydration'] || answers['water'] || '';
-  return hydrationAnswer || '4-6 glasses';
-}
-
-/**
- * Map exercise frequency from answers
- */
-function mapExerciseFrequency(answers: Record<string, string>): string {
-  const exerciseAnswer = answers['exercise'] || answers['physical-activity'] || '';
-  return exerciseAnswer || '2-3 times per week';
-}
-
-/**
- * Map nutrition quality from answers
- */
-function mapNutritionQuality(answers: Record<string, string>): string {
-  const nutritionAnswer = answers['nutrition'] || answers['diet'] || '';
-  return nutritionAnswer || 'balanced';
-}
-
-/**
- * Map sleep issues from answers
- */
-function mapSleepIssues(answers: Record<string, string>): string {
-  const issuesAnswer = answers['sleep-issues'] || answers['sleep-problems'] || '';
-  if (issuesAnswer) return issuesAnswer;
-  
-  // Default based on sleep quality
-  const quality = answers['sleep-quality'] || '';
-  if (quality.toLowerCase().includes('poor') || quality.toLowerCase().includes('bad')) {
-    return 'have difficulty falling asleep';
+  // h5 is Yes/No for smoking OR alcohol
+  if (h5Answer.includes('yes') || answers['h5'] === 'a') {
+    return 'moderate'; // Assume moderate if they said yes
   }
-  return 'sometimes wake up during the night';
+  return 'none';
 }
 
 /**
- * Map water intake from answers
+ * Extract stress level from h6 (stress management question)
  */
-function mapWaterIntake(answers: Record<string, string>): string {
-  const waterAnswer = answers['hydration'] || answers['water'] || answers['water-intake'] || '';
-  return waterAnswer || '2-3 glasses daily';
-}
-
-/**
- * Map hydration awareness from answers
- */
-function mapHydrationAwareness(answers: Record<string, string>): string {
-  const awarenessAnswer = answers['hydration-awareness'] || answers['water-awareness'] || '';
-  if (awarenessAnswer) return awarenessAnswer;
+function extractStressLevel(
+  answers: Record<string, string>,
+  getOptionText: (id: string) => string
+): 'low' | 'moderate' | 'high' {
+  const h6Answer = getOptionText('h6').toLowerCase();
   
-  // Default based on hydration level
-  const level = answers['hydration'] || '';
-  if (level.includes('1-2') || level.includes('rarely')) {
-    return 'often forget to drink water';
+  if (h6Answer.includes('overwhelmed') || h6Answer.includes('struggle')) {
+    return 'high';
   }
-  return 'try to stay hydrated but not consistent';
+  if (h6Answer.includes('very well') || h6Answer.includes('pretty well')) {
+    return 'low';
+  }
+  return 'moderate';
 }
 
 /**
- * Map activity level from answers
+ * Extract medical checkup frequency from h11
  */
-function mapActivityLevel(answers: Record<string, string>): string {
-  const activityAnswer = answers['activity-level'] || answers['daily-activity'] || '';
-  if (activityAnswer) return activityAnswer;
+function extractCheckupFrequency(
+  answers: Record<string, string>,
+  getOptionText: (id: string) => string
+): 'never' | 'rarely' | 'yearly' | 'regular' {
+  const h11Answer = getOptionText('h11').toLowerCase();
   
-  // Default based on exercise frequency
-  const exercise = answers['exercise'] || '';
-  if (exercise.includes('sedentary') || exercise.includes('rarely')) {
-    return 'mostly sedentary during the day';
+  if (h11Answer.includes('yes')) {
+    return 'yearly';
   }
-  if (exercise.includes('active') || exercise.includes('often')) {
-    return 'moderately active throughout the day';
+  if (h11Answer.includes('no')) {
+    return 'rarely';
   }
-  return 'lightly active during the day';
+  return 'rarely';
 }
 
 /**
- * Map diet pattern from answers
+ * Extract urgency/motivation level from h15 (readiness question)
  */
-function mapDietPattern(answers: Record<string, string>): string {
-  const dietAnswer = answers['diet-pattern'] || answers['eating-habits'] || '';
-  if (dietAnswer) return dietAnswer;
+function extractUrgencyLevel(
+  answers: Record<string, string>,
+  getOptionText: (id: string) => string
+): 'low' | 'moderate' | 'high' {
+  const h15Answer = getOptionText('h15').toLowerCase();
   
-  // Default based on nutrition quality
-  const nutrition = answers['nutrition'] || answers['diet'] || '';
-  if (nutrition.toLowerCase().includes('fast food') || nutrition.toLowerCase().includes('processed')) {
-    return 'eat fast food 3-4 times per week';
+  if (h15Answer.includes('very ready') || h15Answer.includes('start today')) {
+    return 'high';
   }
-  if (nutrition.toLowerCase().includes('healthy') || nutrition.toLowerCase().includes('balanced')) {
-    return 'try to eat balanced meals most days';
+  if (h15Answer.includes('not ready') || h15Answer.includes('exploring')) {
+    return 'low';
   }
-  return 'eat a mix of healthy and convenience foods';
+  return 'moderate';
 }
