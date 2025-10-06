@@ -16,17 +16,7 @@ import { ProjectionTable } from '../components-v2/ProjectionTable';
 
 export const PersonalizedAnalysisV2Preview: React.FC = () => {
   const [selectedProfileId, setSelectedProfileId] = useState<string>('high-risk-richard');
-  const [showStickyCTA, setShowStickyCTA] = useState(false);
   const selectedProfile = getTestProfile(selectedProfileId) || testProfiles[0];
-
-  // Show sticky CTA after scrolling down
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setShowStickyCTA(window.scrollY > 500);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Convert test profile to analysis input (with lifestyleFactors)
   const analysisInput = {
@@ -188,20 +178,6 @@ export const PersonalizedAnalysisV2Preview: React.FC = () => {
             </div>
           </details>
         </div>
-
-        {/* Sticky CTA Button - Appears after scrolling */}
-        {showStickyCTA && (
-          <div className="fixed bottom-4 left-0 right-0 px-3 sm:px-4 z-50 animate-fadeIn">
-            <div className="max-w-5xl mx-auto">
-              <button 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Start Your Transformation
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
