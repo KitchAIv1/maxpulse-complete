@@ -2,6 +2,7 @@
  * PersonalizedTargetsTable - Current vs Target Comparison
  * Following .cursorrules: <200 lines, single responsibility, component pattern
  * Purpose: Display personalized health targets with gap analysis
+ * UI Style: Cal AI minimalist (circular progress rings, clean layout)
  */
 
 import React from 'react';
@@ -15,122 +16,208 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
   targets
 }) => {
   
-  // Determine gap color based on deficit
-  const getGapColor = (deficitPercentage: number): string => {
-    if (deficitPercentage >= 60) return 'text-red-600 font-bold';
-    if (deficitPercentage >= 30) return 'text-orange-600 font-semibold';
-    if (deficitPercentage >= 10) return 'text-yellow-600';
-    return 'text-green-600';
+  // Calculate progress percentage for each metric
+  const getProgressPercentage = (current: number, target: number): number => {
+    return Math.min((current / target) * 100, 100);
   };
 
-  const rows = [
-    {
-      metric: 'Water Intake',
-      current: `${targets.hydration.currentLiters}L (${Math.round(targets.hydration.currentLiters * 4)} glasses)`,
-      target: `${targets.hydration.targetLiters}L (${targets.hydration.glassesNeeded} glasses)`,
-      gap: targets.hydration.deficitPercentage > 0 
-        ? `${targets.hydration.deficitPercentage}% deficit` 
-        : 'On target',
-      gapColor: getGapColor(targets.hydration.deficitPercentage)
-    },
-    {
-      metric: 'Sleep Duration',
-      current: `${targets.sleep.currentHours} hours`,
-      target: `${targets.sleep.targetMinHours}-${targets.sleep.targetMaxHours} hours`,
-      gap: targets.sleep.deficitHours > 0 
-        ? `${targets.sleep.deficitHours.toFixed(1)} hours short` 
-        : 'On target',
-      gapColor: getGapColor((targets.sleep.deficitHours / targets.sleep.targetMinHours) * 100)
-    },
-    {
-      metric: 'Exercise',
-      current: `${targets.exercise.currentMinutesWeekly} min/week`,
-      target: `${targets.exercise.targetMinutesWeekly} min/week`,
-      gap: targets.exercise.deficitMinutes > 0 
-        ? `${targets.exercise.deficitMinutes} min short` 
-        : 'On target',
-      gapColor: getGapColor((targets.exercise.deficitMinutes / targets.exercise.targetMinutesWeekly) * 100)
-    },
-    {
-      metric: 'Daily Steps',
-      current: `~${targets.steps.currentDaily.toLocaleString()}`,
-      target: `${targets.steps.targetDaily.toLocaleString()}`,
-      gap: targets.steps.deficitSteps > 0 
-        ? `${targets.steps.deficitSteps.toLocaleString()} short` 
-        : 'On target',
-      gapColor: getGapColor((targets.steps.deficitSteps / targets.steps.targetDaily) * 100)
-    },
-    {
-      metric: 'Weight',
-      current: `${targets.weight.currentKg}kg`,
-      target: `${targets.weight.targetMinKg}-${targets.weight.targetMaxKg}kg`,
-      gap: targets.weight.excessKg > 0 
-        ? `${targets.weight.excessKg.toFixed(1)}kg excess` 
-        : 'Healthy range',
-      gapColor: getGapColor((targets.weight.excessKg / targets.weight.currentKg) * 100)
-    }
-  ];
+  // Get color based on progress
+  const getProgressColor = (percentage: number): string => {
+    if (percentage >= 80) return 'text-green-500';
+    if (percentage >= 50) return 'text-orange-500';
+    return 'text-red-500';
+  };
 
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        🎯 YOUR PERSONALIZED DAILY TARGETS
-      </h2>
-      
-      <p className="text-gray-600 mb-6">
-        Based on your exact measurements (age {targets.weight.currentKg > 0 ? 'and weight' : ''})
-      </p>
+  // Circular progress component (Cal AI style)
+  const CircularProgress: React.FC<{ 
+    percentage: number; 
+    icon: string; 
+    label: string;
+    value: string;
+    color: string;
+  }> = ({ percentage, icon, label, value, color }) => {
+    const circumference = 2 * Math.PI * 35;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b-2 border-gray-300">
-              <th className="text-left py-3 px-4 font-bold text-gray-700">Metric</th>
-              <th className="text-left py-3 px-4 font-bold text-gray-700">Current</th>
-              <th className="text-left py-3 px-4 font-bold text-gray-700">Target</th>
-              <th className="text-left py-3 px-4 font-bold text-gray-700">Gap</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr 
-                key={row.metric}
-                className={`border-b border-gray-200 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
-              >
-                <td className="py-4 px-4 font-semibold text-gray-900">
-                  {row.metric}
-                </td>
-                <td className="py-4 px-4 text-gray-700">
-                  {row.current}
-                </td>
-                <td className="py-4 px-4 text-gray-700">
-                  {row.target}
-                </td>
-                <td className={`py-4 px-4 ${row.gapColor}`}>
-                  {row.gap}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* BMI Info */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <div className="flex justify-between items-center">
-          <div>
-            <div className="text-sm text-gray-600">Current BMI</div>
-            <div className="text-2xl font-bold text-gray-900">{targets.bmi.current}</div>
-            <div className="text-sm text-gray-600">{targets.bmi.category}</div>
-          </div>
-          <div className="text-3xl text-gray-400">→</div>
-          <div>
-            <div className="text-sm text-gray-600">Target BMI</div>
-            <div className="text-2xl font-bold text-green-600">{targets.bmi.target}</div>
-            <div className="text-sm text-gray-600">Normal weight</div>
+    return (
+      <div className="flex items-start gap-4">
+        {/* Circular Ring */}
+        <div className="relative w-20 h-20 flex-shrink-0">
+          <svg className="transform -rotate-90 w-20 h-20">
+            <circle
+              cx="40"
+              cy="40"
+              r="35"
+              stroke="currentColor"
+              strokeWidth="6"
+              fill="none"
+              className="text-gray-100"
+            />
+            <circle
+              cx="40"
+              cy="40"
+              r="35"
+              stroke="currentColor"
+              strokeWidth="6"
+              fill="none"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              className={color}
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-2xl">
+            {icon}
           </div>
         </div>
+
+        {/* Label and Value */}
+        <div className="flex-1 pt-2">
+          <div className="text-gray-500 text-sm mb-1">{label}</div>
+          <div className="text-gray-900 font-bold text-lg">{value}</div>
+        </div>
+      </div>
+    );
+  };
+
+  // Calculate progress for each metric
+  const hydrationProgress = getProgressPercentage(
+    targets.hydration.currentLiters, 
+    targets.hydration.targetLiters
+  );
+  const sleepProgress = getProgressPercentage(
+    targets.sleep.currentHours, 
+    targets.sleep.targetMinHours
+  );
+  const exerciseProgress = getProgressPercentage(
+    targets.exercise.currentMinutesWeekly, 
+    targets.exercise.targetMinutesWeekly
+  );
+  const stepsProgress = getProgressPercentage(
+    targets.steps.currentDaily, 
+    targets.steps.targetDaily
+  );
+
+  return (
+    <div className="bg-white min-h-screen">
+      {/* Header */}
+      <div className="px-6 py-8 border-b border-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 text-center">
+          Daily Health Targets
+        </h1>
+      </div>
+
+      {/* Goals with Circular Progress (Cal AI style) */}
+      <div className="px-6 py-8 space-y-6">
+        
+        {/* Hydration Goal */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <CircularProgress
+            percentage={hydrationProgress}
+            icon="💧"
+            label="Hydration goal"
+            value={`${targets.hydration.targetLiters}L`}
+            color={getProgressColor(hydrationProgress)}
+          />
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Current</span>
+              <span className="text-gray-900 font-semibold">
+                {targets.hydration.currentLiters}L ({Math.round(targets.hydration.currentLiters * 4)} glasses)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Sleep Goal */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <CircularProgress
+            percentage={sleepProgress}
+            icon="😴"
+            label="Sleep goal"
+            value={`${targets.sleep.targetMinHours}-${targets.sleep.targetMaxHours} hours`}
+            color={getProgressColor(sleepProgress)}
+          />
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Current</span>
+              <span className="text-gray-900 font-semibold">
+                {targets.sleep.currentHours} hours
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Exercise Goal */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <CircularProgress
+            percentage={exerciseProgress}
+            icon="🏃"
+            label="Exercise goal"
+            value={`${targets.exercise.targetMinutesWeekly} min/week`}
+            color={getProgressColor(exerciseProgress)}
+          />
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Current</span>
+              <span className="text-gray-900 font-semibold">
+                {targets.exercise.currentMinutesWeekly} min/week
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Steps Goal */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <CircularProgress
+            percentage={stepsProgress}
+            icon="👟"
+            label="Daily step goal"
+            value={`${targets.steps.targetDaily.toLocaleString()} steps`}
+            color={getProgressColor(stepsProgress)}
+          />
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Current</span>
+              <span className="text-gray-900 font-semibold">
+                ~{targets.steps.currentDaily.toLocaleString()} steps
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Weight Target */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-start gap-4">
+            <div className="text-4xl">⚖️</div>
+            <div className="flex-1">
+              <div className="text-gray-500 text-sm mb-1">Weight target</div>
+              <div className="text-gray-900 font-bold text-lg">
+                {targets.weight.targetMinKg}-{targets.weight.targetMaxKg} kg
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Current weight</span>
+              <span className="text-gray-900 font-semibold">{targets.weight.currentKg} kg</span>
+            </div>
+            {targets.weight.excessKg > 0 && (
+              <div className="flex justify-between text-sm mt-2">
+                <span className="text-gray-500">Excess weight</span>
+                <span className="text-red-600 font-semibold">
+                  {targets.weight.excessKg.toFixed(1)} kg
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* View micronutrients button (Cal AI style) */}
+        <button className="w-full py-4 text-gray-500 text-sm flex items-center justify-center gap-2">
+          View detailed breakdown
+          <span className="text-xs">▼</span>
+        </button>
       </div>
     </div>
   );

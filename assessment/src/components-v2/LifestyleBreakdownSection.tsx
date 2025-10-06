@@ -2,10 +2,10 @@
  * LifestyleBreakdownSection - Detailed Lifestyle Analysis
  * Following .cursorrules: <200 lines, single responsibility, component pattern
  * Purpose: Display lifestyle areas with user quotes and consequences
+ * UI Style: Cal AI minimalist (clean cards, simple icons)
  */
 
 import React from 'react';
-import { Moon, Droplets, Activity, Utensils } from 'lucide-react';
 
 interface LifestyleArea {
   quote: string;
@@ -29,92 +29,74 @@ export const LifestyleBreakdownSection: React.FC<LifestyleBreakdownSectionProps>
     {
       key: 'sleep',
       title: 'Sleep',
-      icon: Moon,
-      color: 'from-indigo-500 to-purple-500',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-200',
+      emoji: '😴',
       data: lifestyleBreakdown.sleep
     },
     {
       key: 'hydration',
       title: 'Hydration',
-      icon: Droplets,
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
+      emoji: '💧',
       data: lifestyleBreakdown.hydration
     },
     {
       key: 'exercise',
       title: 'Physical Activity',
-      icon: Activity,
-      color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
+      emoji: '🏃',
       data: lifestyleBreakdown.exercise
     },
     {
       key: 'nutrition',
       title: 'Nutrition',
-      icon: Utensils,
-      color: 'from-orange-500 to-red-500',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200',
+      emoji: '🥗',
       data: lifestyleBreakdown.nutrition
     }
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          🔍 YOUR LIFESTYLE BREAKDOWN
-        </h2>
-        <p className="text-gray-600">
-          Based on your specific answers and health data
-        </p>
+    <div className="bg-white min-h-screen">
+      {/* Header */}
+      <div className="px-6 py-8 border-b border-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 text-center">
+          Lifestyle Analysis
+        </h1>
       </div>
 
-      {areas.map((area) => {
-        const Icon = area.icon;
-        
-        return (
+      <div className="px-6 py-8 space-y-6">
+        {areas.map((area) => (
           <div
             key={area.key}
-            className={`${area.bgColor} rounded-xl p-6 shadow-md border ${area.borderColor}`}
+            className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
           >
-            {/* Header */}
+            {/* Header with emoji */}
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-3 rounded-lg bg-gradient-to-br ${area.color}`}>
-                <Icon className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">
+              <span className="text-3xl">{area.emoji}</span>
+              <h3 className="text-lg font-bold text-gray-900">
                 {area.title}
               </h3>
             </div>
 
             {/* What You Told Us */}
-            <div className="bg-white rounded-lg p-4 mb-4">
-              <div className="text-sm font-semibold text-gray-600 mb-2">
-                📝 What you told us:
+            <div className="mb-4">
+              <div className="text-xs text-gray-500 mb-2">
+                What you told us:
               </div>
-              <p className="text-gray-800 italic">
+              <p className="text-gray-700 text-sm leading-relaxed italic">
                 "{area.data.quote}"
               </p>
             </div>
 
-            {/* Consequences */}
-            <div className="bg-white rounded-lg p-4">
-              <div className="text-sm font-semibold text-gray-600 mb-2">
-                ⚠️ Why this matters:
+            {/* Why This Matters */}
+            <div className="pt-4 border-t border-gray-100">
+              <div className="text-xs text-gray-500 mb-2">
+                Why this matters:
               </div>
-              <p className="text-gray-800 leading-relaxed">
+              <p className="text-gray-900 text-sm leading-relaxed">
                 {area.data.consequences}
               </p>
             </div>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 };

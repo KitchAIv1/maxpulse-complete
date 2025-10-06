@@ -2,10 +2,10 @@
  * RiskFactorCards - Risk Factor Display Component
  * Following .cursorrules: <200 lines, single responsibility, component pattern
  * Purpose: Display primary health risk factors with severity indicators
+ * UI Style: Cal AI minimalist (clean cards, simple color coding)
  */
 
 import React from 'react';
-import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { CompoundRiskAnalysis } from '../services-v2/RiskCalculator';
 
 interface RiskFactorCardsProps {
@@ -18,141 +18,139 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
   hardTruth
 }) => {
   
-  // Get severity icon and colors
-  const getSeverityConfig = (severity: string) => {
+  // Get severity colors (Cal AI style: minimal, clean)
+  const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return {
-          icon: AlertTriangle,
-          bgColor: 'bg-red-50',
-          borderColor: 'border-red-300',
-          iconColor: 'text-red-600',
-          badgeColor: 'bg-red-600',
-          emoji: '🔴'
-        };
+        return 'bg-red-50 text-red-700 border-red-200';
       case 'high':
-        return {
-          icon: AlertCircle,
-          bgColor: 'bg-orange-50',
-          borderColor: 'border-orange-300',
-          iconColor: 'text-orange-600',
-          badgeColor: 'bg-orange-600',
-          emoji: '🟠'
-        };
+        return 'bg-orange-50 text-orange-700 border-orange-200';
       case 'moderate':
-        return {
-          icon: Info,
-          bgColor: 'bg-yellow-50',
-          borderColor: 'border-yellow-300',
-          iconColor: 'text-yellow-600',
-          badgeColor: 'bg-yellow-600',
-          emoji: '🟡'
-        };
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
       default:
-        return {
-          icon: Info,
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-300',
-          iconColor: 'text-green-600',
-          badgeColor: 'bg-green-600',
-          emoji: '🟢'
-        };
+        return 'bg-green-50 text-green-700 border-green-200';
     }
   };
 
-  // Get overall risk badge color
-  const getOverallRiskColor = (level: string): string => {
-    switch (level) {
-      case 'critical': return 'bg-red-600';
-      case 'high': return 'bg-orange-600';
-      case 'moderate': return 'bg-yellow-600';
-      default: return 'bg-green-600';
-    }
+  // Get risk percentage color
+  const getRiskColor = (percentage: number): string => {
+    if (percentage >= 60) return 'text-red-600';
+    if (percentage >= 40) return 'text-orange-500';
+    if (percentage >= 20) return 'text-yellow-600';
+    return 'text-green-600';
   };
 
   return (
-    <div className="space-y-6">
+    <div className="bg-white min-h-screen">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-6 shadow-lg border border-red-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">
-            ⚠️ YOUR HIGHEST RISK FACTORS
-          </h2>
-          <div className={`px-4 py-2 rounded-full text-white font-bold ${getOverallRiskColor(riskAnalysis.overallRiskLevel)}`}>
-            {riskAnalysis.overallRiskLevel.toUpperCase()} RISK
-          </div>
-        </div>
+      <div className="px-6 py-8 border-b border-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 text-center">
+          Health Risk Factors
+        </h1>
+      </div>
+
+      <div className="px-6 py-8 space-y-6">
         
-        <div className="bg-white rounded-lg p-4">
-          <p className="text-gray-700 leading-relaxed">
+        {/* Overall Risk Summary */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-gray-600">Overall Risk Level</span>
+            <span className={`px-4 py-2 rounded-full text-sm font-bold border ${getSeverityColor(riskAnalysis.overallRiskLevel)}`}>
+              {riskAnalysis.overallRiskLevel.toUpperCase()}
+            </span>
+          </div>
+          <p className="text-gray-700 text-sm leading-relaxed">
             {riskAnalysis.riskCategory}
           </p>
         </div>
-      </div>
 
-      {/* Risk Factor Cards */}
-      {riskAnalysis.primaryRiskFactors.map((factor, index) => {
-        const config = getSeverityConfig(factor.severity);
-        const Icon = config.icon;
-        
-        return (
+        {/* Individual Risk Metrics (Cal AI style) */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Risk Breakdown</h2>
+          
+          <div className="space-y-4">
+            {/* Diabetes Risk */}
+            <div className="flex justify-between items-center py-3 border-b border-gray-100">
+              <span className="text-gray-600">Diabetes Risk</span>
+              <span className={`font-bold text-lg ${getRiskColor(riskAnalysis.diabetesRisk)}`}>
+                {riskAnalysis.diabetesRisk}%
+              </span>
+            </div>
+            
+            {/* Cardiovascular Risk */}
+            <div className="flex justify-between items-center py-3 border-b border-gray-100">
+              <span className="text-gray-600">Cardiovascular Risk</span>
+              <span className={`font-bold text-lg ${getRiskColor(riskAnalysis.cardiovascularRisk)}`}>
+                {riskAnalysis.cardiovascularRisk}%
+              </span>
+            </div>
+            
+            {/* Metabolic Syndrome Risk */}
+            <div className="flex justify-between items-center py-3">
+              <span className="text-gray-600">Metabolic Syndrome</span>
+              <span className={`font-bold text-lg ${getRiskColor(riskAnalysis.metabolicSyndromeRisk)}`}>
+                {riskAnalysis.metabolicSyndromeRisk}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Primary Risk Factors */}
+        {riskAnalysis.primaryRiskFactors.map((factor, index) => (
           <div
             key={index}
-            className={`${config.bgColor} rounded-xl p-6 shadow-md border-2 ${config.borderColor}`}
+            className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-lg bg-white border-2 ${config.borderColor}`}>
-                  <Icon className={`w-6 h-6 ${config.iconColor}`} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {factor.name}
-                  </h3>
-                  <div className={`inline-block px-3 py-1 rounded-full text-white text-sm font-semibold mt-1 ${config.badgeColor}`}>
-                    {config.emoji} {factor.severity.toUpperCase()}
-                  </div>
-                </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  {factor.name}
+                </h3>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getSeverityColor(factor.severity)}`}>
+                  {factor.severity.toUpperCase()}
+                </span>
               </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-gray-900">
+              <div className="text-right ml-4">
+                <div className={`text-3xl font-bold ${getRiskColor(factor.riskPercentage)}`}>
                   {factor.riskPercentage}%
                 </div>
-                <div className="text-sm text-gray-600">Risk Level</div>
               </div>
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-lg p-4 mb-3">
-              <p className="text-gray-800 leading-relaxed">
-                {factor.description}
-              </p>
-            </div>
+            <p className="text-gray-700 text-sm leading-relaxed mb-4">
+              {factor.description}
+            </p>
 
             {/* Compound Factors */}
-            <div className="flex flex-wrap gap-2">
-              {factor.compoundFactors.map((compoundFactor, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 bg-white rounded-full text-sm text-gray-700 border border-gray-300"
-                >
-                  {compoundFactor}
-                </span>
-              ))}
-            </div>
+            {factor.compoundFactors.length > 0 && (
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-xs text-gray-500 mb-2">Contributing factors:</div>
+                <div className="flex flex-wrap gap-2">
+                  {factor.compoundFactors.map((compoundFactor, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 bg-gray-50 rounded-full text-xs text-gray-600 border border-gray-200"
+                    >
+                      {compoundFactor}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        );
-      })}
+        ))}
 
-      {/* Hard Truth Section */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6 shadow-lg text-white">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          💡 THE TRUTH ABOUT YOUR SITUATION
-        </h3>
-        <p className="text-gray-100 leading-relaxed text-lg">
-          {hardTruth}
-        </p>
+        {/* Hard Truth Section (Cal AI style: clean, direct) */}
+        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm text-white">
+          <h3 className="text-lg font-bold mb-4">
+            The Reality
+          </h3>
+          <p className="text-gray-100 leading-relaxed">
+            {hardTruth}
+          </p>
+        </div>
       </div>
     </div>
   );
