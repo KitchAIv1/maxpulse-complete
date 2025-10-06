@@ -94,8 +94,13 @@ export function HealthInsightsResults({
       waterIntake: '4-6 glasses',
       hydrationAwareness: 'try to stay hydrated but not consistent',
       exerciseFrequency: '2-3 times per week',
+      exerciseType: 'mostly cardio',
+      exerciseIntensity: 'moderate intensity',
       activityLevel: 'lightly active during the day',
       nutritionQuality: 'balanced',
+      fastFoodFrequency: '1-2 times per week',
+      mealTiming: 'eat 3 meals daily',
+      snackingHabits: 'snack occasionally',
       dietPattern: 'eat a mix of healthy and convenience foods',
       urgencyLevel: 'moderate' as const
     },

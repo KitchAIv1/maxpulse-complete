@@ -98,11 +98,34 @@ export function mapAssessmentToV2Input(
     // h1: Exercise frequency question
     exerciseFrequency: getOptionText('h1') || '1-2 days per week',
     
+    // Exercise type (not asked in assessment - infer from frequency)
+    exerciseType: answers['h1'] === 'd' ? 'cardio and strength training' :
+                  answers['h1'] === 'c' ? 'mostly cardio' :
+                  'light exercise',
+    
+    // Exercise intensity (not asked - infer from frequency)
+    exerciseIntensity: answers['h1'] === 'd' ? 'moderate to high intensity' :
+                       answers['h1'] === 'c' ? 'moderate intensity' :
+                       'low intensity',
+    
     // h7: Energy level (activity proxy)
     activityLevel: getOptionText('h7') || 'lightly active during the day',
     
     // h2: Nutrition question
     nutritionQuality: getOptionText('h2') || 'sometimes eat healthy',
+    
+    // Fast food frequency (not asked - infer from h2)
+    fastFoodFrequency: answers['h2'] === 'a' ? '3-4 times per week' :
+                       answers['h2'] === 'b' ? '1-2 times per week' :
+                       'rarely',
+    
+    // Meal timing (not asked - provide default)
+    mealTiming: answers['h2'] === 'a' ? 'skip breakfast regularly' :
+                'eat 3 meals daily',
+    
+    // Snacking habits (not asked - infer from nutrition)
+    snackingHabits: answers['h2'] === 'a' ? 'snack late at night' :
+                    'snack occasionally',
     
     // Infer from h2 answer
     dietPattern: answers['h2'] === 'a' ? 'eat fast food 3-4 times per week' :
