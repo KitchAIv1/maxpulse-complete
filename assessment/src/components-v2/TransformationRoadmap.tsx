@@ -28,18 +28,22 @@ export const TransformationRoadmap: React.FC<TransformationRoadmapProps> = ({
         </p>
       </div>
 
-      <div className="px-6 py-8 space-y-6">
+      <div className="px-6 py-8 space-y-4">
         
-        {/* Phases */}
+        {/* Phases with transition animation */}
         {roadmap.phases.map((phase, phaseIndex) => (
           <div
             key={phase.phase}
-            className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
+            className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md"
+            style={{
+              animationDelay: `${phaseIndex * 100}ms`,
+              animation: 'fadeIn 0.5s ease-in-out'
+            }}
           >
             {/* Phase Header */}
             <div className="mb-4">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm transition-transform hover:scale-110">
                   {phase.phase}
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">

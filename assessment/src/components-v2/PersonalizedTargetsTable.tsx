@@ -36,18 +36,19 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
     value: string;
     color: string;
   }> = ({ percentage, icon, label, value, color }) => {
-    const circumference = 2 * Math.PI * 35;
+    const radius = 35;
+    const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
     return (
       <div className="flex items-start gap-4">
-        {/* Circular Ring */}
-        <div className="relative w-20 h-20 flex-shrink-0">
-          <svg className="transform -rotate-90 w-20 h-20">
+        {/* Circular Ring - Fixed overflow */}
+        <div className="relative w-24 h-24 flex-shrink-0 p-2">
+          <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 80 80">
             <circle
               cx="40"
               cy="40"
-              r="35"
+              r={radius}
               stroke="currentColor"
               strokeWidth="6"
               fill="none"
@@ -56,7 +57,7 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
             <circle
               cx="40"
               cy="40"
-              r="35"
+              r={radius}
               stroke="currentColor"
               strokeWidth="6"
               fill="none"
@@ -213,8 +214,11 @@ export const PersonalizedTargetsTable: React.FC<PersonalizedTargetsTableProps> =
           </div>
         </div>
 
-        {/* View micronutrients button (Cal AI style) */}
-        <button className="w-full py-4 text-gray-500 text-sm flex items-center justify-center gap-2">
+        {/* View detailed breakdown button (Cal AI style) */}
+        <button 
+          onClick={() => alert('Detailed breakdown coming soon!')}
+          className="w-full py-4 text-gray-500 text-sm flex items-center justify-center gap-2 hover:text-gray-700 transition-colors"
+        >
           View detailed breakdown
           <span className="text-xs">▼</span>
         </button>

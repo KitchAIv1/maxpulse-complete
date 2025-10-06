@@ -70,42 +70,50 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
 
       <div className="px-6 py-8 space-y-6">
         
-        {/* Projection Metrics (Cal AI style) */}
-        {projectionRows.map((row) => (
-          <div
-            key={row.metric}
-            className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-gray-600 text-sm">{row.metric}</span>
-              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                row.isImprovement 
-                  ? 'bg-green-50 text-green-700 border border-green-200' 
-                  : 'bg-gray-50 text-gray-700 border border-gray-200'
-              }`}>
-                {row.isImprovement ? '↓' : '→'} {row.change}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs text-gray-500 mb-1">Current</div>
-                <div className="text-2xl font-bold text-gray-900">{row.current}</div>
-              </div>
-              
-              <div className="text-gray-300 text-2xl">→</div>
-              
-              <div className="text-right">
-                <div className="text-xs text-gray-500 mb-1">90 days</div>
-                <div className={`text-2xl font-bold ${
-                  row.isImprovement ? 'text-green-600' : 'text-gray-900'
-                }`}>
-                  {row.projected}
+        {/* All Projection Metrics in ONE Container */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Your Progress</h3>
+          
+          <div className="space-y-6">
+            {projectionRows.map((row, index) => (
+              <div key={row.metric}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-gray-600 text-sm">{row.metric}</span>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                    row.isImprovement 
+                      ? 'bg-green-50 text-green-700 border border-green-200' 
+                      : 'bg-gray-50 text-gray-700 border border-gray-200'
+                  }`}>
+                    {row.isImprovement ? '↓' : '→'} {row.change}
+                  </span>
                 </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Current</div>
+                    <div className="text-2xl font-bold text-gray-900">{row.current}</div>
+                  </div>
+                  
+                  <div className="text-gray-300 text-2xl">→</div>
+                  
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 mb-1">90 days</div>
+                    <div className={`text-2xl font-bold ${
+                      row.isImprovement ? 'text-green-600' : 'text-gray-900'
+                    }`}>
+                      {row.projected}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Divider between metrics (except last one) */}
+                {index < projectionRows.length - 1 && (
+                  <div className="mt-6 border-t border-gray-100"></div>
+                )}
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
 
         {/* Daily Life Improvements */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
@@ -122,9 +130,9 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
           </ul>
         </div>
 
-        {/* Priority Actions */}
-        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm text-white">
-          <h3 className="text-lg font-bold mb-4">
+        {/* Priority Actions - Fixed text color */}
+        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold mb-4 text-white">
             Your Top 3 Priority Actions
           </h3>
           <div className="space-y-4">
@@ -133,7 +141,7 @@ export const ProjectionTable: React.FC<ProjectionTableProps> = ({
                 <div className="w-6 h-6 rounded-full bg-white text-gray-900 flex items-center justify-center font-bold text-sm flex-shrink-0">
                   {index + 1}
                 </div>
-                <p className="text-gray-100 text-sm leading-relaxed">{action}</p>
+                <p className="text-gray-300 text-sm leading-relaxed">{action}</p>
               </div>
             ))}
           </div>

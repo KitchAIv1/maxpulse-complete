@@ -143,11 +143,11 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
         ))}
 
         {/* Hard Truth Section (Cal AI style: clean, direct) */}
-        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm text-white">
-          <h3 className="text-lg font-bold mb-4">
+        <div className="bg-gray-900 rounded-3xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold mb-4 text-white">
             The Reality
           </h3>
-          <p className="text-gray-100 leading-relaxed">
+          <p className="text-gray-300 leading-relaxed">
             {hardTruth}
           </p>
         </div>
