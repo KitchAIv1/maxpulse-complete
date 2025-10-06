@@ -63,10 +63,19 @@ export class RiskCalculator {
     else if (bmi >= 30) risk += 20;
     else if (bmi >= 25) risk += 10;
 
-    // Sleep deprivation factor (Sleep Foundation research)
-    if (sleepHours < 5) risk += 15;
-    else if (sleepHours < 6) risk += 10;
-    else if (sleepHours < 7) risk += 5;
+    // Sleep factor (Sleep Foundation research)
+    // Good sleep (7-9 hours) REDUCES risk, poor sleep INCREASES risk
+    if (sleepHours >= 7 && sleepHours <= 9) {
+      risk -= 5; // Good sleep reduces diabetes risk
+    } else if (sleepHours < 5) {
+      risk += 15; // Severe sleep deprivation
+    } else if (sleepHours < 6) {
+      risk += 10; // Moderate sleep deprivation
+    } else if (sleepHours < 7) {
+      risk += 5; // Mild sleep deprivation
+    } else if (sleepHours > 9) {
+      risk += 3; // Excessive sleep also increases risk slightly
+    }
 
     // Smoking factor (CDC: 30-40% increased risk)
     if (isSmoker) risk += 15;
@@ -114,10 +123,17 @@ export class RiskCalculator {
     if (bmi >= 30) risk += 20;
     else if (bmi >= 25) risk += 10;
 
-    // Sedentary lifestyle factor
-    if (exerciseScore <= 3) risk += 20;
-    else if (exerciseScore <= 5) risk += 10;
-    else if (exerciseScore <= 7) risk += 5;
+    // Exercise factor (AHA: regular exercise reduces CVD risk by 30-40%)
+    // Good exercise (7-10) REDUCES risk, poor exercise INCREASES risk
+    if (exerciseScore >= 7) {
+      risk -= 10; // Regular exercise significantly reduces CVD risk
+    } else if (exerciseScore >= 5) {
+      risk += 5; // Moderate activity - some risk
+    } else if (exerciseScore >= 3) {
+      risk += 10; // Low activity - higher risk
+    } else {
+      risk += 20; // Sedentary - highest risk
+    }
 
     // Smoking factor (AHA: 2-4x higher CVD risk)
     if (isSmoker) risk += 30;
@@ -197,7 +213,7 @@ export class RiskCalculator {
   }
 
   /**
-   * Generate comprehensive risk analysis with all variables
+   * Generate comprehensive risk analysis with all variables including medical conditions
    */
   analyzeCompoundRisk(
     age: number,
@@ -210,14 +226,15 @@ export class RiskCalculator {
     isSmoker: boolean = false,
     alcoholLevel: 'none' | 'light' | 'moderate' | 'heavy' = 'none',
     stressLevel: 'low' | 'moderate' | 'high' = 'moderate',
-    checkupFrequency: 'never' | 'rare' | 'annual' | 'biannual' = 'annual'
+    checkupFrequency: 'never' | 'rare' | 'annual' | 'biannual' = 'annual',
+    medicalConditions: string[] = []
   ): CompoundRiskAnalysis {
     const bmi = this.calculateBMI(weight, height);
     const sleepHours = this.estimateSleepHours(sleepScore);
 
     // Calculate individual risks with all factors
-    const diabetesRisk = this.calculateDiabetesRisk(age, bmi, sleepHours, isSmoker);
-    const cardiovascularRisk = this.calculateCardiovascularRisk(
+    let diabetesRisk = this.calculateDiabetesRisk(age, bmi, sleepHours, isSmoker);
+    let cardiovascularRisk = this.calculateCardiovascularRisk(
       age, 
       bmi, 
       exerciseScore,
@@ -225,7 +242,7 @@ export class RiskCalculator {
       stressLevel,
       gender
     );
-    const metabolicSyndromeRisk = this.calculateMetabolicSyndromeRisk(
+    let metabolicSyndromeRisk = this.calculateMetabolicSyndromeRisk(
       age, 
       bmi, 
       sleepScore, 
@@ -233,6 +250,69 @@ export class RiskCalculator {
       alcoholLevel,
       stressLevel
     );
+
+    // Adjust risks based on existing medical conditions
+    // Note: Filter out 'none' to handle cases where it's included in array
+    const activeConditions = medicalConditions.filter(c => c !== 'none');
+    const hasDiabetes = activeConditions.includes('diabetes_type1') || activeConditions.includes('diabetes_type2');
+    const hasHeartCondition = activeConditions.includes('heart_condition');
+    const hasHighBP = activeConditions.includes('high_blood_pressure');
+    const hasKidneyIssues = activeConditions.includes('kidney_issues');
+    const hasLiverIssues = activeConditions.includes('liver_issues');
+    const hasThyroid = activeConditions.includes('thyroid_issues');
+    const isPregnant = activeConditions.includes('pregnancy_breastfeeding');
+    const hasDigestive = activeConditions.includes('digestive_issues');
+    
+    // Diabetes (already diagnosed)
+    if (hasDiabetes) {
+      diabetesRisk = 100; // Already diagnosed
+    }
+    
+    // Cardiovascular risk adjustments
+    if (hasHighBP) {
+      cardiovascularRisk = Math.min(cardiovascularRisk + 20, 95);
+    }
+    if (hasHeartCondition) {
+      cardiovascularRisk = Math.min(cardiovascularRisk + 30, 95);
+    }
+    if (hasKidneyIssues) {
+      cardiovascularRisk = Math.min(cardiovascularRisk + 10, 95); // Kidney disease increases CVD risk
+    }
+    
+    // Metabolic syndrome risk adjustments
+    if (hasThyroid) {
+      metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 15, 90);
+    }
+    if (hasKidneyIssues) {
+      metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 10, 90);
+    }
+    if (hasLiverIssues) {
+      metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 15, 90); // NAFLD linked to metabolic syndrome
+    }
+    if (hasDigestive) {
+      metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 5, 90); // May affect nutrient absorption
+    }
+    
+    // Pregnancy adjustments (reduce aggressive risk warnings)
+    if (isPregnant) {
+      // Pregnancy is not a "disease" - adjust baseline risks to be less alarming
+      cardiovascularRisk = Math.max(cardiovascularRisk - 10, 5);
+      metabolicSyndromeRisk = Math.max(metabolicSyndromeRisk - 10, 5);
+    }
+    
+    // Compound condition effects (multiple conditions multiply risk)
+    if (hasDiabetes && hasHeartCondition) {
+      cardiovascularRisk = Math.min(cardiovascularRisk + 15, 95); // Diabetes + heart = major compound risk
+    }
+    if (hasDiabetes && hasHighBP) {
+      cardiovascularRisk = Math.min(cardiovascularRisk + 10, 95); // Common comorbidity
+    }
+    if (hasHeartCondition && hasHighBP) {
+      cardiovascularRisk = Math.min(cardiovascularRisk + 10, 95); // Compound effect
+    }
+    if (hasDiabetes && hasKidneyIssues) {
+      metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 10, 90); // Diabetic nephropathy risk
+    }
 
     // Add checkup frequency risk modifier
     let checkupRiskModifier = 0;
@@ -269,26 +349,28 @@ export class RiskCalculator {
 
   /**
    * Estimate sleep hours from score
+   * Updated: More conservative estimates (6hrs instead of 4.5hrs for poor sleep)
    */
   private estimateSleepHours(sleepScore: number): number {
-    if (sleepScore <= 3) return 4.5;
-    if (sleepScore <= 5) return 5.5;
-    if (sleepScore <= 7) return 6.5;
+    if (sleepScore <= 3) return 6.0; // Changed from 4.5 to 6.0 (more realistic)
+    if (sleepScore <= 5) return 6.5; // Changed from 5.5 to 6.5
+    if (sleepScore <= 7) return 7.0; // Changed from 6.5 to 7.0
     return 7.5;
   }
 
   /**
    * Get risk level from percentage
+   * Updated thresholds: LOW (<30%), MODERATE (30-50%), HIGH (50-70%), CRITICAL (70%+)
    */
   private getRiskLevel(riskPercentage: number): 'critical' | 'high' | 'moderate' | 'low' {
-    if (riskPercentage >= 60) return 'critical';
-    if (riskPercentage >= 40) return 'high';
-    if (riskPercentage >= 20) return 'moderate';
+    if (riskPercentage >= 70) return 'critical';
+    if (riskPercentage >= 50) return 'high';
+    if (riskPercentage >= 30) return 'moderate';
     return 'low';
   }
 
   /**
-   * Get risk category description with all factors
+   * Get risk category description with all factors - DYNAMIC based on habits
    */
   private getRiskCategory(
     age: number, 
@@ -297,22 +379,50 @@ export class RiskCalculator {
     isSmoker: boolean = false,
     stressLevel: 'low' | 'moderate' | 'high' = 'moderate'
   ): string {
+    // Count positive factors (good habits)
+    const positiveFactors = [
+      sleepScore >= 7, // Good sleep
+      bmi < 25, // Healthy weight
+      !isSmoker, // Non-smoker
+      stressLevel === 'low' // Low stress
+    ].filter(Boolean).length;
+    
+    // CRITICAL: Multiple severe compounding factors
     if (age >= 45 && bmi >= 30 && sleepScore <= 5 && isSmoker) {
-      return 'Critical risk category - multiple severe compounding factors';
+      return 'Critical risk category - multiple severe compounding factors requiring immediate intervention';
     }
-    if (age >= 45 && bmi >= 30 && sleepScore <= 5) {
-      return 'Highest risk category - multiple compounding factors';
+    
+    // HIGH: Obesity + poor habits
+    if (bmi >= 30 && sleepScore <= 5) {
+      return 'High risk category - obesity combined with poor sleep significantly increases disease risk';
     }
+    
+    // HIGH: Smoking + obesity
     if (isSmoker && bmi >= 30) {
       return 'High risk category - smoking and obesity compound significantly';
     }
-    if (bmi >= 30 || (age >= 40 && sleepScore <= 5) || (isSmoker && stressLevel === 'high')) {
-      return 'High risk category - significant health concerns';
+    
+    // MODERATE-HIGH: Overweight + some poor habits
+    if (bmi >= 25 && sleepScore <= 6) {
+      return 'Moderate-high risk category - weight and sleep need attention';
     }
-    if (bmi >= 25 || sleepScore <= 6 || stressLevel === 'high') {
-      return 'Moderate risk category - room for improvement';
+    
+    // MODERATE: Overweight but good habits OR healthy weight with some poor habits
+    if (bmi >= 25 && positiveFactors >= 2) {
+      return 'Moderate risk category - good habits mitigate overweight, focus on weight management';
     }
-    return 'Low risk category - good health foundation';
+    
+    if (bmi < 25 && (sleepScore <= 6 || stressLevel === 'high')) {
+      return 'Moderate risk category - healthy weight but lifestyle factors need improvement';
+    }
+    
+    // LOW: Healthy weight + mostly good habits
+    if (bmi < 25 && positiveFactors >= 3) {
+      return 'Low risk category - excellent health foundation, maintain these habits';
+    }
+    
+    // DEFAULT: Room for improvement
+    return 'Moderate risk category - room for improvement in key areas';
   }
 
   /**
@@ -389,13 +499,38 @@ export class RiskCalculator {
     }
 
     // Cardiovascular risk (if not already covered by smoking+obesity)
+    // DYNAMIC: Only add if risk is actually elevated (40%+)
     if (cardiovascularRisk >= 40 && !(isSmoker && bmi >= 30)) {
+      // Determine actual contributing factors based on scores
+      const cvdFactors: string[] = [];
+      
+      if (exerciseScore <= 3) cvdFactors.push('Sedentary lifestyle');
+      else if (exerciseScore <= 5) cvdFactors.push('Low activity level');
+      
+      if (bmi >= 30) cvdFactors.push('Obesity');
+      else if (bmi >= 25) cvdFactors.push('Overweight');
+      
+      if (age >= 45) cvdFactors.push('Age');
+      
+      if (stressLevel === 'high') cvdFactors.push('High stress');
+      
+      // Build description based on actual factors
+      let description = '';
+      if (exerciseScore <= 3) {
+        description = `Sedentary lifestyle combined with BMI ${bmi.toFixed(1)} increases cardiovascular disease risk by ${cardiovascularRisk}%`;
+      } else if (exerciseScore <= 5) {
+        description = `Low activity level (${exerciseScore}/10) combined with BMI ${bmi.toFixed(1)} increases cardiovascular disease risk by ${cardiovascularRisk}%`;
+      } else {
+        // Good exercise but still elevated risk (likely due to age/weight)
+        description = `At age ${age} with BMI ${bmi.toFixed(1)}, your cardiovascular disease risk is ${cardiovascularRisk}%. Regular exercise is helping mitigate this risk.`;
+      }
+      
       factors.push({
         name: 'Cardiovascular Disease Risk',
-        severity: cardiovascularRisk >= 60 ? 'critical' : 'high',
+        severity: cardiovascularRisk >= 70 ? 'critical' : cardiovascularRisk >= 50 ? 'high' : 'moderate',
         riskPercentage: cardiovascularRisk,
-        description: `Sedentary lifestyle combined with BMI ${bmi.toFixed(1)} increases cardiovascular disease risk by ${cardiovascularRisk}%`,
-        compoundFactors: ['Sedentary lifestyle', 'Obesity', 'Age']
+        description,
+        compoundFactors: cvdFactors
       });
     }
 

@@ -14,12 +14,19 @@ import { PersonalizedAnalysisInput } from '../services-v2/PersonalizedNarrativeB
  * @param demographics - User demographics from personal details
  * @param healthMetrics - Health scores calculated from assessment
  * @param currentQuestions - The actual questions array to look up answer text
+ * @param medicalData - Optional medical conditions, medications, allergies
  */
 export function mapAssessmentToV2Input(
   results: AssessmentResults,
   demographics: Demographics,
   healthMetrics: HealthMetrics,
-  currentQuestions: Question[]
+  currentQuestions: Question[],
+  medicalData?: {
+    conditions: string[];
+    medications: string;
+    allergies: string;
+    hasCriticalConditions: boolean;
+  }
 ): PersonalizedAnalysisInput {
   
   const answers = results.answers || {};
@@ -80,12 +87,15 @@ export function mapAssessmentToV2Input(
                    answers['h3'] === 'b' ? 'less than 7 hours per night' :
                    getOptionText('h3') || '7-9 hours',
     
-    // h3: Sleep quality (from metadata)
-    sleepQuality: getOptionMetadata('h3', 'sleepQuality') || 
-                  (answers['h3'] === 'a' ? 'refreshed' : 'tired'),
+    // h3: Sleep quality - Use human-readable terms, not metadata values
+    sleepQuality: answers['h3'] === 'a' ? 'refreshed' : // Yes = optimal sleep
+                  answers['h3'] === 'b' ? 'tired' : // No = suboptimal sleep
+                  'fair',
     
     // h10: Burnout/overwhelm - Better text for sleep context
-    sleepIssues: answers['h10'] === 'a' ? 'have difficulty falling asleep due to stress' :
+    // If sleep is good (h3='a'), default to positive sleep issues text
+    sleepIssues: answers['h3'] === 'a' ? 'sleep relatively well' : // Good sleep overrides h10
+                 answers['h10'] === 'a' ? 'have difficulty falling asleep due to stress' :
                  answers['h10'] === 'b' ? 'sometimes wake up during the night' :
                  answers['h10'] === 'c' ? 'sleep relatively well' :
                  getOptionText('h10') || 'sometimes wake up during the night',
@@ -116,13 +126,14 @@ export function mapAssessmentToV2Input(
     // h7: Energy level (activity proxy)
     activityLevel: getOptionText('h7') || 'lightly active during the day',
     
-    // h2: Nutrition question - Use actual answer text
+    // h2: Nutrition question - Use actual answer text (what user sees)
     nutritionQuality: getOptionText('h2') || 'sometimes eat fruits and vegetables',
     
-    // Fast food frequency (infer from h2 - for internal calculations only)
-    fastFoodFrequency: answers['h2'] === 'a' ? 'fast food 3-4 times per week' :
-                       answers['h2'] === 'b' ? 'fast food 1-2 times per week' :
-                       'rarely eat fast food',
+    // Fast food frequency (infer from h2 nutrition quality - for lifestyle breakdown only)
+    // Note: This is inferred data, not what user actually said
+    fastFoodFrequency: answers['h2'] === 'a' ? '3-4 times per week' :
+                       answers['h2'] === 'b' ? '1-2 times per week' :
+                       'rarely',
     
     // Meal timing (infer from h2)
     mealTiming: answers['h2'] === 'a' ? 'skip breakfast regularly' :
@@ -147,7 +158,8 @@ export function mapAssessmentToV2Input(
     demographics: v2Demographics,
     healthMetrics: v2HealthMetrics,
     answers: v2Answers,
-    lifestyleFactors
+    lifestyleFactors,
+    medicalData // Pass through medical data if provided
   };
 }
 

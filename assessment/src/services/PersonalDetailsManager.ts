@@ -23,11 +23,12 @@ export class PersonalDetailsManager {
   }
 
   /**
-   * Calculate daily hydration goal (in liters)
-   * Formula: body weight (kg) × 0.033
+   * Calculate daily hydration goal (in liters) based on weight and gender
+   * Formula: body weight (kg) × 0.033 (male) or 0.031 (female)
    */
-  calculateHydrationGoal(weightKg: number): number {
-    return Math.round(weightKg * 0.033 * 10) / 10;
+  calculateHydrationGoal(weightKg: number, gender: 'male' | 'female' | 'other' = 'male'): number {
+    const multiplier = gender === 'female' ? 0.031 : 0.033;
+    return Math.round(weightKg * multiplier * 10) / 10;
   }
 
   /**

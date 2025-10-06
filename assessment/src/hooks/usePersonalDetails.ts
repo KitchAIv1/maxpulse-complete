@@ -18,6 +18,12 @@ interface UsePersonalDetailsResult {
     bmi: number;
     bmiCategory: string;
   };
+  medicalData: {
+    conditions: string[];
+    medications: string;
+    allergies: string;
+    hasCriticalConditions: boolean;
+  };
   loading: boolean;
   error: string | null;
 }
@@ -82,10 +88,17 @@ export function usePersonalDetails(
     name: userName
   };
 
+  // Determine fitness level from BMI for dynamic step goal
+  const getFitnessLevel = (bmi: number): 'low' | 'moderate' | 'high' => {
+    if (bmi >= 30) return 'low'; // Obese - start with lower goal
+    if (bmi >= 25) return 'moderate'; // Overweight - moderate goal
+    return 'high'; // Healthy weight - higher goal
+  };
+
   // Calculate health goals
   const healthGoals = {
     hydrationGoalLiters: personalDetails 
-      ? manager.calculateHydrationGoal(personalDetails.weightKg)
+      ? manager.calculateHydrationGoal(personalDetails.weightKg, personalDetails.gender as 'male' | 'female' | 'other')
       : 2.3,
     sleepHoursMin: personalDetails
       ? manager.getRecommendedSleepHours(personalDetails.age).min
@@ -94,7 +107,7 @@ export function usePersonalDetails(
       ? manager.getRecommendedSleepHours(personalDetails.age).max
       : 9,
     dailyStepGoal: personalDetails
-      ? manager.getRecommendedSteps(personalDetails.age)
+      ? manager.getRecommendedSteps(personalDetails.age, getFitnessLevel(personalDetails.bmi))
       : 10000,
     bmi: personalDetails?.bmi || 0,
     bmiCategory: personalDetails?.bmi 
@@ -102,10 +115,21 @@ export function usePersonalDetails(
       : 'Unknown'
   };
 
+  // Extract medical data
+  const medicalData = {
+    conditions: personalDetails?.medicalConditions || [],
+    medications: personalDetails?.currentMedications || '',
+    allergies: personalDetails?.allergies || '',
+    hasCriticalConditions: personalDetails 
+      ? manager.hasContraindications(personalDetails.medicalConditions)
+      : false
+  };
+
   return {
     personalDetails,
     demographics,
     healthGoals,
+    medicalData,
     loading,
     error
   };

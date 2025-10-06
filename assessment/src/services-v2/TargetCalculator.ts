@@ -43,13 +43,30 @@ export interface PersonalizedTargets {
 export class TargetCalculator {
   
   /**
-   * Calculate hydration goal based on weight and gender
+   * Calculate hydration goal based on weight, gender, and medical conditions
    * Science-backed: National Academies - Men ~3.7L/day, Women ~2.7L/day
-   * Formula: weight (kg) × gender-specific multiplier
+   * Formula: weight (kg) × gender-specific multiplier, adjusted for medical conditions
    */
-  calculateHydrationGoal(weightKg: number, gender: 'male' | 'female' | 'other' = 'male'): number {
-    const multiplier = gender === 'female' ? 0.031 : 0.035; // Gender-specific
-    return Math.round(weightKg * multiplier * 10) / 10; // Round to 1 decimal
+  calculateHydrationGoal(
+    weightKg: number, 
+    gender: 'male' | 'female' | 'other' = 'male',
+    medicalConditions: string[] = []
+  ): number {
+    let multiplier = gender === 'female' ? 0.031 : 0.035; // Gender-specific
+    let hydrationGoal = weightKg * multiplier;
+    
+    // Adjust for medical conditions
+    if (medicalConditions.includes('pregnancy_breastfeeding')) {
+      hydrationGoal += 0.7; // +700ml for pregnancy/breastfeeding (science-backed)
+    }
+    if (medicalConditions.includes('kidney_issues')) {
+      hydrationGoal *= 0.85; // Reduce by 15% for kidney issues (consult doctor)
+    }
+    if (medicalConditions.includes('heart_condition')) {
+      hydrationGoal *= 0.9; // Slightly reduce for heart conditions (fluid retention risk)
+    }
+    
+    return Math.round(hydrationGoal * 10) / 10; // Round to 1 decimal
   }
 
   /**
@@ -75,11 +92,12 @@ export class TargetCalculator {
 
   /**
    * Estimate current sleep hours from score
+   * Updated: More conservative estimates (6hrs instead of 4.5hrs for poor sleep)
    */
   estimateCurrentSleepHours(sleepScore: number): number {
-    if (sleepScore <= 3) return 4.5;
-    if (sleepScore <= 5) return 5.5;
-    if (sleepScore <= 7) return 6.5;
+    if (sleepScore <= 3) return 6.0; // Changed from 4.5 to 6.0 (more realistic)
+    if (sleepScore <= 5) return 6.5; // Changed from 5.5 to 6.5
+    if (sleepScore <= 7) return 7.0; // Changed from 6.5 to 7.0
     return 7.5;
   }
 
@@ -110,14 +128,38 @@ export class TargetCalculator {
   }
 
   /**
-   * Calculate daily step goal based on age
+   * Calculate daily step goal based on age, BMI, and medical conditions
+   * Science-backed: CDC/WHO recommendations adjusted by age, fitness, and health status
    */
-  getRecommendedSteps(age: number): number {
-    if (age < 30) return 12000;
-    if (age < 40) return 10000;
-    if (age < 50) return 8000;
-    if (age < 65) return 7000;
-    return 6000;
+  getRecommendedSteps(
+    age: number, 
+    bmi: number, 
+    medicalConditions: string[] = []
+  ): number {
+    let baseSteps = 10000; // Default WHO recommendation
+    
+    // Adjust for age
+    if (age >= 65) baseSteps = 7000;
+    else if (age >= 50) baseSteps = 8500;
+    else if (age < 30) baseSteps = 12000;
+    
+    // Adjust for BMI/fitness level (science-backed: start lower for obese to prevent injury)
+    if (bmi >= 30) baseSteps -= 2000; // Obese - lower starting goal
+    else if (bmi >= 25) baseSteps -= 1000; // Overweight - slightly lower
+    else if (bmi < 20) baseSteps += 2000; // Underweight/athletic - higher goal
+    
+    // Adjust for medical conditions (safety-first approach)
+    if (medicalConditions.includes('heart_condition')) {
+      baseSteps = Math.min(baseSteps, 6000); // Cap at 6000 for heart conditions
+    }
+    if (medicalConditions.includes('pregnancy_breastfeeding')) {
+      baseSteps = Math.min(baseSteps, 7000); // Moderate activity during pregnancy
+    }
+    if (medicalConditions.includes('kidney_issues') || medicalConditions.includes('liver_issues')) {
+      baseSteps -= 1000; // Slightly reduce for organ issues
+    }
+    
+    return Math.max(3000, baseSteps); // Minimum 3000 steps (medical conditions may require lower)
   }
 
   /**
@@ -156,7 +198,7 @@ export class TargetCalculator {
   }
 
   /**
-   * Generate complete personalized targets with gender-specific calculations
+   * Generate complete personalized targets with gender-specific and medical-aware calculations
    */
   calculateAllTargets(
     age: number,
@@ -165,14 +207,15 @@ export class TargetCalculator {
     hydrationScore: number,
     sleepScore: number,
     exerciseScore: number,
-    gender: 'male' | 'female' | 'other' = 'male'
+    gender: 'male' | 'female' | 'other' = 'male',
+    medicalConditions: string[] = []
   ): PersonalizedTargets {
     // Calculate BMI
     const currentBMI = weight / ((height / 100) ** 2);
     const bmiCategory = this.getBMICategory(currentBMI);
 
-    // Hydration targets (gender-specific)
-    const targetHydration = this.calculateHydrationGoal(weight, gender);
+    // Hydration targets (gender-specific + medical-aware)
+    const targetHydration = this.calculateHydrationGoal(weight, gender, medicalConditions);
     const currentHydration = this.estimateCurrentHydration(hydrationScore);
     const hydrationDeficit = Math.round(
       ((targetHydration - currentHydration) / targetHydration) * 100
@@ -188,8 +231,8 @@ export class TargetCalculator {
     const currentExercise = this.estimateCurrentExercise(exerciseScore);
     const exerciseDeficit = Math.max(0, targetExercise - currentExercise);
 
-    // Step targets
-    const targetSteps = this.getRecommendedSteps(age);
+    // Step targets (BMI-adjusted + medical-aware)
+    const targetSteps = this.getRecommendedSteps(age, currentBMI, medicalConditions);
     const currentSteps = this.estimateCurrentSteps(exerciseScore);
     const stepsDeficit = Math.max(0, targetSteps - currentSteps);
 

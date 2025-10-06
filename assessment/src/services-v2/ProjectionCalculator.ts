@@ -89,12 +89,21 @@ export class ProjectionCalculator {
 
   /**
    * Calculate sleep improvement projection
+   * FIX: If sleep is already optimal (≥ target), maintain it instead of reducing
    */
   calculateSleepProjection(
     currentHours: number,
     targetHours: number
   ): { projected: number; change: number } {
-    // Realistic improvement: 80% of deficit in 90 days
+    // If already at or above target, maintain current sleep
+    if (currentHours >= targetHours) {
+      return {
+        projected: Math.round(currentHours * 10) / 10,
+        change: 0
+      };
+    }
+    
+    // Otherwise, improve by 80% of deficit in 90 days
     const deficit = targetHours - currentHours;
     const improvement = deficit * 0.8;
     const projected = Math.min(currentHours + improvement, targetHours);
@@ -107,20 +116,46 @@ export class ProjectionCalculator {
 
   /**
    * Calculate energy level projection (1-10 scale)
+   * FIX: Account for sleep maintenance, hydration %, exercise, and nutrition improvements
    */
   calculateEnergyProjection(
     currentScore: number,
     sleepImprovement: number,
-    hydrationImprovement: number
+    hydrationImprovementPercent: number,
+    exerciseImprovement: number = 0,
+    nutritionImprovement: number = 0
   ): { projected: number; change: number } {
-    // Energy improves with better sleep and hydration
     let improvement = 0;
     
-    if (sleepImprovement >= 2) improvement += 3;
-    else if (sleepImprovement >= 1) improvement += 2;
-    else improvement += 1;
+    // Sleep impact (0-3 points)
+    if (sleepImprovement >= 2) {
+      improvement += 3; // Major sleep improvement
+    } else if (sleepImprovement >= 1) {
+      improvement += 2; // Moderate sleep improvement
+    } else if (sleepImprovement === 0 && currentScore >= 7) {
+      improvement += 2; // Sleep already optimal - maintenance bonus
+    } else if (sleepImprovement > 0) {
+      improvement += 1; // Minor sleep improvement
+    }
 
-    if (hydrationImprovement >= 1.5) improvement += 1;
+    // Hydration impact (0-2 points)
+    if (hydrationImprovementPercent >= 40) {
+      improvement += 2; // Major hydration fix (40%+ deficit closed)
+    } else if (hydrationImprovementPercent >= 20) {
+      improvement += 1; // Moderate hydration fix
+    }
+
+    // Exercise impact (0-2 points)
+    if (exerciseImprovement >= 3) {
+      improvement += 2; // 0 → 3-4 days/week
+    } else if (exerciseImprovement >= 1) {
+      improvement += 1; // Some exercise increase
+    }
+
+    // Nutrition impact (0-1 point)
+    if (nutritionImprovement >= 2) {
+      improvement += 1; // Significant nutrition improvement
+    }
 
     const projected = Math.min(currentScore + improvement, 10);
 
@@ -221,6 +256,7 @@ export class ProjectionCalculator {
 
   /**
    * Generate complete 90-day projection
+   * FIX: Pass actual current energy score and calculate improvements properly
    */
   calculateNinetyDayProjection(
     currentWeight: number,
@@ -230,7 +266,10 @@ export class ProjectionCalculator {
     targetSleep: number,
     currentHydration: number,
     targetHydration: number,
-    currentHealthScore: number
+    currentHealthScore: number,
+    currentEnergyScore: number = 3, // NEW: Accept actual energy score
+    currentExerciseScore: number = 3, // NEW: Accept actual exercise score
+    currentNutritionScore: number = 3 // NEW: Accept actual nutrition score
   ): NinetyDayProjection {
     // Calculate weight and BMI projections
     const weightProj = this.calculateWeightProjection(currentWeight, currentBMI);
@@ -239,11 +278,22 @@ export class ProjectionCalculator {
     // Calculate sleep projection
     const sleepProj = this.calculateSleepProjection(currentSleep, targetSleep);
 
-    // Calculate energy projection
+    // Calculate hydration improvement percentage
+    const hydrationDeficitPercent = ((targetHydration - currentHydration) / targetHydration) * 100;
+
+    // Estimate exercise improvement (assume 0 → 3-4 days/week for low scorers)
+    const exerciseImprovement = currentExerciseScore <= 3 ? 3 : 1;
+    
+    // Estimate nutrition improvement (assume moderate improvement)
+    const nutritionImprovement = currentNutritionScore <= 5 ? 2 : 1;
+
+    // Calculate energy projection with ALL factors
     const energyProj = this.calculateEnergyProjection(
-      3, // Assume current energy is low (3/10)
+      currentEnergyScore,
       sleepProj.change,
-      targetHydration - currentHydration
+      hydrationDeficitPercent,
+      exerciseImprovement,
+      nutritionImprovement
     );
 
     // Calculate health score projection
@@ -252,8 +302,8 @@ export class ProjectionCalculator {
       {
         sleep: sleepProj.change,
         hydration: (targetHydration - currentHydration) / targetHydration * 10,
-        exercise: 3, // Assume moderate improvement
-        nutrition: 2 // Assume some improvement
+        exercise: exerciseImprovement,
+        nutrition: nutritionImprovement
       }
     );
 
@@ -284,7 +334,7 @@ export class ProjectionCalculator {
         change: sleepProj.change
       },
       energyLevel: {
-        current: 3,
+        current: currentEnergyScore, // FIX: Use actual current energy
         projected: energyProj.projected,
         change: energyProj.change
       },

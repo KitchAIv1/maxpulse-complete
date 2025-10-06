@@ -45,31 +45,47 @@ export function HealthInsightsResults({
   const fullName = results.userProfile?.name || distributorInfo?.customerName || 'Alex';
   const firstName = fullName.split(' ')[0]; // Get first name only
   
-  // 🆕 PHASE 1B: Fetch real personal details from database
+  // 🆕 PHASE 1B: Fetch real personal details from database (including medical data)
   const sessionId = distributorInfo?.code;
   const { 
     demographics, 
     healthGoals, 
+    medicalData,
     loading: detailsLoading 
   } = usePersonalDetails(sessionId, firstName);
 
   // 🆕 PHASE 1B: Extract real health metrics from assessment answers
   const extractHealthMetrics = (): HealthMetrics => {
     const userAnswers = results.answers || {};
-    const profile = results.userProfile || {};
     
-    // Map scores from userProfile (calculated during assessment)
-    // These are derived from actual assessment responses
+    // Extract scores directly from actual assessment answers (not userProfile metadata)
+    // This ensures accurate scoring based on what user actually selected
+    
+    // h4: Hydration - "Less than 4 cups" (a), "4-7 cups" (b), "8+ cups" (c)
+    const hydrationScore = userAnswers['h4'] === 'c' ? 8 : // 8+ cups = excellent
+                           userAnswers['h4'] === 'b' ? 5 : // 4-7 cups = moderate
+                           userAnswers['h4'] === 'a' ? 3 : 5; // <4 cups = poor
+    
+    // h3: Sleep - "Yes" (7-9 hrs) (a), "No" (<7 hrs) (b)
+    const sleepScore = userAnswers['h3'] === 'a' ? 8 : // Yes = optimal
+                       userAnswers['h3'] === 'b' ? 3 : 5; // No = suboptimal
+    
+    // h1: Exercise - "0 days" (a), "1-2 days" (b), "3-4 days" (c), "5+ days" (d)
+    const exerciseScore = userAnswers['h1'] === 'd' ? 8 : // 5+ days = high
+                          userAnswers['h1'] === 'c' ? 6 : // 3-4 days = medium
+                          userAnswers['h1'] === 'b' ? 4 : // 1-2 days = low
+                          userAnswers['h1'] === 'a' ? 2 : 5; // 0 days = very low
+    
+    // h2: Nutrition - "Never" (a), "Sometimes" (b), "Always" (c)
+    const nutritionScore = userAnswers['h2'] === 'c' ? 8 : // Always = excellent
+                           userAnswers['h2'] === 'b' ? 5 : // Sometimes = moderate
+                           userAnswers['h2'] === 'a' ? 3 : 5; // Never = poor
+    
     return {
-      hydration: profile.hydrationLevel === 'optimal' ? 8 : 
-                profile.hydrationLevel === 'good' ? 6 : 4,
-      sleep: profile.sleepQuality === 'optimal' ? 8 : 
-             profile.sleepQuality === 'suboptimal' ? 5 : 3,
-      exercise: profile.exerciseLevel === 'high' ? 8 : 
-               profile.exerciseLevel === 'medium' ? 6 : 
-               profile.exerciseLevel === 'low' ? 3 : 5,
-      nutrition: profile.nutritionQuality === 'excellent' ? 8 : 
-                profile.nutritionQuality === 'good' ? 6 : 4
+      hydration: hydrationScore,
+      sleep: sleepScore,
+      exercise: exerciseScore,
+      nutrition: nutritionScore
     };
   };
 
@@ -90,19 +106,19 @@ export function HealthInsightsResults({
       sleepDuration: '7-9 hours per night',
       sleepQuality: 'refreshed',
       sleepIssues: 'sleep relatively well',
-      hydrationLevel: '4-6 glasses',
       waterIntake: '4-6 glasses',
       hydrationAwareness: 'try to stay hydrated but not consistent',
       exerciseFrequency: '2-3 times per week',
       exerciseType: 'mostly cardio',
       exerciseIntensity: 'moderate intensity',
-      activityLevel: 'lightly active during the day',
-      nutritionQuality: 'balanced',
       fastFoodFrequency: '1-2 times per week',
       mealTiming: 'eat 3 meals daily',
       snackingHabits: 'snack occasionally',
-      dietPattern: 'eat a mix of healthy and convenience foods',
-      urgencyLevel: 'moderate' as const
+      stressLevel: 'moderate',
+      medicalCheckups: 'annual',
+      smokingStatus: 'no',
+      alcoholConsumption: 'none',
+      urgencyLevel: 'moderate'
     },
     lifestyleFactors: {
       isSmoker: false,
@@ -114,7 +130,7 @@ export function HealthInsightsResults({
   };
   
   const v2Input = useV2Analysis && !detailsLoading 
-    ? mapAssessmentToV2Input(results, demographics, healthMetrics, currentQuestions) 
+    ? mapAssessmentToV2Input(results, demographics, healthMetrics, currentQuestions, medicalData) 
     : defaultV2Input;
     
   const v2Analysis = usePersonalizedAnalysisV2({
@@ -253,10 +269,10 @@ export function HealthInsightsResults({
     if (distributorInfo && trackProgress) {
       trackProgress('health_insights_viewed', {
         userName: firstName,
-        sleepScore,
-        hydrationScore,
-        activityScore,
-        stressScore
+        sleepScore: healthMetrics.sleep,
+        hydrationScore: healthMetrics.hydration,
+        activityScore: healthMetrics.exercise,
+        stressScore: healthMetrics.nutrition
       });
     }
     
@@ -265,114 +281,9 @@ export function HealthInsightsResults({
 
   return (
     <div className="bg-white p-6 max-w-2xl mx-auto">
-      {/* Simple Header */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center mb-4">
-          <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center mr-2">
-            <div className="w-4 h-4 bg-amber-800 rounded-full"></div>
-          </div>
-          <span style={{color: 'black', fontSize: '20px', fontWeight: 'bold'}}>MaxPulse</span>
-        </div>
-        
-        <h1 style={{color: 'black', fontSize: '32px', fontWeight: 'bold', marginBottom: '16px'}}>
-          Hi {firstName}, here are your Health Insights
-        </h1>
-        <p style={{color: 'black', fontSize: '18px'}}>
-          Based on your answers, here's a snapshot of your lifestyle and where you can improve.
-        </p>
-      </div>
-
-      {/* Enhanced Health Metrics Cards with Science-Backed Analysis */}
-      <HealthMetricsCards healthMetrics={healthMetricsDisplay} />
-
-      {/* 🆕 PHASE 1B: Personalized Daily Health Goals */}
-      {demographics.age !== 35 && (
-        <div style={{
-          marginBottom: '32px',
-          padding: '20px',
-          backgroundColor: '#f0fdf4',
-          border: '2px solid #86efac',
-          borderRadius: '12px'
-        }}>
-          <h3 style={{
-            fontSize: '18px',
-            fontWeight: 'bold',
-            color: '#15803d',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <span>🎯</span> Your Personalized Daily Goals
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
-            <div style={{
-              padding: '12px',
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              border: '1px solid #bbf7d0'
-            }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
-                {healthGoals.hydrationGoalLiters}L
-              </div>
-              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
-                Daily Water
-              </div>
-            </div>
-            <div style={{
-              padding: '12px',
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              border: '1px solid #bbf7d0'
-            }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
-                {healthGoals.sleepHoursMin}-{healthGoals.sleepHoursMax}hrs
-              </div>
-              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
-                Sleep Target
-              </div>
-            </div>
-            <div style={{
-              padding: '12px',
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              border: '1px solid #bbf7d0'
-            }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
-                {healthGoals.dailyStepGoal.toLocaleString()}
-              </div>
-              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
-                Daily Steps
-              </div>
-            </div>
-            <div style={{
-              padding: '12px',
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              border: '1px solid #bbf7d0'
-            }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#16a34a' }}>
-                {healthGoals.bmi.toFixed(1)}
-              </div>
-              <div style={{ fontSize: '12px', color: '#166534', marginTop: '4px' }}>
-                BMI ({healthGoals.bmiCategory})
-              </div>
-            </div>
-          </div>
-          <p style={{
-            fontSize: '13px',
-            color: '#166534',
-            marginTop: '12px',
-            fontStyle: 'italic'
-          }}>
-            ✨ Based on your age ({demographics.age}), weight ({demographics.weight}kg), and height ({demographics.height}cm)
-          </p>
-        </div>
-      )}
-
       {/* 🆕 V2 Analysis Engine OR V1 AI Analysis */}
       {useV2Analysis ? (
-        // V2 Analysis Components
+        // V2 Analysis Components (renders complete UI including header)
         v2Analysis.loading ? (
           <div style={{padding: '24px', textAlign: 'center', backgroundColor: 'white'}}>
             <h2 style={{color: 'black', fontSize: '24px', marginBottom: '16px'}}>Generating Your Personalized Analysis...</h2>
@@ -411,15 +322,38 @@ export function HealthInsightsResults({
           </>
         ) : null
       ) : (
-        // V1 Enhanced AI Analysis Section
-        <EnhancedAIAnalysisSection
-          analysis={analysis}
-          loading={loading}
-          error={error}
-          canRetry={canRetry}
-          onRetry={retry}
-          assessmentType="health"
-        />
+        // V1 Enhanced AI Analysis Section with header and cards
+        <>
+          {/* V1 Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center mr-2">
+                <div className="w-4 h-4 bg-amber-800 rounded-full"></div>
+              </div>
+              <span style={{color: 'black', fontSize: '20px', fontWeight: 'bold'}}>MaxPulse</span>
+            </div>
+            
+            <h1 style={{color: 'black', fontSize: '32px', fontWeight: 'bold', marginBottom: '16px'}}>
+              Hi {firstName}, here are your Health Insights
+            </h1>
+            <p style={{color: 'black', fontSize: '18px'}}>
+              Based on your answers, here's a snapshot of your lifestyle and where you can improve.
+            </p>
+          </div>
+
+          {/* Enhanced Health Metrics Cards with Science-Backed Analysis */}
+          <HealthMetricsCards healthMetrics={healthMetricsDisplay} />
+
+          {/* V1 AI Analysis */}
+          <EnhancedAIAnalysisSection
+            analysis={analysis}
+            loading={loading}
+            error={error}
+            canRetry={canRetry}
+            onRetry={retry}
+            assessmentType="health"
+          />
+        </>
       )}
 
       {/* Simple Button */}
