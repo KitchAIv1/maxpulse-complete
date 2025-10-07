@@ -34,11 +34,11 @@ A comprehensive, enterprise-grade platform featuring real-time assessment tracki
 - **Frictionless Public Assessment System** for lead generation
 - **Sophisticated Distributor Dashboards** for performance tracking and client management
 - **Real-time Multi-Tenant Architecture** supporting unlimited distributors
-- **AI-Powered Personalized Insights** using OpenAI integration
+- **V2 Science-Backed Health Analysis** with deterministic, data-driven personalization (no AI dependency)
 - **Enterprise-Grade Security** with Row Level Security (RLS) policies
 
 ### **🎯 Business Impact**
-- **Lead Generation**: AI-powered assessments capture high-quality prospects
+- **Lead Generation**: Science-backed health assessments capture high-quality prospects
 - **Distributor Empowerment**: Complete dashboard ecosystem for performance tracking
 - **Revenue Optimization**: Automated commission processing and analytics
 - **Scalable Growth**: Multi-tenant architecture supporting business expansion

@@ -623,7 +623,73 @@ import { ProjectionTable } from './components-v2/ProjectionTable';
 
 ---
 
-**Documentation Version**: 1.0  
-**Last Updated**: October 6, 2025  
+---
+
+## 🆕 Recent Updates
+
+### October 7, 2025 - Underweight Support Added
+
+**NEW: Comprehensive Underweight Branching Logic**
+
+The V2 engine now fully supports underweight clients (BMI < 18.5) with specialized logic:
+
+#### 1. **Weight Target Calculations**
+- Added `deficitKg` and `isUnderweight` flags to `PersonalizedTargets`
+- Calculate weight **deficit** (not just excess) for underweight clients
+- **Reduced step goal to 6,000** for underweight (preserve energy for weight gain)
+
+#### 2. **Current Reality Text**
+- Shows "**Xkg BELOW** healthy range" instead of "within range"
+- Emphasizes importance of healthy weight gain for energy, immunity, and bone health
+
+#### 3. **Lifestyle Breakdown**
+- **Nutrition**: Focus on calorie-dense foods (nuts, avocados, whole grains, protein)
+- **Exercise**: Emphasize strength training and muscle building over calorie burning
+- **Sleep**: Highlight importance for muscle recovery and weight gain
+
+#### 4. **Weight Projection**
+- **Weight GAIN logic**: 0.4kg/week (healthy gain rate)
+- **BMI increases** with weight gain (was incorrectly decreasing)
+- Example: 35kg → 39.8kg (4.8kg gain over 90 days)
+
+#### 5. **Transformation Plan**
+- **Phase 1**: "1-2kg initial weight gain" instead of "weight loss"
+- **Phase 2**: "Clothes fitting better (less baggy)" instead of "looser"
+- **Phase 3**: Completely different nutrition plan:
+  - Increase calorie-dense foods (300-500 cal/day)
+  - Eat 5-6 smaller meals
+  - Add protein shakes (300-400 cal each)
+
+#### 6. **Risk Factors**
+- **Underweight Health Risks** (BMI < 18.5):
+  - BMI < 16: CRITICAL (80% risk)
+  - BMI < 17: HIGH (65% risk)
+  - BMI < 18.5: MODERATE (50% risk)
+  - Risks: Malnutrition, weak immunity, osteoporosis, fertility issues, anemia
+
+#### 7. **Daily Life Improvements**
+- "Clothes fit better (less baggy)"
+- "More strength and stamina"
+- "Feel less cold and tired"
+- "Have more confidence in your appearance"
+
+**Science-Backed Approach:**
+- Weight gain rate: 0.4kg/week (healthy, sustainable)
+- Step goal: 6,000 (preserve energy for weight gain)
+- Calorie surplus: 300-500 calories daily
+- Nutrition focus: Calorie-dense, nutrient-rich foods (not junk food)
+- Meal frequency: 5-6 smaller meals (easier to consume more calories)
+
+**Files Updated:**
+- `TargetCalculator.ts`: Added deficit calculation, reduced step goal
+- `PersonalizedNarrativeBuilder.ts`: Added underweight branching for all narrative sections
+- `ProjectionCalculator.ts`: Added weight GAIN logic, fixed BMI projection
+- `PhaseRoadmapGenerator.ts`: Added underweight nutrition plan
+- `RiskCalculator.ts`: Added underweight-specific risk factors
+
+---
+
+**Documentation Version**: 1.1  
+**Last Updated**: October 7, 2025  
 **Author**: MAXPULSE Development Team  
-**Status**: Production-Ready
+**Status**: Production-Ready (with Underweight Support)
