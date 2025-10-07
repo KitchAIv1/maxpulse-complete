@@ -80,11 +80,15 @@ export class PhaseRoadmapGenerator {
     const actions: PhaseAction[] = [];
     
     // Only add sleep action if it needs improvement
+    const isUnderweight = targets.bmi.current < 18.5;
+    
     if (!sleepAlreadyOptimal) {
       actions.push({
         action: 'Sleep Protocol',
         how: `Set bedtime: ${this.calculateBedtime(targets.sleep.targetMinHours)} (to achieve ${targets.sleep.targetMinHours}-hour minimum). You're currently at ${targets.sleep.currentHours}hrs.`,
-        why: 'Sleep affects everything else. Without fixing this, you\'ll struggle with food cravings, exercise motivation, and weight loss',
+        why: isUnderweight 
+          ? 'Sleep affects everything else. Without fixing this, you\'ll struggle with food cravings, exercise motivation, and weight gain'
+          : 'Sleep affects everything else. Without fixing this, you\'ll struggle with food cravings, exercise motivation, and weight loss',
         tracking: `Did you sleep ${targets.sleep.targetMinHours}+ hours? Y/N`
       });
     } else {
@@ -111,22 +115,33 @@ export class PhaseRoadmapGenerator {
       focus: sleepAlreadyOptimal ? ['Maintain Sleep', 'Hydration'] : ['Sleep', 'Hydration'],
       actions,
       weeklyMilestones,
-      expectedResults: sleepAlreadyOptimal
-        ? [
-            'Maintained excellent sleep quality',
-            'Improved hydration and energy',
-            'Better appetite control',
-            '2-3kg initial weight loss',
-            'Enhanced mental clarity'
-          ]
-        : [
-            'Better morning alertness',
-            'Reduced headaches and fatigue',
-            'Clearer thinking and focus',
-            '2-3kg initial weight loss',
-            'Improved energy levels'
-          ]
+      expectedResults: this.getPhase1ExpectedResults(sleepAlreadyOptimal, targets.bmi.current)
     };
+  }
+  
+  /**
+   * Get phase 1 expected results based on sleep status and BMI
+   */
+  private getPhase1ExpectedResults(sleepAlreadyOptimal: boolean, bmi: number): string[] {
+    const isUnderweight = bmi < 18.5;
+    
+    if (sleepAlreadyOptimal) {
+      return [
+        'Maintained excellent sleep quality',
+        'Improved hydration and energy',
+        'Better appetite control',
+        isUnderweight ? '1-2kg initial weight gain' : '2-3kg initial weight loss',
+        'Enhanced mental clarity'
+      ];
+    }
+    
+    return [
+      'Better morning alertness',
+      'Reduced headaches and fatigue',
+      'Clearer thinking and focus',
+      isUnderweight ? '1-2kg initial weight gain' : '2-3kg initial weight loss',
+      'Improved energy levels'
+    ];
   }
   
   /**
@@ -186,14 +201,33 @@ export class PhaseRoadmapGenerator {
         }
       ],
       weeklyMilestones,
-      expectedResults: [
+      expectedResults: this.getPhase2ExpectedResults(targets.bmi.current)
+    };
+  }
+  
+  /**
+   * Get phase 2 expected results based on BMI
+   */
+  private getPhase2ExpectedResults(bmi: number): string[] {
+    const isUnderweight = bmi < 18.5;
+    
+    if (isUnderweight) {
+      return [
         'Easier breathing, less winded',
-        'Clothes fitting slightly looser',
+        'Clothes fitting better (less baggy)',
         'Better mood and mental clarity',
         'Improved cardiovascular fitness',
-        'Increased daily energy'
-      ]
-    };
+        'Increased daily energy and strength'
+      ];
+    }
+    
+    return [
+      'Easier breathing, less winded',
+      'Clothes fitting slightly looser',
+      'Better mood and mental clarity',
+      'Improved cardiovascular fitness',
+      'Increased daily energy'
+    ];
   }
   
   /**

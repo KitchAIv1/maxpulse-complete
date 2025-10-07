@@ -90,6 +90,7 @@ export class ProjectionCalculator {
 
   /**
    * Calculate BMI projection based on weight change
+   * FIXED: For underweight (weight GAIN), BMI should INCREASE, not decrease
    */
   calculateBMIProjection(
     currentBMI: number,
@@ -98,7 +99,12 @@ export class ProjectionCalculator {
   ): { projected: number; change: number } {
     const heightM = height / 100;
     const bmiChange = weightChange / (heightM ** 2);
-    const projected = currentBMI - bmiChange;
+    
+    // For underweight (weight GAIN), weightChange is positive, so BMI should INCREASE
+    // For overweight (weight LOSS), weightChange is positive, so BMI should DECREASE
+    // The sign is correct - we ADD bmiChange for gain, SUBTRACT for loss
+    const isWeightGain = currentBMI < 18.5;
+    const projected = isWeightGain ? currentBMI + bmiChange : currentBMI - bmiChange;
 
     return {
       projected: Math.round(projected * 10) / 10,

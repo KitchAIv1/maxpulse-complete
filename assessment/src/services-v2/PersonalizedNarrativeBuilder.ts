@@ -307,23 +307,36 @@ export class PersonalizedNarrativeBuilder {
       }
     })();
     
-    // Exercise consequences with branching logic
+    // Exercise consequences with branching logic + UNDERWEIGHT support
     const exerciseConsequences = (() => {
       const current = targets.exercise.currentMinutesWeekly;
       const target = targets.exercise.targetMinutesWeekly;
       const percentage = Math.round((current / target) * 100);
+      const isUnderweight = bmi < 18.5;
       
       if (current >= target) {
         // EXCELLENT EXERCISE (100%+ of goal)
+        if (isUnderweight) {
+          return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, you're hitting ${current} minutes weekly—that's ${percentage}% of the recommended ${target} minutes! Your activity level is excellent. Focus on strength training and resistance exercises to build muscle mass alongside your cardio routine.`;
+        }
         return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, you're hitting ${current} minutes weekly—that's ${percentage}% of the recommended ${target} minutes! Your activity level is excellent and helps counteract age-related metabolic slowdown. This significantly reduces your cardiovascular disease risk and supports healthy weight management.`;
       } else if (current >= target * 0.75) {
         // GOOD EXERCISE (75-99% of goal)
+        if (isUnderweight) {
+          return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, you're doing ${current} minutes weekly (${percentage}% of goal). You're close to the recommended ${target} minutes! Adding just ${target - current} more minutes weekly with focus on strength training would help build muscle mass and healthy weight.`;
+        }
         return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, you're doing ${current} minutes weekly (${percentage}% of goal). You're close to the recommended ${target} minutes! Adding just ${target - current} more minutes weekly would maximize cardiovascular benefits and further boost metabolism.`;
       } else if (current >= target * 0.5) {
         // MODERATE EXERCISE (50-74% of goal)
+        if (isUnderweight) {
+          return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, you're hitting ${current} minutes weekly (${percentage}% of goal). You need ${target} minutes for optimal health. Increasing activity with focus on strength training would help build muscle mass and support healthy weight gain.`;
+        }
         return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, you're hitting ${current} minutes weekly (${percentage}% of goal). You need ${target} minutes for optimal health. Increasing activity would help counteract age-related metabolic slowdown and burn approximately 200-300 more calories daily.`;
       } else {
         // POOR EXERCISE (<50% of goal)
+        if (isUnderweight) {
+          return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, your current activity level isn't enough for optimal health. You need ${target} minutes weekly—you're hitting about ${current} minutes. Focus on gentle strength training and resistance exercises to build muscle mass, not just cardio.`;
+        }
         return `At ${demographics.age} with BMI ${bmi.toFixed(1)}, your current activity level isn't enough to counteract the metabolic slowdown that happens with age. You need ${target} minutes weekly—you're hitting about ${current} minutes. Your body is burning approximately 400-500 fewer calories daily than someone your age at a healthy weight with regular activity.`;
       }
     })();

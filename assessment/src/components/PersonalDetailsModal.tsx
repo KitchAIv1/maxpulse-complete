@@ -108,6 +108,7 @@ export function PersonalDetailsModal({ onSubmit, onCancel, userName = 'there' }:
 
   return (
     <div 
+      className="personal-details-modal-wrapper"
       style={{
         position: 'fixed',
         inset: 0,
@@ -116,9 +117,29 @@ export function PersonalDetailsModal({ onSubmit, onCancel, userName = 'there' }:
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
-        padding: '16px'
+        padding: '16px',
+        colorScheme: 'light'
       }}
     >
+      <style>{`
+        /* Force light mode for PersonalDetailsModal - override system dark mode */
+        .personal-details-modal-wrapper * {
+          color-scheme: light !important;
+        }
+        .personal-details-modal-wrapper {
+          background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+        .personal-details-modal-wrapper input,
+        .personal-details-modal-wrapper select,
+        .personal-details-modal-wrapper textarea {
+          background-color: white !important;
+          color: #111827 !important;
+        }
+        .personal-details-modal-wrapper input::placeholder,
+        .personal-details-modal-wrapper textarea::placeholder {
+          color: #9ca3af !important;
+        }
+      `}</style>
       <div 
         style={{
           backgroundColor: 'white',
@@ -127,7 +148,8 @@ export function PersonalDetailsModal({ onSubmit, onCancel, userName = 'there' }:
           width: '100%',
           maxHeight: '90vh',
           overflow: 'auto',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          color: '#111827'
         }}
       >
         {/* Header */}
