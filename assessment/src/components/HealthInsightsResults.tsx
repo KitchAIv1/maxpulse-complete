@@ -280,7 +280,17 @@ export function HealthInsightsResults({
   };
 
   return (
-    <div className="bg-white p-6 max-w-2xl mx-auto">
+    <div className="bg-white p-6 max-w-2xl mx-auto" style={{ colorScheme: 'light', color: '#111827' }}>
+      <style>{`
+        /* Force light mode for V2 analysis - override system dark mode */
+        .v2-analysis-wrapper * {
+          color-scheme: light !important;
+        }
+        .v2-analysis-wrapper {
+          background-color: white !important;
+          color: #111827 !important;
+        }
+      `}</style>
       {/* 🆕 V2 Analysis Engine OR V1 AI Analysis */}
       {useV2Analysis ? (
         // V2 Analysis Components (renders complete UI including header)
@@ -295,7 +305,7 @@ export function HealthInsightsResults({
             <p style={{color: '#7f1d1d', fontSize: '14px'}}>{v2Analysis.error.message}</p>
           </div>
         ) : v2Analysis.analysis ? (
-          <>
+          <div className="v2-analysis-wrapper">
             <CurrentRealityCard
               userProfile={v2Analysis.analysis.userProfile}
               overallScore={v2Analysis.analysis.overallScore}
@@ -319,7 +329,7 @@ export function HealthInsightsResults({
               projection={v2Analysis.analysis.ninetyDayProjection}
               priorityActions={v2Analysis.analysis.priorityActions}
             />
-          </>
+          </div>
         ) : null
       ) : (
         // V1 Enhanced AI Analysis Section with header and cards

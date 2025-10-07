@@ -68,8 +68,18 @@ export const PersonalizedAnalysisV2Preview: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-4 sm:py-8">
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 space-y-6">
+    <div className="min-h-screen bg-gray-100 py-4 sm:py-8" style={{ colorScheme: 'light', color: '#111827' }}>
+      <style>{`
+        /* Force light mode for V2 analysis - override system dark mode */
+        .v2-analysis-wrapper * {
+          color-scheme: light !important;
+        }
+        .v2-analysis-wrapper {
+          background-color: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+      `}</style>
+      <div className="v2-analysis-wrapper max-w-5xl mx-auto px-3 sm:px-4 space-y-6">
         {/* Profile Selector - Cal AI Style */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-3">
