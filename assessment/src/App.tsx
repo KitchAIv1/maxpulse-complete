@@ -831,18 +831,8 @@ export default function App() {
         </AnimatePresence>
 
         {/* Theme Toggle */}
-        <div className="fixed top-4 right-4 z-50 space-y-2">
+        <div className="fixed top-4 right-4 z-50">
           <ThemeToggle />
-          {/* Emergency restart button */}
-          <button
-            onClick={() => {
-              console.log('Emergency restart clicked');
-              restartAssessment();
-            }}
-            className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-semibold w-full"
-          >
-            RESTART
-          </button>
         </div>
 
         {/* Progress Bar for Assessment, Motivational, Educational Slide, and Section Complete states */}
