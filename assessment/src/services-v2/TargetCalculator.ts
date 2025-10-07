@@ -32,6 +32,8 @@ export interface PersonalizedTargets {
     targetMinKg: number;
     targetMaxKg: number;
     excessKg: number;
+    deficitKg: number; // NEW: Weight deficit for underweight
+    isUnderweight: boolean; // NEW: Flag for underweight status
   };
   bmi: {
     current: number;
@@ -130,6 +132,7 @@ export class TargetCalculator {
   /**
    * Calculate daily step goal based on age, BMI, and medical conditions
    * Science-backed: CDC/WHO recommendations adjusted by age, fitness, and health status
+   * UPDATED: Underweight gets LOWER steps (preserve energy for weight gain)
    */
   getRecommendedSteps(
     age: number, 
@@ -146,7 +149,8 @@ export class TargetCalculator {
     // Adjust for BMI/fitness level (science-backed: start lower for obese to prevent injury)
     if (bmi >= 30) baseSteps -= 2000; // Obese - lower starting goal
     else if (bmi >= 25) baseSteps -= 1000; // Overweight - slightly lower
-    else if (bmi < 20) baseSteps += 2000; // Underweight/athletic - higher goal
+    else if (bmi < 18.5) baseSteps = 6000; // UNDERWEIGHT - lower goal to preserve energy for weight gain
+    else if (bmi < 20) baseSteps += 1000; // Low-normal/athletic - slightly higher goal
     
     // Adjust for medical conditions (safety-first approach)
     if (medicalConditions.includes('heart_condition')) {
@@ -236,9 +240,11 @@ export class TargetCalculator {
     const currentSteps = this.estimateCurrentSteps(exerciseScore);
     const stepsDeficit = Math.max(0, targetSteps - currentSteps);
 
-    // Weight targets (gender-specific)
+    // Weight targets (gender-specific) - Calculate both excess AND deficit
     const weightRange = this.calculateHealthyWeightRange(height, gender);
     const excessWeight = Math.max(0, weight - weightRange.max);
+    const deficitWeight = Math.max(0, weightRange.min - weight);
+    const isUnderweight = currentBMI < 18.5;
 
     return {
       hydration: {
@@ -267,7 +273,9 @@ export class TargetCalculator {
         currentKg: weight,
         targetMinKg: weightRange.min,
         targetMaxKg: weightRange.max,
-        excessKg: excessWeight
+        excessKg: excessWeight,
+        deficitKg: deficitWeight,
+        isUnderweight: isUnderweight
       },
       bmi: {
         current: Math.round(currentBMI * 10) / 10,

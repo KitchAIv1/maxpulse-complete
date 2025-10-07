@@ -41,13 +41,32 @@ export class ProjectionCalculator {
   
   /**
    * Calculate 90-day weight projection
-   * Realistic: 0.5-1kg per week with lifestyle changes
+   * UPDATED: Supports both weight LOSS (overweight) and weight GAIN (underweight)
+   * Realistic: 0.5-1kg per week loss OR 0.3-0.5kg per week gain
    */
   calculateWeightProjection(
     currentWeight: number,
     bmi: number,
     complianceLevel: 'high' | 'moderate' | 'low' = 'moderate'
   ): { projected: number; change: number } {
+    // UNDERWEIGHT: Weight GAIN goal
+    if (bmi < 18.5) {
+      let weeklyGain = 0.4; // 0.4kg per week (healthy gain rate)
+      
+      // Adjust for compliance
+      if (complianceLevel === 'high') weeklyGain *= 1.2; // 0.48kg/week
+      else if (complianceLevel === 'low') weeklyGain *= 0.6; // 0.24kg/week
+      
+      const totalGain = weeklyGain * 12; // 12 weeks
+      const projected = currentWeight + totalGain;
+      
+      return {
+        projected: Math.round(projected * 10) / 10,
+        change: Math.round(totalGain * 10) / 10
+      };
+    }
+    
+    // OVERWEIGHT/OBESE: Weight LOSS goal
     let weeklyLoss = 0;
 
     // Base weight loss potential
@@ -193,7 +212,7 @@ export class ProjectionCalculator {
   }
 
   /**
-   * Generate daily life improvements based on changes
+   * Generate daily life improvements based on changes + UNDERWEIGHT support
    */
   generateDailyLifeImprovements(
     weightChange: number,
@@ -202,6 +221,7 @@ export class ProjectionCalculator {
     bmi: number
   ): string[] {
     const improvements: string[] = [];
+    const isUnderweight = bmi < 18.5;
 
     if (sleepChange >= 2) {
       improvements.push('You wake up refreshed instead of groggy');
@@ -210,12 +230,26 @@ export class ProjectionCalculator {
       improvements.push('You feel more rested in the mornings');
     }
 
-    if (weightChange >= 5) {
-      improvements.push('You climb stairs without being winded');
-      improvements.push('Your clothes fit better');
-      improvements.push('You have more confidence in your appearance');
-    } else if (weightChange >= 3) {
-      improvements.push('You notice clothes fitting slightly looser');
+    // UNDERWEIGHT: Weight GAIN improvements (opposite of weight loss)
+    if (isUnderweight) {
+      if (weightChange >= 4) {
+        improvements.push('You notice clothes fitting better (less baggy)');
+        improvements.push('You have more strength and stamina');
+        improvements.push('You feel less cold and tired');
+        improvements.push('You have more confidence in your appearance');
+      } else if (weightChange >= 2) {
+        improvements.push('You notice increased energy and strength');
+        improvements.push('You feel warmer and less fatigued');
+      }
+    } else {
+      // OVERWEIGHT/OBESE: Weight LOSS improvements
+      if (weightChange >= 5) {
+        improvements.push('You climb stairs without being winded');
+        improvements.push('Your clothes fit better');
+        improvements.push('You have more confidence in your appearance');
+      } else if (weightChange >= 3) {
+        improvements.push('You notice clothes fitting slightly looser');
+      }
     }
 
     if (energyChange >= 3) {
@@ -230,7 +264,9 @@ export class ProjectionCalculator {
       improvements.push('You sleep better (less snoring/apnea)');
     }
 
-    improvements.push('You don\'t crave junk food constantly');
+    if (!isUnderweight) {
+      improvements.push('You don\'t crave junk food constantly');
+    }
 
     return improvements;
   }

@@ -498,6 +498,20 @@ export class RiskCalculator {
       });
     }
 
+    // UNDERWEIGHT: Add underweight-specific risk factors
+    if (bmi < 18.5) {
+      const underweightSeverity = bmi < 16 ? 'critical' : bmi < 17 ? 'high' : 'moderate';
+      const underweightRisk = bmi < 16 ? 80 : bmi < 17 ? 65 : 50;
+      
+      factors.push({
+        name: 'Underweight Health Risks',
+        severity: underweightSeverity,
+        riskPercentage: underweightRisk,
+        description: `BMI ${bmi.toFixed(1)} (underweight) increases risk of malnutrition, weakened immune system, osteoporosis, fertility issues, and anemia. Being underweight can be as dangerous as being overweight—your body needs adequate nutrition to function properly.`,
+        compoundFactors: ['Underweight', 'Malnutrition risk', 'Weak immunity', 'Low bone density']
+      });
+    }
+    
     // Cardiovascular risk (if not already covered by smoking+obesity)
     // DYNAMIC: Only add if risk is actually elevated (40%+)
     if (cardiovascularRisk >= 40 && !(isSmoker && bmi >= 30)) {

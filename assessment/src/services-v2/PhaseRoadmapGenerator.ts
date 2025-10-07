@@ -207,13 +207,16 @@ export class PhaseRoadmapGenerator {
   }
 
   /**
-   * Generate Phase 3: Nutrition (Weeks 9-12) with medical condition awareness
+   * Generate Phase 3: Nutrition (Weeks 9-12) with medical condition awareness + UNDERWEIGHT support
    */
   generatePhase3(
     currentFastFoodFreq: string,
     age: number,
-    medicalConditions: string[] = []
+    medicalConditions: string[] = [],
+    bmi: number = 22 // NEW: Accept BMI to detect underweight
   ): TransformationPhase {
+    const isUnderweight = bmi < 18.5;
+    
     // Check for medical conditions
     const hasDiabetes = medicalConditions.includes('diabetes_type1') || medicalConditions.includes('diabetes_type2');
     const hasHeartCondition = medicalConditions.includes('heart_condition');
@@ -231,6 +234,65 @@ export class PhaseRoadmapGenerator {
       nutritionWarning = ' ⚠️ With digestive issues, introduce changes gradually and note any trigger foods.';
     } else if (isPregnant) {
       nutritionWarning = ' ⚠️ During pregnancy, focus on nutrient-dense foods. Consult your OB/GYN about dietary needs.';
+    }
+    
+    // UNDERWEIGHT: Completely different Phase 3 (INCREASE calories, not reduce)
+    if (isUnderweight) {
+      return {
+        phase: 3,
+        name: 'Nutrition',
+        weeks: 'Weeks 9-12',
+        focus: ['Calorie increase', 'Nutrient density'],
+        actions: [
+          {
+            action: 'Increase Calorie-Dense Foods',
+            how: `Add 300-500 calories daily: nuts (almonds, walnuts), nut butters (peanut, almond), avocados, whole grains, protein shakes, olive oil${nutritionWarning}`,
+            why: 'Healthy weight gain requires calorie surplus with nutrient-dense foods. Focus on quality calories, not junk food',
+            tracking: 'Added 300+ calories daily: Y/N'
+          },
+          {
+            action: 'Eat 5-6 Smaller Meals',
+            how: 'Instead of 3 large meals, eat 5-6 smaller, calorie-rich meals throughout the day. Example: Breakfast, snack, lunch, snack, dinner, evening snack',
+            why: 'Smaller, frequent meals are easier to digest and help you consume more calories without feeling overly full',
+            tracking: 'Ate 5+ meals: Y/N daily'
+          },
+          {
+            action: 'Add Protein Shakes',
+            how: 'Drink 1-2 protein shakes daily (300-400 cal each). Blend: protein powder, banana, nut butter, oats, milk/almond milk',
+            why: 'Liquid calories are easier to consume and protein supports muscle building, not just fat gain',
+            tracking: 'Drank protein shake: Y/N daily'
+          }
+        ],
+        weeklyMilestones: [
+          {
+            week: 9,
+            focus: 'Add 300 cal/day + 5 meals',
+            expectedChanges: ['Increased appetite', 'More energy', 'Less fatigue']
+          },
+          {
+            week: 10,
+            focus: 'Add protein shakes + maintain meals',
+            expectedChanges: ['Better strength', 'Clothes fit better']
+          },
+          {
+            week: 11,
+            focus: 'Consistent calorie surplus',
+            expectedChanges: ['Visible weight gain', 'Improved muscle tone']
+          },
+          {
+            week: 12,
+            focus: 'All habits integrated',
+            expectedChanges: ['2-4kg weight gain', 'Sustained energy', 'Better immunity']
+          }
+        ],
+        expectedResults: [
+          'Healthy weight gain (2-4kg)',
+          'Increased strength and stamina',
+          'Better energy throughout day',
+          'Improved immune function',
+          'Clothes fitting better (less baggy)'
+        ]
+      };
     }
     
     return {
@@ -311,7 +373,7 @@ export class PhaseRoadmapGenerator {
   }
 
   /**
-   * Generate complete transformation roadmap with REAL targets and medical awareness
+   * Generate complete transformation roadmap with REAL targets and medical awareness + UNDERWEIGHT support
    */
   generateRoadmap(
     age: number,
@@ -322,7 +384,7 @@ export class PhaseRoadmapGenerator {
   ): TransformationRoadmap {
     const phase1 = this.generatePhase1(targets, urgencyLevel, medicalConditions);
     const phase2 = this.generatePhase2(targets, age, medicalConditions);
-    const phase3 = this.generatePhase3(fastFoodFrequency, age, medicalConditions);
+    const phase3 = this.generatePhase3(fastFoodFrequency, age, medicalConditions, targets.bmi.current);
 
     // Calculate total timeline based on urgency
     const phase1Weeks = urgencyLevel === 'high' ? 2 : urgencyLevel === 'low' ? 6 : 4;

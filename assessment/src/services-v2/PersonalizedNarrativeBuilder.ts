@@ -226,11 +226,22 @@ export class PersonalizedNarrativeBuilder {
   }
   
   /**
-   * Build current reality narrative with score-based branching
+   * Build current reality narrative with score-based branching + UNDERWEIGHT support
    */
   private buildCurrentReality(demographics: any, bmi: number, bmiCategory: string, score: number): string {
     const weightRange = this.targetCalc.calculateHealthyWeightRange(demographics.height);
     const excessWeight = Math.max(0, demographics.weight - weightRange.max);
+    const deficitWeight = Math.max(0, weightRange.min - demographics.weight);
+    const isUnderweight = bmi < 18.5;
+    
+    // UNDERWEIGHT: Special handling (weight GAIN goal)
+    if (isUnderweight) {
+      if (score >= 70) {
+        return `At ${demographics.age} years old with a BMI of ${bmi.toFixed(1)}, you have good health habits in most areas. You're carrying ${demographics.weight}kg on a ${demographics.height}cm frame, which places you ${Math.round(deficitWeight)}kg below the healthy weight range (target: ${weightRange.min}-${weightRange.max}kg). Gaining weight in a healthy way is important for your energy, immune function, and long-term health. Your positive lifestyle habits will support healthy weight gain.`;
+      } else {
+        return `At ${demographics.age} years old with a BMI of ${bmi.toFixed(1)}, your assessment reveals areas for improvement. You're carrying ${demographics.weight}kg on a ${demographics.height}cm frame, which places you ${Math.round(deficitWeight)}kg below the healthy weight range (target: ${weightRange.min}-${weightRange.max}kg). Gaining weight in a healthy way is important for your energy, immune function, and long-term health.`;
+      }
+    }
     
     // EXCELLENT SCORE (80+): Positive framing
     if (score >= 80) {
@@ -317,18 +328,28 @@ export class PersonalizedNarrativeBuilder {
       }
     })();
     
-    // Nutrition consequences with branching logic
+    // Nutrition consequences with branching logic + UNDERWEIGHT support
     const nutritionConsequences = (() => {
       const quality = answers.nutritionQuality.toLowerCase();
+      const isUnderweight = bmi < 18.5;
       
       if (quality.includes('always')) {
         // EXCELLENT NUTRITION
+        if (isUnderweight) {
+          return `At ${demographics.age}, your excellent nutrition habits (eating fruits and vegetables daily) provide essential micronutrients and fiber. To support healthy weight gain, focus on adding calorie-dense, nutritious foods like nuts, avocados, whole grains, and protein-rich meals to your diet.`;
+        }
         return `At ${demographics.age}, your basal metabolic rate is already 10-15% lower than in your 30s. Your excellent nutrition habits (eating fruits and vegetables daily) provide essential micronutrients, fiber, and antioxidants that support healthy metabolism and reduce inflammation. This is a major strength—keep it up!`;
       } else if (quality.includes('sometimes')) {
         // MODERATE NUTRITION
+        if (isUnderweight) {
+          return `At ${demographics.age}, eating fruits and vegetables sometimes is good, but to support healthy weight gain, focus on increasing calorie-dense foods: nuts, nut butters, avocados, whole grains, lean proteins, and healthy fats. Aim for 300-500 extra calories daily.`;
+        }
         return `At ${demographics.age}, your basal metabolic rate is already 10-15% lower than in your 30s. Eating fruits and vegetables sometimes is good, but increasing to daily consumption would provide more consistent energy, better digestion, and enhanced nutrient intake to support your metabolism.`;
       } else {
         // POOR NUTRITION
+        if (isUnderweight) {
+          return `At ${demographics.age}, your current eating pattern needs improvement. To gain weight healthily, focus on nutrient-dense, calorie-rich foods: nuts, seeds, avocados, whole grains, lean proteins, and healthy oils. Aim for 5-6 smaller meals daily instead of 3 large ones.`;
+        }
         return `At ${demographics.age}, your basal metabolic rate is already 10-15% lower than in your 30s. ${answers.fastFoodFrequency !== 'rarely' ? `Eating fast food ${answers.fastFoodFrequency} combined with ${answers.mealTiming.toLowerCase()} creates a perfect storm for weight gain. Each fast food meal: 1,200-1,500 calories, 60-80g fat, 2,000mg+ sodium.` : `Your current eating pattern needs improvement. Adding more fruits and vegetables would significantly boost energy, support weight management, and reduce disease risk.`}`;
       }
     })();
@@ -354,12 +375,13 @@ export class PersonalizedNarrativeBuilder {
   }
   
   /**
-   * Build hard truth section with comprehensive BMI × Condition matrix
+   * Build hard truth section with comprehensive BMI × Condition matrix + UNDERWEIGHT support
    */
   private buildHardTruth(demographics: any, bmi: number, riskAnalysis: CompoundRiskAnalysis, medicalConditions: string[] = []): string {
     const avgRisk = (riskAnalysis.diabetesRisk + riskAnalysis.cardiovascularRisk + riskAnalysis.metabolicSyndromeRisk) / 3;
     const weightRange = this.targetCalc.calculateHealthyWeightRange(demographics.height);
     const excessWeight = Math.max(0, demographics.weight - weightRange.max);
+    const deficitWeight = Math.max(0, weightRange.min - demographics.weight);
     
     // Analyze medical conditions
     const conditionAnalysis = this.conditionClassifier.analyzeConditions(medicalConditions);
@@ -371,6 +393,17 @@ export class PersonalizedNarrativeBuilder {
     
     // Determine BMI category
     const bmiCategory = bmi < 18.5 ? 'underweight' : bmi < 25 ? 'normal' : bmi < 30 ? 'overweight' : 'obese';
+    
+    // UNDERWEIGHT: Special handling (different risks)
+    if (bmiCategory === 'underweight') {
+      if (conditionAnalysis.count > 0) {
+        return `With your BMI of ${bmi.toFixed(1)} (underweight) and existing medical conditions, it's important to focus on healthy weight gain under medical supervision. Being underweight can weaken your immune system, reduce bone density, and affect your energy levels. Work with your healthcare provider to develop a safe nutrition plan.${medicalDisclaimer}`;
+      }
+      if (avgRisk >= 30 || demographics.age >= 40) {
+        return `At ${demographics.age} with a BMI of ${bmi.toFixed(1)}, you're ${Math.round(deficitWeight)}kg below the healthy weight range. Being underweight increases your risk of malnutrition, weakened immune system, osteoporosis, and fertility issues. The good news? With proper nutrition and strength training, you can gain ${Math.round(deficitWeight)}-${Math.round(deficitWeight + 3)}kg in a healthy way over 90 days and significantly improve your health.`;
+      }
+      return `You're ${demographics.age} with a BMI of ${bmi.toFixed(1)}. While your lifestyle habits are mostly positive, being ${Math.round(deficitWeight)}kg below the healthy weight range can affect your energy, immunity, and bone health. Focus on nutrient-dense, calorie-rich foods to reach a healthier weight.`;
+    }
     
     // CRITICAL CONDITIONS (Type 1 Diabetes, Heart Condition, or Multiple Serious Conditions)
     if (conditionAnalysis.severity === 'critical' || conditionAnalysis.compoundRisk) {
@@ -437,17 +470,20 @@ export class PersonalizedNarrativeBuilder {
   }
   
   /**
-   * Build priority actions with comprehensive medical condition awareness
+   * Build priority actions with comprehensive medical condition awareness + UNDERWEIGHT support
    */
   private buildPriorityActions(targets: PersonalizedTargets, bmi: number, medicalConditions: string[] = [], hasCriticalConditions: boolean = false): string[] {
     const actions: string[] = [];
     const conditionAnalysis = this.conditionClassifier.analyzeConditions(medicalConditions);
+    const isUnderweight = bmi < 18.5;
     
     // Action 1: Sleep (always safe, but adjust for conditions)
     if (conditionAnalysis.hasDiabetes) {
       actions.push(`Sleep ${targets.sleep.targetMinHours} hours tonight - Critical for blood sugar regulation. Set bedtime alarm, put phone away at 10 PM`);
     } else if (conditionAnalysis.hasHeartCondition) {
       actions.push(`Sleep ${targets.sleep.targetMinHours} hours tonight - Essential for heart recovery. Set bedtime alarm, put phone away at 10 PM`);
+    } else if (isUnderweight) {
+      actions.push(`Sleep ${targets.sleep.targetMinHours} hours tonight - Essential for muscle recovery and healthy weight gain. Set bedtime alarm, put phone away at 10 PM`);
     } else {
       actions.push(`Sleep ${targets.sleep.targetMinHours} hours tonight - Set bedtime alarm, put phone away at 10 PM`);
     }
@@ -465,7 +501,7 @@ export class PersonalizedNarrativeBuilder {
       actions.push(`Drink ${targets.hydration.targetLiters}L water today - Fill bottle in morning, finish by 6 PM`);
     }
     
-    // Action 3: Movement (adjust for medical conditions)
+    // Action 3: Movement (adjust for medical conditions + underweight)
     if (conditionAnalysis.hasHeartCondition) {
       actions.push(`Take a gentle ${targets.steps.targetDaily <= 6000 ? '15' : '20'}-minute walk after lunch - Start slow, consult cardiologist before increasing intensity`);
     } else if (conditionAnalysis.isPregnant) {
@@ -476,8 +512,15 @@ export class PersonalizedNarrativeBuilder {
       actions.push(`Take a ${bmi >= 30 ? '20' : '30'}-minute walk after lunch - Helps lower blood sugar. Check glucose before/after if needed`);
     } else if (conditionAnalysis.hasKidneyIssues || conditionAnalysis.hasLiverIssues) {
       actions.push(`Take a ${bmi >= 30 ? '20' : '25'}-minute gentle walk after lunch - Start slow, gradually increase as tolerated`);
+    } else if (isUnderweight) {
+      actions.push(`Take 20-minute gentle walk after lunch - Light activity supports appetite and muscle building without burning too many calories`);
     } else {
       actions.push(`Take ${bmi >= 30 ? '20' : '30'}-minute walk after lunch - Calendar block it, no excuses`);
+    }
+    
+    // Action 4: Nutrition (UNDERWEIGHT gets special action)
+    if (isUnderweight && !conditionAnalysis.hasDiabetes) {
+      actions.push(`Eat 5-6 small, calorie-dense meals today - Focus on nuts, avocados, nut butter, whole grains, protein shakes. Aim for 300-500 extra calories`);
     }
     
     // Add critical medical disclaimer if needed (for critical conditions or multiple conditions)
