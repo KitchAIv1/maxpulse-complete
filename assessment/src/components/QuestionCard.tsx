@@ -370,10 +370,10 @@ export function QuestionCard({
         <AnimatePresence>
           {selectedAnswer && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
               className="relative z-10 mb-6"
             >
               {/* Q1 Messages (Exercise) */}
