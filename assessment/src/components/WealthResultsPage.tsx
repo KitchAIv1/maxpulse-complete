@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { AssessmentResults } from '../types/assessment';
 import { AIAnalysisSection } from './AIAnalysisSection';
-import { useAIAnalysis } from '../hooks/useAIAnalysis';
+import { useAIAnalysis } from '../services-v1-archived/useAIAnalysis';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
 interface WealthResultsPageProps {

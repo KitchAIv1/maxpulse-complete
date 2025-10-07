@@ -3,7 +3,7 @@ import { Moon, Droplets, Activity, Heart } from 'lucide-react';
 import { AssessmentResults } from '../types/assessment';
 import { EnhancedAIAnalysisSection } from './EnhancedAIAnalysisSection';
 import { HealthMetricsCards } from './HealthMetricsCards';
-import { useAIAnalysis } from '../hooks/useAIAnalysis';
+import { useAIAnalysis } from '../services-v1-archived/useAIAnalysis';
 import { usePersonalDetails } from '../hooks/usePersonalDetails';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 // 🆕 V2 Analysis Engine Imports
@@ -124,7 +124,7 @@ export function HealthInsightsResults({
       isSmoker: false,
       alcoholLevel: 'none' as const,
       stressLevel: 'moderate' as const,
-      checkupFrequency: 'rarely' as const,
+      checkupFrequency: 'rare' as const,
       urgencyLevel: 'moderate' as const
     }
   };

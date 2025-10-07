@@ -10,7 +10,7 @@ import {
   Demographics,
   HealthMetrics 
 } from '../types/aiAnalysis';
-import { EnhancedAIAnalysisManager } from '../services/EnhancedAIAnalysisManager';
+import { EnhancedAIAnalysisManager } from './EnhancedAIAnalysisManager';
 
 interface UseAIAnalysisProps {
   assessmentType: 'health' | 'wealth' | 'hybrid';
