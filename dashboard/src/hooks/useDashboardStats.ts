@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useCommissions } from './useCommissions';
 import { SupabaseAnalyticsManager } from '../services/SupabaseAnalyticsManager';
+import { SupabaseDatabaseManager } from '../services/SupabaseDatabaseManager';
 import { FeatureFlags } from '../utils/featureFlags';
 
 interface DashboardStats {
@@ -151,15 +152,44 @@ export const useDashboardStats = (distributorId: string) => {
         const calculatedStats = calculateStats();
         setStats(calculatedStats);
         
-        // Load enhanced Supabase analytics (if enabled)
+        // Load enhanced Supabase analytics using SAME method as Client Hub
         if (FeatureFlags.useSupabaseAnalytics) {
           try {
-            const enhanced = await analyticsManager.getDashboardStats(distributorId, 30);
-            if (enhanced) {
-              setSupabaseStats(enhanced);
-              if (FeatureFlags.debugMode) {
-                console.log('📊 Enhanced analytics loaded:', enhanced);
+            // Use SupabaseDatabaseManager.getCompletedSessions() - same as Client Hub
+            const databaseManager = new SupabaseDatabaseManager();
+            await databaseManager.initialize();
+            
+            const sessions = await databaseManager.getCompletedSessions(distributorId, {
+              limit: 1000 // Get all sessions for accurate count
+            });
+            
+            // Calculate stats from sessions (aligned with Client Hub logic)
+            const totalAssessments = sessions.length;
+            const completedAssessments = sessions.filter(s => 
+              s.progress_percentage === 100 || s.assessments?.status === 'completed'
+            ).length;
+            const completionRate = totalAssessments > 0 
+              ? (completedAssessments / totalAssessments) * 100 
+              : 0;
+            
+            // Set enhanced stats with accurate session count
+            const enhanced = {
+              assessments: {
+                total: totalAssessments,
+                completed: completedAssessments,
+                completionRate: Math.round(completionRate * 10) / 10,
+                trend: 0 // TODO: Calculate trend in future
               }
+            };
+            
+            setSupabaseStats(enhanced);
+            
+            if (FeatureFlags.debugMode) {
+              console.log('📊 Enhanced analytics loaded from assessment_sessions:', {
+                total: totalAssessments,
+                completed: completedAssessments,
+                completionRate: completionRate.toFixed(1) + '%'
+              });
             }
           } catch (error) {
             console.error('Failed to fetch Supabase analytics:', error);
