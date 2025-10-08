@@ -9,6 +9,7 @@ import { TargetCalculator, PersonalizedTargets } from './TargetCalculator';
 import { ProjectionCalculator, NinetyDayProjection } from './ProjectionCalculator';
 import { PhaseRoadmapGenerator, TransformationRoadmap } from './PhaseRoadmapGenerator';
 import { ConditionSeverityClassifier, ConditionAnalysis } from './ConditionSeverityClassifier';
+import { MentalHealthNarrativeBuilder } from './MentalHealthNarrativeBuilder';
 
 export interface PersonalizedAnalysisInput {
   demographics: {
@@ -48,6 +49,12 @@ export interface PersonalizedAnalysisInput {
     stressLevel: 'low' | 'moderate' | 'high';
     checkupFrequency: 'never' | 'rare' | 'annual' | 'biannual';
     urgencyLevel: 'low' | 'moderate' | 'high';
+    
+    // Mental health variables (h7-h10)
+    energyLevel: 'low' | 'medium' | 'high';
+    mindfulnessPractice: 'never' | 'occasionally' | 'regularly';
+    socialSupport: 'supported' | 'unsupported' | 'mixed';
+    burnoutLevel: 'low' | 'moderate' | 'high';
   };
   // NEW: Medical data for safety and personalization
   medicalData?: {
@@ -86,6 +93,7 @@ export interface PersonalizedAnalysisResult {
     hydration: { quote: string; consequences: string; };
     exercise: { quote: string; consequences: string; };
     nutrition: { quote: string; consequences: string; };
+    mentalHealth: { quote: string; consequences: string; }; // NEW: Mental health breakdown
   };
   hardTruth: string;
   priorityActions: string[];
@@ -101,6 +109,7 @@ export class PersonalizedNarrativeBuilder {
   private projectionCalc = new ProjectionCalculator();
   private roadmapGen = new PhaseRoadmapGenerator();
   private conditionClassifier = new ConditionSeverityClassifier();
+  private mentalHealthBuilder = new MentalHealthNarrativeBuilder(); // NEW: Mental health narrative generator
   
   /**
    * Generate complete personalized analysis with ALL variables
@@ -119,20 +128,31 @@ export class PersonalizedNarrativeBuilder {
     const overallGrade = this.calculateGrade(overallScore);
     
     // Generate analysis components with ALL lifestyle factors + medical conditions
-    const riskAnalysis = this.riskCalc.analyzeCompoundRisk(
-      demographics.age,
-      demographics.weight,
-      demographics.height,
-      healthMetrics.sleep,
-      healthMetrics.hydration,
-      healthMetrics.exercise,
-      demographics.gender,
-      lifestyleFactors.isSmoker,
-      lifestyleFactors.alcoholLevel,
-      lifestyleFactors.stressLevel,
-      lifestyleFactors.checkupFrequency,
+    const riskAnalysis = this.riskCalc.analyzeCompoundRisk({
+      demographics: {
+        age: demographics.age,
+        weight: demographics.weight,
+        height: demographics.height,
+        gender: demographics.gender
+      },
+      healthScores: {
+        sleep: healthMetrics.sleep,
+        hydration: healthMetrics.hydration,
+        exercise: healthMetrics.exercise
+      },
+      lifestyleFactors: {
+        isSmoker: lifestyleFactors.isSmoker,
+        alcoholLevel: lifestyleFactors.alcoholLevel,
+        stressLevel: lifestyleFactors.stressLevel,
+        checkupFrequency: lifestyleFactors.checkupFrequency,
+        // NEW: Mental health factors
+        energyLevel: lifestyleFactors.energyLevel,
+        mindfulnessPractice: lifestyleFactors.mindfulnessPractice,
+        socialSupport: lifestyleFactors.socialSupport,
+        burnoutLevel: lifestyleFactors.burnoutLevel
+      },
       medicalConditions
-    );
+    });
     
     const personalizedTargets = this.targetCalc.calculateAllTargets(
       demographics.age,
@@ -156,7 +176,13 @@ export class PersonalizedNarrativeBuilder {
       overallScore,
       healthMetrics.sleep, // Pass actual sleep score
       healthMetrics.exercise, // Pass actual exercise score
-      healthMetrics.nutrition // Pass actual nutrition score
+      healthMetrics.nutrition, // Pass actual nutrition score
+      { // NEW: Pass mental health factors for adherence adjustment
+        stressLevel: lifestyleFactors.stressLevel,
+        energyLevel: lifestyleFactors.energyLevel,
+        socialSupport: lifestyleFactors.socialSupport,
+        burnoutLevel: lifestyleFactors.burnoutLevel
+      }
     );
     
     const transformationRoadmap = this.roadmapGen.generateRoadmap(
@@ -164,12 +190,25 @@ export class PersonalizedNarrativeBuilder {
       personalizedTargets,
       answers.fastFoodFrequency,
       lifestyleFactors.urgencyLevel,
-      medicalConditions
+      medicalConditions,
+      { // NEW: Pass mental health factors for Phase 1 actions
+        stressLevel: lifestyleFactors.stressLevel,
+        mindfulnessPractice: lifestyleFactors.mindfulnessPractice,
+        socialSupport: lifestyleFactors.socialSupport,
+        burnoutLevel: lifestyleFactors.burnoutLevel
+      }
     );
     
     // Generate narrative sections
     const currentReality = this.buildCurrentReality(demographics, bmi, bmiCategory, overallScore);
-    const lifestyleBreakdown = this.buildLifestyleBreakdown(demographics, healthMetrics, answers, personalizedTargets);
+    const lifestyleBreakdown = this.buildLifestyleBreakdown(
+      demographics, 
+      healthMetrics, 
+      answers, 
+      personalizedTargets,
+      lifestyleFactors, // NEW: Pass lifestyle factors for mental health
+      riskAnalysis.mentalHealthRisk // NEW: Pass mental health risk
+    );
     const hardTruth = this.buildHardTruth(demographics, bmi, riskAnalysis, medicalConditions);
     const priorityActions = this.buildPriorityActions(personalizedTargets, bmi, medicalConditions, hasCriticalConditions);
     
@@ -268,8 +307,16 @@ export class PersonalizedNarrativeBuilder {
   
   /**
    * Build lifestyle breakdown with answer quotes and score-based branching
+   * NEW: Includes mental health breakdown
    */
-  private buildLifestyleBreakdown(demographics: any, metrics: any, answers: any, targets: PersonalizedTargets): any {
+  private buildLifestyleBreakdown(
+    demographics: any, 
+    metrics: any, 
+    answers: any, 
+    targets: PersonalizedTargets,
+    lifestyleFactors: any, // NEW: For mental health factors
+    mentalHealthRisk: number // NEW: Mental health risk score
+  ): any {
     const bmi = this.riskCalc.calculateBMI(demographics.weight, demographics.height);
     
     // Sleep consequences with branching logic
@@ -367,6 +414,17 @@ export class PersonalizedNarrativeBuilder {
       }
     })();
     
+    // Mental health breakdown (NEW)
+    const mentalHealthBreakdown = this.mentalHealthBuilder.buildMentalHealthBreakdown(
+      lifestyleFactors.stressLevel,
+      lifestyleFactors.energyLevel,
+      lifestyleFactors.mindfulnessPractice,
+      lifestyleFactors.socialSupport,
+      lifestyleFactors.burnoutLevel,
+      mentalHealthRisk,
+      bmi
+    );
+    
     return {
       sleep: {
         quote: `You told us: You sleep ${answers.sleepDuration}, wake up feeling ${answers.sleepQuality.toLowerCase()}, and ${answers.sleepIssues.toLowerCase()}`,
@@ -383,7 +441,8 @@ export class PersonalizedNarrativeBuilder {
       nutrition: {
         quote: `You told us: You eat fruits and vegetables ${answers.nutritionQuality.toLowerCase()}`,
         consequences: nutritionConsequences
-      }
+      },
+      mentalHealth: mentalHealthBreakdown // NEW: Mental health section
     };
   }
   

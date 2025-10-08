@@ -299,6 +299,7 @@ export class ProjectionCalculator {
   /**
    * Generate complete 90-day projection
    * FIX: Pass actual current energy score and calculate improvements properly
+   * NEW: Includes mental health factors for realistic adherence rate adjustments
    */
   calculateNinetyDayProjection(
     currentWeight: number,
@@ -309,12 +310,44 @@ export class ProjectionCalculator {
     currentHydration: number,
     targetHydration: number,
     currentHealthScore: number,
-    currentEnergyScore: number = 3, // NEW: Accept actual energy score
-    currentExerciseScore: number = 3, // NEW: Accept actual exercise score
-    currentNutritionScore: number = 3 // NEW: Accept actual nutrition score
+    currentEnergyScore: number = 3, // Accept actual energy score
+    currentExerciseScore: number = 3, // Accept actual exercise score
+    currentNutritionScore: number = 3, // Accept actual nutrition score
+    mentalHealthFactors?: { // NEW: Mental health for adherence adjustment
+      stressLevel: 'low' | 'moderate' | 'high';
+      energyLevel: 'low' | 'medium' | 'high';
+      socialSupport: 'supported' | 'unsupported' | 'mixed';
+      burnoutLevel: 'low' | 'moderate' | 'high';
+    }
   ): NinetyDayProjection {
-    // Calculate weight and BMI projections
-    const weightProj = this.calculateWeightProjection(currentWeight, currentBMI);
+    // NEW: Calculate realistic adherence rate based on mental health
+    let adherenceRate = 0.65; // Default 65% adherence (industry standard)
+    
+    if (mentalHealthFactors) {
+      // Positive factors increase adherence
+      if (mentalHealthFactors.energyLevel === 'high') adherenceRate += 0.05; // +5%
+      if (mentalHealthFactors.socialSupport === 'supported') adherenceRate += 0.10; // +10%
+      if (mentalHealthFactors.stressLevel === 'low') adherenceRate += 0.05; // +5%
+      if (mentalHealthFactors.burnoutLevel === 'low') adherenceRate += 0.05; // +5%
+      
+      // Negative factors decrease adherence
+      if (mentalHealthFactors.energyLevel === 'low') adherenceRate -= 0.10; // -10%
+      if (mentalHealthFactors.socialSupport === 'unsupported') adherenceRate -= 0.10; // -10%
+      if (mentalHealthFactors.stressLevel === 'high') adherenceRate -= 0.05; // -5%
+      if (mentalHealthFactors.burnoutLevel === 'high') adherenceRate -= 0.15; // -15%
+      
+      // Cap between 40% and 80% (realistic range)
+      adherenceRate = Math.min(Math.max(adherenceRate, 0.40), 0.80);
+    }
+    
+    // Determine adherence quality for weight calculation
+    const adherenceQuality: 'low' | 'moderate' | 'high' = 
+      adherenceRate >= 0.70 ? 'high' : 
+      adherenceRate >= 0.55 ? 'moderate' : 
+      'low';
+    
+    // Calculate weight and BMI projections with adjusted adherence
+    const weightProj = this.calculateWeightProjection(currentWeight, currentBMI, adherenceQuality);
     const bmiProj = this.calculateBMIProjection(currentBMI, weightProj.change, height);
 
     // Calculate sleep projection

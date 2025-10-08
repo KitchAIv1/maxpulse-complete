@@ -125,7 +125,12 @@ export function HealthInsightsResults({
       alcoholLevel: 'none' as const,
       stressLevel: 'moderate' as const,
       checkupFrequency: 'rare' as const,
-      urgencyLevel: 'moderate' as const
+      urgencyLevel: 'moderate' as const,
+      // Mental health defaults
+      energyLevel: 'medium' as const,
+      mindfulnessPractice: 'occasionally' as const,
+      socialSupport: 'mixed' as const,
+      burnoutLevel: 'moderate' as const
     }
   };
   

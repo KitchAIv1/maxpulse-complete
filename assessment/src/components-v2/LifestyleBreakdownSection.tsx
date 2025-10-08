@@ -18,6 +18,7 @@ interface LifestyleBreakdownSectionProps {
     hydration: LifestyleArea;
     exercise: LifestyleArea;
     nutrition: LifestyleArea;
+    mentalHealth: LifestyleArea; // NEW: Mental health breakdown
   };
 }
 
@@ -49,6 +50,12 @@ export const LifestyleBreakdownSection: React.FC<LifestyleBreakdownSectionProps>
       title: 'Nutrition',
       emoji: '🥗',
       data: lifestyleBreakdown.nutrition
+    },
+    {
+      key: 'mentalHealth', // NEW
+      title: 'Mental & Emotional Health',
+      emoji: '🧠',
+      data: lifestyleBreakdown.mentalHealth
     }
   ];
 
