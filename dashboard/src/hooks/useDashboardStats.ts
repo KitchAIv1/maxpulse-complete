@@ -163,22 +163,123 @@ export const useDashboardStats = (distributorId: string) => {
               limit: 1000 // Get all sessions for accurate count
             });
             
-            // Calculate stats from sessions (aligned with Client Hub logic)
+            // Calculate current month boundaries
+            const now = new Date();
+            const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+            const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).getTime();
+            
+            // Filter sessions by month
+            const currentMonthSessions = sessions.filter(s => 
+              new Date(s.created_at).getTime() >= currentMonthStart
+            );
+            const previousMonthSessions = sessions.filter(s => {
+              const createdTime = new Date(s.created_at).getTime();
+              return createdTime >= previousMonthStart && createdTime <= previousMonthEnd;
+            });
+            
+            // Calculate assessment metrics
             const totalAssessments = sessions.length;
+            const currentMonthAssessments = currentMonthSessions.length;
+            const previousMonthAssessments = previousMonthSessions.length;
+            
             const completedAssessments = sessions.filter(s => 
               s.progress_percentage === 100 || s.assessments?.status === 'completed'
             ).length;
+            
             const completionRate = totalAssessments > 0 
               ? (completedAssessments / totalAssessments) * 100 
               : 0;
             
-            // Set enhanced stats with accurate session count
+            const assessmentTrend = previousMonthAssessments > 0
+              ? ((currentMonthAssessments - previousMonthAssessments) / previousMonthAssessments) * 100
+              : 0;
+            
+            // Calculate revenue metrics from commissions
+            const currentMonthRevenue = commissions
+              ?.filter(c => new Date(c.createdAt).getTime() >= currentMonthStart)
+              ?.reduce((sum, c) => sum + c.saleAmount, 0) || 0;
+            
+            const previousMonthRevenue = commissions
+              ?.filter(c => {
+                const date = new Date(c.createdAt).getTime();
+                return date >= previousMonthStart && date <= previousMonthEnd;
+              })
+              ?.reduce((sum, c) => sum + c.saleAmount, 0) || 0;
+            
+            const revenueTrend = previousMonthRevenue > 0
+              ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
+              : 0;
+            
+            // Calculate client metrics (unique clients)
+            const uniqueClients = new Set(
+              sessions.map(s => s.session_data?.customer_email || s.session_data?.customer_name)
+                .filter(Boolean)
+            ).size;
+            
+            const currentMonthClients = new Set(
+              currentMonthSessions.map(s => s.session_data?.customer_email || s.session_data?.customer_name)
+                .filter(Boolean)
+            ).size;
+            
+            const previousMonthClients = new Set(
+              previousMonthSessions.map(s => s.session_data?.customer_email || s.session_data?.customer_name)
+                .filter(Boolean)
+            ).size;
+            
+            const clientTrend = previousMonthClients > 0
+              ? ((currentMonthClients - previousMonthClients) / previousMonthClients) * 100
+              : 0;
+            
+            // Calculate conversion rate (commissions / assessments)
+            const currentMonthPurchases = commissions
+              ?.filter(c => new Date(c.createdAt).getTime() >= currentMonthStart)?.length || 0;
+            
+            const previousMonthPurchases = commissions
+              ?.filter(c => {
+                const date = new Date(c.createdAt).getTime();
+                return date >= previousMonthStart && date <= previousMonthEnd;
+              })?.length || 0;
+            
+            const currentConversion = currentMonthAssessments > 0
+              ? (currentMonthPurchases / currentMonthAssessments) * 100
+              : 0;
+            
+            const previousConversion = previousMonthAssessments > 0
+              ? (previousMonthPurchases / previousMonthAssessments) * 100
+              : 0;
+            
+            const conversionTrend = previousConversion > 0
+              ? ((currentConversion - previousConversion) / previousConversion) * 100
+              : 0;
+            
+            // Set enhanced stats with accurate metrics
             const enhanced = {
               assessments: {
                 total: totalAssessments,
+                current: currentMonthAssessments,
+                previous: previousMonthAssessments,
                 completed: completedAssessments,
                 completionRate: Math.round(completionRate * 10) / 10,
-                trend: 0 // TODO: Calculate trend in future
+                trend: Math.round(assessmentTrend * 10) / 10
+              },
+              revenue: {
+                total: Math.round(currentMonthRevenue),
+                current: Math.round(currentMonthRevenue),
+                previous: Math.round(previousMonthRevenue),
+                trend: Math.round(revenueTrend * 10) / 10
+              },
+              clients: {
+                total: uniqueClients,
+                current: currentMonthClients,
+                previous: previousMonthClients,
+                trend: Math.round(clientTrend * 10) / 10
+              },
+              conversion: {
+                rate: Math.round(currentConversion * 10) / 10,
+                current: Math.round(currentConversion * 10) / 10,
+                previous: Math.round(previousConversion * 10) / 10,
+                trend: Math.round(conversionTrend * 10) / 10
               }
             };
             
@@ -186,9 +287,10 @@ export const useDashboardStats = (distributorId: string) => {
             
             if (FeatureFlags.debugMode) {
               console.log('📊 Enhanced analytics loaded from assessment_sessions:', {
-                total: totalAssessments,
-                completed: completedAssessments,
-                completionRate: completionRate.toFixed(1) + '%'
+                assessments: `${totalAssessments} total (${currentMonthAssessments} this month, trend: ${assessmentTrend.toFixed(1)}%)`,
+                revenue: `$${currentMonthRevenue} (trend: ${revenueTrend.toFixed(1)}%)`,
+                clients: `${uniqueClients} total (${currentMonthClients} this month, trend: ${clientTrend.toFixed(1)}%)`,
+                conversion: `${currentConversion.toFixed(1)}% (trend: ${conversionTrend.toFixed(1)}%)`
               });
             }
           } catch (error) {

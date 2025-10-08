@@ -109,17 +109,17 @@ export function DashboardOverview({
             <Target className="h-6 w-6 lg:h-8 lg:w-8 text-brand-primary" />
           </div>
           <div className="flex items-center mt-2">
-            {!statsLoading && (supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 ? (
+            {!statsLoading && (supabaseStats?.assessments?.trend ?? dashboardData?.monthlyStats.assessments.trend ?? 0) >= 0 ? (
               <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-emerald-600 mr-1" />
             ) : (
               <TrendingDown className="h-3 w-3 lg:h-4 lg:w-4 text-red-600 mr-1" />
             )}
             <span className={`text-xs lg:text-sm ${
-              !statsLoading && (supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0) >= 0 
+              !statsLoading && (supabaseStats?.assessments?.trend ?? dashboardData?.monthlyStats.assessments.trend ?? 0) >= 0 
                 ? 'text-emerald-600' 
                 : 'text-red-600'
             }`}>
-              {statsLoading ? '...' : `${Math.abs(supabaseStats?.assessments?.trend || dashboardData?.monthlyStats.assessments.trend || 0).toFixed(1)}%`}
+              {statsLoading ? '...' : `${Math.abs(supabaseStats?.assessments?.trend ?? dashboardData?.monthlyStats.assessments.trend ?? 0).toFixed(1)}%`}
             </span>
           </div>
         </Card>
@@ -135,17 +135,17 @@ export function DashboardOverview({
             <DollarSign className="h-6 w-6 lg:h-8 lg:w-8 text-emerald-600" />
           </div>
           <div className="flex items-center mt-2">
-            {!statsLoading && (supabaseStats?.revenue?.trend || dashboardData?.monthlyStats.revenue.trend || 0) >= 0 ? (
+            {!statsLoading && (supabaseStats?.revenue?.trend ?? dashboardData?.monthlyStats.revenue.trend ?? 0) >= 0 ? (
               <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-emerald-600 mr-1" />
             ) : (
               <TrendingDown className="h-3 w-3 lg:h-4 lg:w-4 text-red-600 mr-1" />
             )}
             <span className={`text-xs lg:text-sm ${
-              !statsLoading && (supabaseStats?.revenue?.trend || dashboardData?.monthlyStats.revenue.trend || 0) >= 0 
+              !statsLoading && (supabaseStats?.revenue?.trend ?? dashboardData?.monthlyStats.revenue.trend ?? 0) >= 0 
                 ? 'text-emerald-600' 
                 : 'text-red-600'
             }`}>
-              {statsLoading ? '...' : `${Math.abs(supabaseStats?.revenue?.trend || dashboardData?.monthlyStats.revenue.trend || 0).toFixed(1)}%`}
+              {statsLoading ? '...' : `${Math.abs(supabaseStats?.revenue?.trend ?? dashboardData?.monthlyStats.revenue.trend ?? 0).toFixed(1)}%`}
             </span>
           </div>
         </Card>
@@ -161,17 +161,17 @@ export function DashboardOverview({
             <Users className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" />
           </div>
           <div className="flex items-center mt-2">
-            {!statsLoading && (dashboardData?.monthlyStats.clients.trend || 0) >= 0 ? (
+            {!statsLoading && (supabaseStats?.clients?.trend ?? dashboardData?.monthlyStats.clients.trend ?? 0) >= 0 ? (
               <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-emerald-600 mr-1" />
             ) : (
               <TrendingDown className="h-3 w-3 lg:h-4 lg:w-4 text-red-600 mr-1" />
             )}
             <span className={`text-xs lg:text-sm ${
-              !statsLoading && (dashboardData?.monthlyStats.clients.trend || 0) >= 0 
+              !statsLoading && (supabaseStats?.clients?.trend ?? dashboardData?.monthlyStats.clients.trend ?? 0) >= 0 
                 ? 'text-emerald-600' 
                 : 'text-red-600'
             }`}>
-              {statsLoading ? '...' : `${Math.abs(dashboardData?.monthlyStats.clients.trend || 0).toFixed(1)}%`}
+              {statsLoading ? '...' : `${Math.abs(supabaseStats?.clients?.trend ?? dashboardData?.monthlyStats.clients.trend ?? 0).toFixed(1)}%`}
             </span>
           </div>
         </Card>
@@ -181,23 +181,23 @@ export function DashboardOverview({
             <div>
               <p className="text-xs lg:text-sm text-gray-700">Conversion Rate</p>
               <p className="text-xl lg:text-2xl text-gray-900">
-                {statsLoading ? '...' : `${(supabaseStats?.assessments?.completionRate || dashboardData?.monthlyStats.conversion.current || fallbackData.monthlyStats.conversion.current).toFixed(1)}%`}
+                {statsLoading ? '...' : `${(supabaseStats?.conversion?.rate ?? dashboardData?.monthlyStats.conversion.current ?? fallbackData.monthlyStats.conversion.current).toFixed(1)}%`}
               </p>
             </div>
             <TrendingUp className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600" />
           </div>
           <div className="flex items-center mt-2">
-            {!statsLoading && (dashboardData?.monthlyStats.conversion.trend || 0) >= 0 ? (
+            {!statsLoading && (supabaseStats?.conversion?.trend ?? dashboardData?.monthlyStats.conversion.trend ?? 0) >= 0 ? (
               <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-emerald-600 mr-1" />
             ) : (
               <TrendingDown className="h-3 w-3 lg:h-4 lg:w-4 text-red-600 mr-1" />
             )}
             <span className={`text-xs lg:text-sm ${
-              !statsLoading && (dashboardData?.monthlyStats.conversion.trend || 0) >= 0 
+              !statsLoading && (supabaseStats?.conversion?.trend ?? dashboardData?.monthlyStats.conversion.trend ?? 0) >= 0 
                 ? 'text-emerald-600' 
                 : 'text-red-600'
             }`}>
-              {statsLoading ? '...' : `${Math.abs(dashboardData?.monthlyStats.conversion.trend || 0).toFixed(1)}%`}
+              {statsLoading ? '...' : `${Math.abs(supabaseStats?.conversion?.trend ?? dashboardData?.monthlyStats.conversion.trend ?? 0).toFixed(1)}%`}
             </span>
           </div>
         </Card>
