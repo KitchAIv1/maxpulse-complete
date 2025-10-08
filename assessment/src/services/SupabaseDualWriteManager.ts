@@ -202,6 +202,29 @@ export class SupabaseDualWriteManager {
         return false;
       }
 
+      // Step 3: Update session progress in assessment_sessions table
+      // This ensures progress_percentage is always accurate for Client Hub queries
+      const { error: updateError } = await supabase
+        .from('assessment_sessions')
+        .update({
+          progress_percentage: data.progress,
+          current_question_index: data.currentStep - 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sessionUuid);
+
+      if (updateError) {
+        console.error('⚠️ Failed to update session progress:', updateError);
+        // Don't fail the entire operation - tracking event was written successfully
+        // Progress update is enhancement, not critical
+      } else if (FeatureFlags.debugMode) {
+        console.log('✅ Updated session progress:', {
+          sessionUuid,
+          progress: data.progress,
+          currentStep: data.currentStep
+        });
+      }
+
       if (FeatureFlags.debugMode) {
         console.log('✅ Supabase write successful for session:', data.sessionId, 'UUID:', sessionUuid);
       }

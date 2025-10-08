@@ -101,19 +101,30 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
       console.log(`✅ Resolved ${distributorId} to UUID: ${distributorUuid}`);
     }
     
-    // Get assessment statistics from assessment_tracking table
-    const { data: assessmentStats, error: assessmentError } = await supabase
-      .from('assessment_tracking')
-      .select('id, session_id, event_type, event_data, timestamp')
-      .eq('distributor_id', distributorUuid)
-      .gte('timestamp', periodStart);
+    // Get assessment statistics from assessment_sessions table (aligned with Client Hub)
+    // Query assessment_sessions directly for consistency and performance
+    const { data: sessionStats, error: sessionError } = await supabase
+      .from('assessment_sessions')
+      .select(`
+        id,
+        session_id,
+        progress_percentage,
+        created_at,
+        updated_at,
+        assessments!inner (
+          distributor_id,
+          status,
+          completed_at
+        )
+      `)
+      .eq('assessments.distributor_id', distributorUuid);
     
-    console.log(`🔍 Assessment query result: ${assessmentStats?.length || 0} records found`);
-    if (assessmentError) {
-      console.error('❌ Assessment query error:', assessmentError);
+    console.log(`🔍 Assessment sessions query result: ${sessionStats?.length || 0} sessions found`);
+    if (sessionError) {
+      console.error('❌ Assessment sessions query error:', sessionError);
     }
-    if (assessmentStats?.length > 0) {
-      console.log('📊 Sample assessment record:', assessmentStats[0]);
+    if (sessionStats?.length > 0) {
+      console.log('📊 Sample session record:', sessionStats[0]);
     }
     
     // Get commission statistics (table may not exist yet, handle gracefully)
@@ -156,16 +167,16 @@ async function getDashboardStats(supabase: any, distributorId: string, period: n
       linkStats = [];
     }
     
-    // Calculate metrics from assessment_tracking data
-    // 🎯 FIX: Use session_id UUID column to count unique assessment sessions
-    const uniqueSessions = new Set(
-      assessmentStats
-        ?.filter(a => a.session_id !== null)
-        ?.map(a => a.session_id) || []
-    ).size;
+    // Calculate metrics from assessment_sessions data (aligned with Client Hub)
+    // Count all sessions (all-time) for consistency with Client Hub count
+    const uniqueSessions = sessionStats?.length || 0;
     
-    console.log(`🎯 DEBUG: Unique sessions counted: ${uniqueSessions} from ${assessmentStats?.length || 0} records`);
-    const completedAssessments = assessmentStats?.filter(a => a.event_type === 'assessment_completed').length || 0;
+    console.log(`🎯 DEBUG: Total sessions counted: ${uniqueSessions} (all-time, matching Client Hub)`);
+    
+    // Count completed assessments from assessments table status
+    const completedAssessments = sessionStats?.filter(s => 
+      s.assessments?.status === 'completed' || s.progress_percentage === 100
+    ).length || 0;
     const totalRevenue = commissionStats?.reduce((sum, c) => sum + (c.commission_amount || 0), 0) || 0;
     const pendingCommissions = commissionStats?.filter(c => c.status === 'pending').length || 0;
     

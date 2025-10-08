@@ -305,6 +305,76 @@ export class SupabaseDatabaseManager {
   }
 
   /**
+   * Get completed assessment sessions from assessment_sessions table
+   * This is the CORRECT query for Client Hub (not assessment_tracking events)
+   * 
+   * @param distributorId - The distributor code (not UUID)
+   * @param options - Query options for filtering and pagination
+   * @returns Array of session records with embedded assessments data
+   */
+  async getCompletedSessions(
+    distributorId: string,
+    options: {
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<any[]> {
+    if (!this.isInitialized) {
+      return [];
+    }
+
+    try {
+      // Resolve distributor code to UUID
+      const distributorUuid = await this.resolveDistributorId(distributorId);
+      if (!distributorUuid) {
+        console.error('❌ Cannot fetch sessions: Distributor not found:', distributorId);
+        return [];
+      }
+
+      // Query assessment_sessions with JOIN to assessments for distributor filtering
+      const { data, error } = await supabase
+        .from('assessment_sessions')
+        .select(`
+          id,
+          session_id,
+          progress_percentage,
+          session_data,
+          updated_at,
+          created_at,
+          age,
+          gender,
+          bmi,
+          assessments!inner (
+            distributor_id,
+            assessment_type,
+            status,
+            completed_at
+          )
+        `)
+        .eq('assessments.distributor_id', distributorUuid)
+        .order('updated_at', { ascending: false })
+        .range(options.offset || 0, (options.offset || 0) + (options.limit || 100) - 1);
+
+      if (error) {
+        console.error('❌ Error fetching assessment sessions:', error);
+        return [];
+      }
+
+      const result = data || [];
+
+      if (FeatureFlags.debugMode) {
+        console.log('📊 Fetched assessment sessions:', result.length, 'sessions');
+      }
+
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error in getCompletedSessions:', error);
+      return [];
+    }
+  }
+
+  /**
    * Handle commission database updates
    */
   private handleCommissionUpdate(payload: any): void {
