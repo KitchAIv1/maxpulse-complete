@@ -301,11 +301,23 @@ CREATE TABLE assessment_tracking (
 
 ---
 
+## ✅ Progress Percentage Backfill (Complete)
+
+**Issue:** Existing 42 sessions had `progress_percentage = 0` (stale data from before Phase 2)
+
+**Solution:** Created and ran one-time backfill script
+
+**Results:**
+- ✅ 43 sessions successfully updated
+- ✅ 0 errors
+- ✅ Progress ranges from 13% to 100%
+- ✅ Client Hub and Overview now show accurate progress percentages
+
+**Script:** `npm run backfill:progress` (already run, no need to run again)
+
 ## 🚨 Known Limitations
 
-1. **Existing 42 sessions** have `progress_percentage = 0` (stale data from before Phase 2)
-   - **Impact:** Only affects existing sessions, new assessments will be accurate
-   - **Solution:** Optional SQL backfill script (can run anytime, not critical)
+None! All issues have been resolved.
    
 2. **Session data in JSONB** requires extraction
    - **Impact:** Slightly slower than top-level columns (~10ms overhead)
