@@ -6,15 +6,18 @@
   "scripts": {
     "build": "npm run build:dashboard && npm run build:assessment && npm run copy:builds",
     "build:dashboard": "cd dashboard && npm install && npm run build",
-    "build:assessment": "cd assessment && npm install && npm run build", 
+    "build:assessment": "cd assessment && npm install && npm run build",
     "copy:builds": "mkdir -p dist/dashboard dist/assessment && cp -r dashboard/dist/* dist/dashboard/ && cp -r assessment/dist/* dist/assessment/",
     "dev": "concurrently \"npm run dev:dashboard\" \"npm run dev:assessment\"",
     "dev:dashboard": "cd dashboard && npm run dev",
     "dev:assessment": "cd assessment && npm run dev",
-    "install:all": "npm install && cd dashboard && npm install && cd ../assessment && npm install"
+    "install:all": "npm install && cd dashboard && npm install && cd ../assessment && npm install",
+    "backfill:progress": "node backfill-progress-percentages.js"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@supabase/supabase-js": "^2.74.0",
+    "concurrently": "^8.2.2",
+    "dotenv": "^17.2.3"
   },
   "workspaces": [
     "dashboard",
