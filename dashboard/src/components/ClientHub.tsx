@@ -147,15 +147,15 @@ export function ClientHub({ user }: ClientHubProps) {
   // ✅ REMOVED: All localStorage functions - dashboard is now 100% database-driven
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 lg:p-6 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl text-gray-900 flex items-center gap-3">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Users className="h-8 w-8 text-blue-600" />
             Client Hub
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 mt-2 text-base">
             Manage your clients and track assessment progress in real-time
           </p>
         </div>
@@ -163,16 +163,20 @@ export function ClientHub({ user }: ClientHubProps) {
         <div className="flex items-center gap-3">
           <Button 
             onClick={loadClientData} 
-            variant="outline" 
+            variant="ghost" 
             size="sm"
             disabled={isLoading}
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           {/* ✅ REMOVED: Test LIVE button - using pure database-driven real-time tracking */}
           {/* ✅ REMOVED: Clean Old Data button - no localStorage to clean */}
-          <Button onClick={() => setShowAddClient(true)}>
+          <Button 
+            onClick={() => setShowAddClient(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all"
+          >
             <UserPlus className="h-4 w-4 mr-2" />
             Add Client
           </Button>

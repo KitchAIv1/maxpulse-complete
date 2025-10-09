@@ -41,48 +41,56 @@ export function ClientStats({ clients, totalCount, isLoading }: ClientStatsProps
   const highPriorityCount = clients.filter(c => c.priority === 'high').length;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
       {/* Total Clients - Shows ALL sessions, not just current page */}
-      <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+      <div className="group bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">Total Clients</p>
-            <p className="text-2xl font-bold text-gray-900">{displayTotalCount}</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Total Clients</p>
+            <p className="text-3xl font-bold text-gray-900">{displayTotalCount}</p>
           </div>
-          <Users className="h-8 w-8 text-blue-600" />
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+            <Users className="h-6 w-6 text-white" />
+          </div>
         </div>
       </div>
       
       {/* Live Now */}
-      <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+      <div className="group bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-300 cursor-pointer">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">Live Now</p>
-            <p className="text-2xl font-bold text-green-600">{liveCount}</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">Live Now</p>
+            <p className="text-3xl font-bold text-green-600">{liveCount}</p>
           </div>
-          <Activity className="h-8 w-8 text-green-600" />
+          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+            <Activity className="h-6 w-6 text-white" />
+          </div>
         </div>
       </div>
       
       {/* In Assessment */}
-      <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+      <div className="group bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all duration-300 cursor-pointer">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">In Assessment</p>
-            <p className="text-2xl font-bold text-blue-600">{inAssessmentCount}</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">In Assessment</p>
+            <p className="text-3xl font-bold text-purple-600">{inAssessmentCount}</p>
           </div>
-          <Clock className="h-8 w-8 text-blue-600" />
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+            <Clock className="h-6 w-6 text-white" />
+          </div>
         </div>
       </div>
       
       {/* High Priority */}
-      <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
+      <div className="group bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-300 cursor-pointer">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">High Priority</p>
-            <p className="text-2xl font-bold text-orange-600">{highPriorityCount}</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">High Priority</p>
+            <p className="text-3xl font-bold text-orange-600">{highPriorityCount}</p>
           </div>
-          <Target className="h-8 w-8 text-orange-600" />
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300">
+            <Target className="h-6 w-6 text-white" />
+          </div>
         </div>
       </div>
     </div>

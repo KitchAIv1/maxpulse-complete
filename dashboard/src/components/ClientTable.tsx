@@ -110,7 +110,7 @@ export function ClientTable({
             <tbody>
               {[...Array(5)].map((_, index) => (
                 <tr key={index} className="border-b">
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       <Skeleton className="w-10 h-10 rounded-full" />
                       <div className="flex-1">
@@ -120,10 +120,10 @@ export function ClientTable({
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <Skeleton className="h-6 w-16 rounded-full" />
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
                       <Skeleton className="h-4 w-4 rounded" />
                       <div>
@@ -132,7 +132,7 @@ export function ClientTable({
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
                       <Skeleton className="h-4 w-4 rounded" />
                       <div>
@@ -141,19 +141,19 @@ export function ClientTable({
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <div>
                       <Skeleton className="h-4 w-16 mb-1" />
                       <Skeleton className="h-3 w-12" />
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <Skeleton className="h-6 w-14 rounded-full" />
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <Skeleton className="h-4 w-20" />
                   </td>
-                  <td className="p-4">
+                  <td className="px-6 py-5">
                     <div className="flex justify-end gap-2">
                       <Skeleton className="h-8 w-8 rounded" />
                       <Skeleton className="h-8 w-8 rounded" />
@@ -199,25 +199,25 @@ export function ClientTable({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
             <tr>
-              <th className="text-left p-4 font-medium text-gray-900">Client</th>
-              <th className="text-left p-4 font-medium text-gray-900">Status</th>
-              <th className="text-left p-4 font-medium text-gray-900">Assessment</th>
-              <th className="text-left p-4 font-medium text-gray-900">Purchase/Action</th>
-              <th className="text-left p-4 font-medium text-gray-900">Value</th>
-              <th className="text-left p-4 font-medium text-gray-900">Priority</th>
-              <th className="text-left p-4 font-medium text-gray-900">Last Contact</th>
-              <th className="text-right p-4 font-medium text-gray-900">Actions</th>
+              <th className="text-left px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Client</th>
+              <th className="text-left px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Status</th>
+              <th className="text-left px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Assessment</th>
+              <th className="text-left px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Purchase/Action</th>
+              <th className="text-left px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Value</th>
+              <th className="text-left px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Priority</th>
+              <th className="text-left px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Last Contact</th>
+              <th className="text-right px-6 py-4 font-semibold text-sm text-gray-700 uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {clients.map((client) => (
-              <tr key={client.id} className="border-b hover:bg-gray-50 transition-colors">
-                <td className="p-4">
+              <tr key={client.id} className="hover:bg-blue-50/50 transition-colors duration-150">
+                <td className="px-6 py-5">
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -242,13 +242,13 @@ export function ClientTable({
                   </div>
                 </td>
                 
-                <td className="p-4">
+                <td className="px-6 py-5">
                   <Badge className={getStatusColor(client.status)} variant="secondary">
                     {client.status}
                   </Badge>
                 </td>
                 
-                <td className="p-4">
+                <td className="px-6 py-5">
                   <div className="flex items-center gap-2">
                     {getAssessmentStatusIcon(client)}
                     {client.currentAssessment ? (
@@ -274,7 +274,7 @@ export function ClientTable({
                 </td>
                 
                 {/* Purchase/Action Column */}
-                <td className="p-4">
+                <td className="px-6 py-5">
                   {(() => {
                     // Get purchase data for this client's session
                     const sessionId = client.currentAssessment?.code || 
@@ -332,7 +332,7 @@ export function ClientTable({
                   })()}
                 </td>
                 
-                <td className="p-4">
+                <td className="px-6 py-5">
                   <div>
                     <p className="text-sm font-medium text-gray-900">
                       ${client.value.toLocaleString()}
@@ -341,17 +341,17 @@ export function ClientTable({
                   </div>
                 </td>
                 
-                <td className="p-4">
+                <td className="px-6 py-5">
                   <Badge className={getPriorityColor(client.priority)} variant="secondary">
                     {client.priority}
                   </Badge>
                 </td>
                 
-                <td className="p-4">
+                <td className="px-6 py-5">
                   <p className="text-sm text-gray-900">{client.lastContact}</p>
                 </td>
                 
-                <td className="p-4">
+                <td className="px-6 py-5">
                   <div className="flex justify-end gap-2">
                     <Button
                       variant="ghost"
