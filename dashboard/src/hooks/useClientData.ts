@@ -276,7 +276,21 @@ export function useClientData(
       }
       
       setIsLoading(false);
-  }, [distributorId, filters, getPurchaseBySession, getPurchaseByClientName]);
+  }, [
+    distributorId, 
+    filters?.page,
+    filters?.pageSize,
+    filters?.dateRange,
+    filters?.assessmentType,
+    filters?.status,
+    filters?.progressRange,
+    filters?.scoreGrade,
+    filters?.searchQuery,
+    filters?.sortBy,
+    filters?.sortOrder,
+    getPurchaseBySession, 
+    getPurchaseByClientName
+  ]);
 
   // Update the ref whenever loadClientData changes
   loadClientDataRef.current = loadClientData;

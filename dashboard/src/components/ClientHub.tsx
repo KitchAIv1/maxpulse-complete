@@ -7,10 +7,14 @@ import { useCommissions } from '../hooks/useCommissions';
 import { useSupabaseSubscriptions } from '../hooks/useSupabaseSubscriptions';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useClientData, type UnifiedClient, type AssessmentSession, type TrackingEvent } from '../hooks/useClientData';
+import { useClientHubFilters } from '../hooks/useClientHubFilters';
 import { useRealtimeTracking } from '../hooks/useRealtimeTracking';
 import { ClientStats } from './ClientStats';
 import { ClientFilters } from './ClientFilters';
 import { ClientTable } from './ClientTable';
+import { ClientHubFilters } from './client-hub/ClientHubFilters';
+import { ClientHubPagination } from './client-hub/ClientHubPagination';
+import { ClientHubEmptyState } from './client-hub/ClientHubEmptyState';
 import { FeatureFlags } from '../utils/featureFlags';
 import { reconstructAssessmentLink, copyToClipboard } from '../utils/assessmentLinkHelper';
 import { Users, RefreshCw, UserPlus, Activity, Clock, ShoppingCart, Mail, PhoneCall, Send, Edit, Link2, Copy, Check } from 'lucide-react';
@@ -44,13 +48,6 @@ interface ClientHubProps {
 }
 
 export function ClientHub({ user }: ClientHubProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('lastContact');
-  
-  // Debounce search term to reduce filtering frequency (performance optimization)
-  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
-  
   // 🔒 SECURITY FIX: Get distributor CODE from user context (not hardcoded)
   // Note: distributorId should be distributor_code (string), NOT user.id (UUID)
   if (FeatureFlags.debugMode) {
@@ -73,20 +70,31 @@ export function ClientHub({ user }: ClientHubProps) {
     console.log('🔍 DEBUG: Using distributorId:', distributorId);
   }
   
+  // ✅ NEW: Client Hub Filters State Management
+  const { 
+    filters, 
+    updateFilter, 
+    resetFilters, 
+    goToPage, 
+    changePageSize 
+  } = useClientHubFilters();
+  
   // Add purchase tracking using EXISTING working commission system
   const { commissions } = useCommissions(distributorId);
   
-  // ✅ EXTRACTED: Use custom hook for client data management
+  // ✅ ENHANCED: Use custom hook for client data management with filters
   const { 
     clients, 
-    isLoading, 
+    isLoading,
+    totalCount,
+    filteredCount,
     loadClientData, 
     loadClientDataRef, 
     handleDeleteClient, 
     handleStatusChange, 
     getPurchaseBySession, 
     getPurchaseByClientName 
-  } = useClientData(distributorId, commissions);
+  } = useClientData(distributorId, commissions, filters);
   
   // ✅ EXTRACTED: Use custom hook for real-time tracking
   const { 
@@ -128,55 +136,10 @@ export function ClientHub({ user }: ClientHubProps) {
   // Supabase real-time subscriptions hook with optimized callback
   const subscriptions = useSupabaseSubscriptions(distributorId, handleRealtimeUpdate);
 
-  // Load data on component mount - real-time subscriptions handle all updates
+  // Load data on component mount and when filters change
   useEffect(() => {
     loadClientData();
-    
-    // ✅ REAL-TIME ONLY: No timer fallback - subscriptions handle all updates
-    // Timer-based polling removed for pure real-time experience
-    
   }, [loadClientData]);
-
-  // Filter and sort clients - memoized for performance
-  const filteredClients = useMemo(() => {
-    return clients
-    .filter(client => {
-        const matchesSearch = client.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                             client.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                             client.phone.includes(debouncedSearchTerm);
-      
-      const matchesFilter = selectedFilter === 'all' || 
-                           (selectedFilter === 'live' && client.isLive) ||
-                           (selectedFilter === 'assessment' && client.currentAssessment) ||
-                           client.status === selectedFilter;
-      
-      return matchesSearch && matchesFilter;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'status':
-          return a.status.localeCompare(b.status);
-        case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
-          // 🎯 FIX: If same priority, sort by latest activity (most recent first)
-          if (priorityDiff === 0) {
-            return (b.lastActivityTimestamp || 0) - (a.lastActivityTimestamp || 0);
-          }
-          return priorityDiff;
-        case 'value':
-          return b.value - a.value;
-        case 'lastContact':
-        default:
-          // 🎯 FIX: Prioritize by latest activity timestamp, fallback to lastContact
-          const aTime = a.lastActivityTimestamp || new Date(a.lastContact).getTime();
-          const bTime = b.lastActivityTimestamp || new Date(b.lastContact).getTime();
-          return bTime - aTime;
-      }
-    });
-  }, [clients, debouncedSearchTerm, selectedFilter, sortBy]);
 
 
   // ✅ REMOVED: handleDeleteClient and handleStatusChange moved to useClientData hook
@@ -219,26 +182,52 @@ export function ClientHub({ user }: ClientHubProps) {
       {/* Stats Cards */}
       <ClientStats clients={clients} isLoading={isLoading} />
 
-      {/* Filters and Search */}
-      <ClientFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedFilter={selectedFilter}
-        setSelectedFilter={setSelectedFilter}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
+      {/* NEW: Client Hub Filters v1 */}
+      <ClientHubFilters
+        filters={filters}
+        onFilterChange={updateFilter}
+        onResetFilters={resetFilters}
         isLoading={isLoading}
+        resultCount={clients.length}
+        totalCount={totalCount}
       />
-      {/* Client List */}
-      <ClientTable
-        clients={filteredClients}
-        isLoading={isLoading}
-        onEdit={setSelectedClient}
-        onDelete={handleDeleteClient}
-        onStatusChange={handleStatusChange}
-        getPurchaseBySession={getPurchaseBySession}
-        getPurchaseByClientName={getPurchaseByClientName}
-      />
+
+      {/* Client List or Empty State */}
+      {clients.length === 0 && !isLoading ? (
+        <ClientHubEmptyState
+          hasFilters={
+            filters.dateRange !== 'all' ||
+            filters.assessmentType !== 'all' ||
+            filters.status !== 'all' ||
+            filters.progressRange !== 'all' ||
+            filters.scoreGrade !== 'all' ||
+            Boolean(filters.searchQuery && filters.searchQuery.length > 0)
+          }
+          onClearFilters={resetFilters}
+        />
+      ) : (
+        <ClientTable
+          clients={clients}
+          isLoading={isLoading}
+          onEdit={setSelectedClient}
+          onDelete={handleDeleteClient}
+          onStatusChange={handleStatusChange}
+          getPurchaseBySession={getPurchaseBySession}
+          getPurchaseByClientName={getPurchaseByClientName}
+        />
+      )}
+
+      {/* NEW: Pagination Controls */}
+      {totalCount > 0 && (
+        <ClientHubPagination
+          currentPage={filters.page || 1}
+          pageSize={filters.pageSize || 25}
+          totalCount={totalCount}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
+          isLoading={isLoading}
+        />
+      )}
       {/* Client Details Modal */}
       {selectedClient && (
         <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
