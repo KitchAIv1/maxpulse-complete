@@ -409,6 +409,7 @@ export class SupabaseDatabaseManager {
 
       // Apply status filter
       if (options.status && options.status !== 'all') {
+        console.log('🔍 Applying status filter:', options.status);
         if (options.status === 'completed') {
           query = query.eq('assessments.status', 'completed');
         } else if (options.status === 'incomplete') {
@@ -495,7 +496,12 @@ export class SupabaseDatabaseManager {
             searchQuery: options.searchQuery,
             sortBy,
             sortOrder
-          }
+          },
+          sampleData: filteredData.slice(0, 3).map(s => ({
+            sessionId: s.session_id,
+            assessmentStatus: s.assessments?.status,
+            progress: s.progress_percentage
+          }))
         });
       }
 

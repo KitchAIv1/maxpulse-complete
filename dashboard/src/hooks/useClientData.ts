@@ -278,9 +278,10 @@ export function useClientData(
       
       setClients(unifiedClients);
       
-      // ✅ FIX #3: Always use unfiltered clients for stats cards
-      // Stats should always show overall numbers, not filtered results
-      setAllClients(unifiedClients);
+      // ✅ SIMPLIFIED: Only update allClients on initial load (stats should never change)
+      if (isInitialLoad || allClients.length === 0) {
+        setAllClients(unifiedClients);
+      }
       
       } catch (error) {
         console.error('Error loading client data:', error);
