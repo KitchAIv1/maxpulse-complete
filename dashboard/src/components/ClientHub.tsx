@@ -180,7 +180,7 @@ export function ClientHub({ user }: ClientHubProps) {
       </div>
 
       {/* Stats Cards */}
-      <ClientStats clients={clients} isLoading={isLoading} />
+      <ClientStats clients={clients} totalCount={totalCount} isLoading={isLoading} />
 
       {/* NEW: Client Hub Filters v1 */}
       <ClientHubFilters

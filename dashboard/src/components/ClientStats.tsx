@@ -5,6 +5,7 @@ import type { UnifiedClient } from '../hooks/useClientData';
 
 interface ClientStatsProps {
   clients: UnifiedClient[];
+  totalCount?: number; // Total count from server (all sessions, not just current page)
   isLoading: boolean;
 }
 
@@ -14,7 +15,7 @@ interface ClientStatsProps {
  * 
  * Shows total clients, live clients, in assessment, and high priority counts
  */
-export function ClientStats({ clients, isLoading }: ClientStatsProps) {
+export function ClientStats({ clients, totalCount, isLoading }: ClientStatsProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -33,18 +34,20 @@ export function ClientStats({ clients, isLoading }: ClientStatsProps) {
     );
   }
 
+  // Use totalCount for "Total Clients" (all sessions), clients.length for filtered counts
+  const displayTotalCount = totalCount !== undefined ? totalCount : clients.length;
   const liveCount = clients.filter(c => c.isLive).length;
   const inAssessmentCount = clients.filter(c => c.currentAssessment).length;
   const highPriorityCount = clients.filter(c => c.priority === 'high').length;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Total Clients */}
+      {/* Total Clients - Shows ALL sessions, not just current page */}
       <div className="bg-white p-4 rounded-lg border transition-all duration-300 ease-in-out opacity-100">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-600">Total Clients</p>
-            <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{displayTotalCount}</p>
           </div>
           <Users className="h-8 w-8 text-blue-600" />
         </div>
