@@ -408,12 +408,15 @@ export class SupabaseDatabaseManager {
       }
 
       // Apply status filter
+      // ⚠️ NOTE: Filter logic based on PROGRESS, not assessments.status
+      // "completed" = progress_percentage === 100
+      // "incomplete" = progress_percentage < 100
       if (options.status && options.status !== 'all') {
         console.log('🔍 Applying status filter:', options.status);
         if (options.status === 'completed') {
-          query = query.eq('assessments.status', 'completed');
+          query = query.eq('progress_percentage', 100);
         } else if (options.status === 'incomplete') {
-          query = query.neq('assessments.status', 'completed');
+          query = query.lt('progress_percentage', 100);
         }
       }
 
