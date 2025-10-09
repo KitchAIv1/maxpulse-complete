@@ -56,16 +56,44 @@ export interface UnifiedClient {
 }
 
 /**
+ * Filter options for Client Hub
+ * Enhanced for Client Hub UI v1 - Full Option A
+ */
+export interface ClientDataFilters {
+  // Pagination
+  page?: number;
+  pageSize?: number;
+  // Filters
+  dateRange?: '7d' | '30d' | '90d' | 'all';
+  assessmentType?: 'health' | 'wealth' | 'hybrid' | 'all';
+  status?: 'completed' | 'incomplete' | 'all';
+  progressRange?: '0-25' | '25-50' | '50-75' | '75-100' | 'all';
+  scoreGrade?: 'A' | 'B' | 'C' | 'D' | 'F' | 'all';
+  searchQuery?: string;
+  // Sorting
+  sortBy?: 'date' | 'progress' | 'score' | 'type';
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
  * Custom hook for managing client data and operations
  * Extracted from ClientHub.tsx to follow .cursorrules
+ * Enhanced for Client Hub UI v1 with filtering, pagination, and sorting
  * 
  * @param distributorId - The distributor code (not UUID)
  * @param commissions - Commission data for purchase integration
+ * @param filters - Filter options for querying sessions
  * @returns Client data management functions and state
  */
-export function useClientData(distributorId?: string, commissions?: any[]) {
+export function useClientData(
+  distributorId?: string, 
+  commissions?: any[], 
+  filters?: ClientDataFilters
+) {
   const [clients, setClients] = useState<UnifiedClient[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
   
   // Stable reference for real-time callbacks
   const loadClientDataRef = useRef<() => void>();
@@ -124,11 +152,29 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
       const databaseManager = new SupabaseDatabaseManager();
       await databaseManager.initialize();
       
-      const sessionRecords = await databaseManager.getCompletedSessions(distributorId, {
-        limit: 100
+      const result = await databaseManager.getCompletedSessions(distributorId, {
+        page: filters?.page || 1,
+        pageSize: filters?.pageSize || 25,
+        dateRange: filters?.dateRange || 'all',
+        assessmentType: filters?.assessmentType || 'all',
+        status: filters?.status || 'all',
+        progressRange: filters?.progressRange || 'all',
+        scoreGrade: filters?.scoreGrade || 'all',
+        searchQuery: filters?.searchQuery || '',
+        sortBy: filters?.sortBy || 'date',
+        sortOrder: filters?.sortOrder || 'desc'
       });
       
-      console.log('📊 Loaded sessions from assessment_sessions table:', sessionRecords.length, 'sessions for', distributorId);
+      const sessionRecords = result.sessions;
+      setTotalCount(result.totalCount);
+      setFilteredCount(result.filteredCount);
+      
+      console.log('📊 Loaded sessions from assessment_sessions table:', {
+        sessions: sessionRecords.length,
+        totalCount: result.totalCount,
+        filteredCount: result.filteredCount,
+        distributorId
+      });
       
       // Debug LIVE detection
       const now = Date.now();
@@ -230,7 +276,7 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
       }
       
       setIsLoading(false);
-  }, [distributorId, getPurchaseBySession, getPurchaseByClientName]);
+  }, [distributorId, filters, getPurchaseBySession, getPurchaseByClientName]);
 
   // Update the ref whenever loadClientData changes
   loadClientDataRef.current = loadClientData;
@@ -251,6 +297,8 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
   return {
     clients,
     isLoading,
+    totalCount,
+    filteredCount,
     loadClientData,
     loadClientDataRef,
     handleDeleteClient,
