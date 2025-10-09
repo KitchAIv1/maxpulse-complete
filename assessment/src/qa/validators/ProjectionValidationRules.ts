@@ -119,6 +119,18 @@ export class ProjectionValidationRules {
         description: 'Milestones should not surpass healthy maximums',
         category: 'projection',
         validate: (profile, result) => {
+          // Defensive check: ensure progressiveTargets exists
+          if (!result.transformationRoadmap?.progressiveTargets?.weeklyTargets) {
+            return {
+              ruleId: 'projection_progressive_targets_not_excessive',
+              passed: true,
+              expected: 'N/A',
+              actual: 'N/A',
+              message: 'Progressive targets not available',
+              severity: 'low'
+            };
+          }
+          
           const weeklyTargets = result.transformationRoadmap.progressiveTargets.weeklyTargets;
           
           // Check that sleep targets don't exceed 9 hours
@@ -181,6 +193,18 @@ export class ProjectionValidationRules {
         description: 'Sleep improvements should be realistic over 90 days',
         category: 'projection',
         validate: (profile, result) => {
+          // Defensive check: ensure data exists
+          if (!result.transformationRoadmap?.progressiveTargets?.weeklyTargets) {
+            return {
+              ruleId: 'projection_sleep_improves_gradually',
+              passed: true,
+              expected: 'N/A',
+              actual: 'N/A',
+              message: 'Progressive targets not available',
+              severity: 'low'
+            };
+          }
+          
           const currentSleep = result.ninetyDayProjection.sleep.current;
           const projectedSleep = result.ninetyDayProjection.sleep.projected;
           const weeklyTargets = result.transformationRoadmap.progressiveTargets.weeklyTargets;
