@@ -18,7 +18,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     category: 'target',
     validate: (profile, result) => {
       const bmi = result.userProfile.bmi;
-      const stepsTarget = result.personalizedTargets.steps.target;
+      const stepsTarget = result.personalizedTargets.steps.targetDaily;
       
       // V2 Engine logic (line 152)
       if (bmi < 18.5) {
@@ -51,7 +51,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     category: 'target',
     validate: (profile, result) => {
       const bmi = result.userProfile.bmi;
-      const stepsTarget = result.personalizedTargets.steps.target;
+      const stepsTarget = result.personalizedTargets.steps.targetDaily;
       const age = profile.demographics.age;
       
       // V2 Engine logic (lines 142-150)
@@ -94,7 +94,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     validate: (profile, result) => {
       const medicalConditions = profile.medicalData?.conditions || [];
       const hasHeartCondition = medicalConditions.includes('heart_condition');
-      const stepsTarget = result.personalizedTargets.steps.target;
+      const stepsTarget = result.personalizedTargets.steps.targetDaily;
       
       // V2 Engine logic (lines 156-158)
       if (hasHeartCondition) {
@@ -128,7 +128,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     validate: (profile, result) => {
       const medicalConditions = profile.medicalData?.conditions || [];
       const isPregnant = medicalConditions.includes('pregnancy_breastfeeding');
-      const stepsTarget = result.personalizedTargets.steps.target;
+      const stepsTarget = result.personalizedTargets.steps.targetDaily;
       
       // V2 Engine logic (lines 159-161)
       if (isPregnant) {
@@ -160,7 +160,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     description: 'Minimum step target should be 3000 (medical safety)',
     category: 'target',
     validate: (profile, result) => {
-      const stepsTarget = result.personalizedTargets.steps.target;
+      const stepsTarget = result.personalizedTargets.steps.targetDaily;
       
       // V2 Engine logic (line 166)
       const passed = stepsTarget >= 3000;
@@ -283,7 +283,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     category: 'target',
     validate: (profile, result) => {
       const age = profile.demographics.age;
-      const sleepTarget = result.personalizedTargets.sleep.target;
+      const sleepTarget = result.personalizedTargets.sleep.targetMinHours;
       
       // Most adults need 7-9 hours
       // Teens/young adults may need slightly more
@@ -320,7 +320,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     category: 'target',
     validate: (profile, result) => {
       const currentSleep = profile.healthMetrics.sleep; // 1-10 score
-      const sleepTarget = result.personalizedTargets.sleep.target; // hours
+      const sleepTarget = result.personalizedTargets.sleep.targetMinHours; // hours
       
       // If current sleep is 7+ (score >= 7), target should be >= 7
       if (currentSleep >= 7) {
@@ -355,7 +355,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     category: 'target',
     validate: (profile, result) => {
       // Defensive check
-      if (!result.personalizedTargets?.hydration?.target) {
+      if (!result.personalizedTargets?.hydration?.targetLiters) {
         return {
           ruleId: 'target_hydration_gender_specific',
           passed: false,
@@ -368,7 +368,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
       
       const gender = profile.demographics.gender;
       const weight = profile.demographics.weight;
-      const hydrationTarget = result.personalizedTargets.hydration.target;
+      const hydrationTarget = result.personalizedTargets.hydration.targetLiters;
       
       // V2 Engine logic (TargetCalculator calculateHydrationGoal)
       const multiplier = gender === 'female' ? 0.031 : 0.035;
@@ -403,7 +403,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
       const isPregnant = medicalConditions.includes('pregnancy_breastfeeding');
       
       // Defensive check
-      if (!result.personalizedTargets?.hydration?.target) {
+      if (!result.personalizedTargets?.hydration?.targetLiters) {
         return {
           ruleId: 'target_hydration_pregnancy_bonus',
           passed: false,
@@ -414,7 +414,7 @@ export const TargetValidationRulesV2: ValidationRule[] = [
         };
       }
       
-      const hydrationTarget = result.personalizedTargets.hydration.target;
+      const hydrationTarget = result.personalizedTargets.hydration.targetLiters;
       const gender = profile.demographics.gender;
       const weight = profile.demographics.weight;
       

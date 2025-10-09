@@ -336,13 +336,13 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
     category: 'projection',
     validate: (profile, result) => {
       // Defensive checks
-      if (!result.ninetyDayProjection?.energyLevel || !result.ninetyDayProjection?.sleep || !result.ninetyDayProjection?.hydration) {
+      if (!result.ninetyDayProjection?.energyLevel || !result.ninetyDayProjection?.sleep) {
         return {
           ruleId: 'projection_energy_correlates_improvements',
           passed: false,
           expected: 'All projections exist',
           actual: 'Missing projections',
-          message: 'Missing energy/sleep/hydration projections',
+          message: 'Missing energy/sleep projections',
           severity: 'critical'
         };
       }
@@ -352,10 +352,8 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
       const projectedEnergy = energyProjection.projected;
       
       const sleepProjection = result.ninetyDayProjection.sleep;
-      const hydrationProjection = result.ninetyDayProjection.hydration;
       
-      if (sleepProjection.projected === undefined || sleepProjection.current === undefined ||
-          hydrationProjection.projected === undefined || hydrationProjection.current === undefined) {
+      if (sleepProjection.projected === undefined || sleepProjection.current === undefined) {
         return {
           ruleId: 'projection_energy_correlates_improvements',
           passed: false,
@@ -367,10 +365,9 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
       }
       
       const sleepImprovement = sleepProjection.projected - sleepProjection.current;
-      const hydrationImprovement = ((hydrationProjection.projected - hydrationProjection.current) / hydrationProjection.current) * 100;
       
       // If habits improve, energy should improve
-      if (sleepImprovement > 0.5 || hydrationImprovement > 10) {
+      if (sleepImprovement > 0.5) {
         const energyGain = projectedEnergy - currentEnergy;
         const passed = energyGain > 0;
         
@@ -388,7 +385,7 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
         ruleId: 'projection_energy_correlates_improvements',
         passed: true,
         expected: 'N/A (no significant habit improvements)',
-        actual: `Sleep: +${sleepImprovement.toFixed(1)}hrs, Hydration: +${hydrationImprovement.toFixed(1)}%`,
+        actual: `Sleep: +${sleepImprovement.toFixed(1)}hrs`,
         message: 'No significant habit improvements',
         severity: 'low'
       };
@@ -422,7 +419,7 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
   {
     id: 'projection_all_fields_exist',
     name: 'All projection fields exist',
-    description: 'weight, bmi, sleep, hydration, energyLevel should all exist',
+    description: 'weight, bmi, sleep, energyLevel, healthScore should all exist',
     category: 'projection',
     validate: (profile, result) => {
       const projection = result.ninetyDayProjection;
@@ -430,15 +427,15 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
       const hasWeight = !!projection.weight;
       const hasBMI = !!projection.bmi;
       const hasSleep = !!projection.sleep;
-      const hasHydration = !!projection.hydration;
       const hasEnergy = !!projection.energyLevel;
+      const hasHealthScore = !!projection.healthScore;
       
-      const allExist = hasWeight && hasBMI && hasSleep && hasHydration && hasEnergy;
+      const allExist = hasWeight && hasBMI && hasSleep && hasEnergy && hasHealthScore;
       
       return {
         ruleId: 'projection_all_fields_exist',
         passed: allExist,
-        expected: 'weight, bmi, sleep, hydration, energyLevel',
+        expected: 'weight, bmi, sleep, energyLevel, healthScore',
         actual: allExist ? 'All present' : 'Missing fields',
         message: allExist ? 'All projection fields exist' : 'Missing one or more projection fields',
         severity: allExist ? 'low' : 'critical'
@@ -458,8 +455,8 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
       if (!projection.weight?.current || !projection.weight?.projected) missing.push('weight');
       if (!projection.bmi?.current || !projection.bmi?.projected) missing.push('bmi');
       if (!projection.sleep?.current || !projection.sleep?.projected) missing.push('sleep');
-      if (!projection.hydration?.current || !projection.hydration?.projected) missing.push('hydration');
       if (projection.energyLevel?.current === undefined || projection.energyLevel?.projected === undefined) missing.push('energyLevel');
+      if (!projection.healthScore?.current || !projection.healthScore?.projected) missing.push('healthScore');
       
       const passed = missing.length === 0;
       
@@ -486,8 +483,8 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
       if (projection.weight?.current < 0 || projection.weight?.projected < 0) negatives.push('weight');
       if (projection.bmi?.current < 0 || projection.bmi?.projected < 0) negatives.push('bmi');
       if (projection.sleep?.current < 0 || projection.sleep?.projected < 0) negatives.push('sleep');
-      if (projection.hydration?.current < 0 || projection.hydration?.projected < 0) negatives.push('hydration');
       if (projection.energyLevel?.current < 0 || projection.energyLevel?.projected < 0) negatives.push('energyLevel');
+      if (projection.healthScore?.current < 0 || projection.healthScore?.projected < 0) negatives.push('healthScore');
       
       const passed = negatives.length === 0;
       
