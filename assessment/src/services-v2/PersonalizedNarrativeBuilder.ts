@@ -28,14 +28,18 @@ export interface PersonalizedAnalysisInput {
     sleepDuration: string;
     sleepQuality: string;
     sleepIssues: string;
+    hydrationLevel: string; // From v2DataMapper - h4 water intake text
     waterIntake: string;
     hydrationAwareness: string;
     exerciseFrequency: string;
     exerciseType: string;
     exerciseIntensity: string;
+    activityLevel: string; // From v2DataMapper - h7 energy level text
+    nutritionQuality: string; // From v2DataMapper - h2 nutrition text
     fastFoodFrequency: string;
     mealTiming: string;
     snackingHabits: string;
+    dietPattern: string; // From v2DataMapper - inferred from h2
     stressLevel: string;
     medicalCheckups: string;
     smokingStatus: string;
