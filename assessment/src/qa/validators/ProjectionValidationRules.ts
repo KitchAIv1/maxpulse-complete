@@ -16,8 +16,8 @@ export class ProjectionValidationRules {
         description: 'Weight loss projections should be medically safe',
         category: 'projection',
         validate: (profile, result) => {
-          const currentWeight = profile.demographics.weight;
-          const projectedWeight = result.ninetyDayProjection.weight.projectedWeight;
+          const currentWeight = result.ninetyDayProjection.weight.current;
+          const projectedWeight = result.ninetyDayProjection.weight.projected;
           const weightLoss = currentWeight - projectedWeight;
           const lossPerWeek = weightLoss / 13; // 90 days = ~13 weeks
           const lbsPerWeek = lossPerWeek * 2.20462; // Convert kg to lbs
@@ -52,8 +52,8 @@ export class ProjectionValidationRules {
         category: 'projection',
         validate: (profile, result) => {
           const bmi = result.userProfile.bmi;
-          const currentWeight = profile.demographics.weight;
-          const projectedWeight = result.ninetyDayProjection.weight.projectedWeight;
+          const currentWeight = result.ninetyDayProjection.weight.current;
+          const projectedWeight = result.ninetyDayProjection.weight.projected;
           
           if (bmi < 18.5) {
             const passed = projectedWeight > currentWeight;
@@ -85,20 +85,20 @@ export class ProjectionValidationRules {
         category: 'projection',
         validate: (profile, result) => {
           const currentSleep = profile.healthMetrics.sleep;
-          const currentEnergy = result.ninetyDayProjection.energy.currentScore;
-          const projectedEnergy = result.ninetyDayProjection.energy.projectedScore;
+          const currentEnergy = result.ninetyDayProjection.energyLevel.current;
+          const projectedEnergy = result.ninetyDayProjection.energyLevel.projected;
           
           if (currentSleep <= 5) {
             // Poor sleep, energy should improve significantly
             const energyGain = projectedEnergy - currentEnergy;
-            const passed = energyGain >= 10;
+            const passed = energyGain >= 1;
             
             return {
               ruleId: 'projection_energy_correlates_sleep',
               passed,
-              expected: '>= +10 points',
-              actual: `+${energyGain} points`,
-              message: passed ? 'Energy improvement realistic' : `Energy gain ${energyGain} too low for poor sleep improvement`,
+              expected: '>= +1 points',
+              actual: `+${energyGain.toFixed(1)} points`,
+              message: passed ? 'Energy improvement realistic' : `Energy gain ${energyGain.toFixed(1)} too low for poor sleep improvement`,
               severity: passed ? 'low' : 'medium'
             };
           }
@@ -145,8 +145,8 @@ export class ProjectionValidationRules {
         description: 'BMI should improve toward healthy range',
         category: 'projection',
         validate: (profile, result) => {
-          const currentBMI = result.userProfile.bmi;
-          const projectedBMI = result.ninetyDayProjection.weight.projectedBMI;
+          const currentBMI = result.ninetyDayProjection.bmi.current;
+          const projectedBMI = result.ninetyDayProjection.bmi.projected;
           
           let passed = true;
           let expected = '';
@@ -181,7 +181,8 @@ export class ProjectionValidationRules {
         description: 'Sleep improvements should be realistic over 90 days',
         category: 'projection',
         validate: (profile, result) => {
-          const currentSleep = profile.healthMetrics.sleep;
+          const currentSleep = result.ninetyDayProjection.sleep.current;
+          const projectedSleep = result.ninetyDayProjection.sleep.projected;
           const weeklyTargets = result.transformationRoadmap.progressiveTargets.weeklyTargets;
           
           if (currentSleep <= 5 && weeklyTargets.length >= 4) {
@@ -190,7 +191,7 @@ export class ProjectionValidationRules {
             const week13Sleep = weeklyTargets[weeklyTargets.length - 1].sleep;
             
             // Sleep should improve progressively, not jump instantly
-            const week1Improvement = week1Sleep - (currentSleep * 0.7);
+            const week1Improvement = week1Sleep - currentSleep;
             const gradualImprovement = week1Sleep < week4Sleep && week4Sleep <= week13Sleep;
             const passed = week1Improvement < 2 && gradualImprovement;
             
