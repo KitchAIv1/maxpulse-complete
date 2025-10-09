@@ -371,24 +371,6 @@ export function HealthInsightsResults({
         </>
       )}
 
-      {/* Simple Button */}
-      <div className="text-center">
-        <button
-          onClick={handleContinue}
-          style={{
-            backgroundColor: 'blue',
-            color: 'white',
-            padding: '16px 48px',
-            borderRadius: '8px',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            border: '2px solid darkblue',
-            cursor: 'pointer'
-          }}
-        >
-          See My Personalized Plan
-        </button>
-      </div>
 
       {/* AI Disclaimer - Bottom of page, no container, with design element */}
       {analysis && (
