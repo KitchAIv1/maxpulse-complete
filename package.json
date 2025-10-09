@@ -12,7 +12,7 @@
     "dev:dashboard": "cd dashboard && npm run dev",
     "dev:assessment": "cd assessment && npm run dev",
     "install:all": "npm install && cd dashboard && npm install && cd ../assessment && npm install",
-    "backfill:progress": "node backfill-progress-percentages.js"
+    "backfill:progress": "node scripts/backfill-progress-percentages.js"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.74.0",

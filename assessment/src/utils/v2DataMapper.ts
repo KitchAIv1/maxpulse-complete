@@ -61,7 +61,13 @@ export function mapAssessmentToV2Input(
     alcoholLevel: extractAlcoholLevel(answers, getOptionText),
     stressLevel: extractStressLevel(answers, getOptionText),
     checkupFrequency: extractCheckupFrequency(answers, getOptionText),
-    urgencyLevel: extractUrgencyLevel(answers, getOptionText)
+    urgencyLevel: extractUrgencyLevel(answers, getOptionText),
+    
+    // Mental health variables (h7-h10)
+    energyLevel: getOptionMetadata('h7', 'energyLevel') || 'medium',
+    mindfulnessPractice: getOptionMetadata('h8', 'mindfulnessPractice') || 'occasionally',
+    socialSupport: getOptionMetadata('h9', 'supportLevel') || 'mixed',
+    burnoutLevel: getOptionMetadata('h10', 'burnoutLevel') || 'moderate'
   };
   
   // Map demographics
@@ -150,6 +156,26 @@ export function mapAssessmentToV2Input(
                  answers['h2'] === 'c' ? 'try to eat balanced meals most days' :
                  'eat a mix of healthy and convenience foods',
     
+    // h6: Stress level (text version for narratives)
+    stressLevel: lifestyleFactors.stressLevel === 'high' ? 'feel overwhelmed often' :
+                 lifestyleFactors.stressLevel === 'moderate' ? 'manage stress okay most days' :
+                 'handle stress very well',
+    
+    // h11: Medical checkups
+    medicalCheckups: lifestyleFactors.checkupFrequency === 'never' ? 'never' :
+                     lifestyleFactors.checkupFrequency === 'rare' ? 'rarely' :
+                     lifestyleFactors.checkupFrequency === 'annual' ? 'annual' :
+                     'biannual',
+    
+    // h5: Smoking status (text)
+    smokingStatus: lifestyleFactors.isSmoker ? 'yes' : 'no',
+    
+    // h5: Alcohol consumption (text)
+    alcoholConsumption: lifestyleFactors.alcoholLevel === 'none' ? 'none' :
+                        lifestyleFactors.alcoholLevel === 'light' ? 'light' :
+                        lifestyleFactors.alcoholLevel === 'moderate' ? 'moderate' :
+                        'heavy',
+    
     // h15: Readiness level
     urgencyLevel: lifestyleFactors.urgencyLevel
   };
@@ -214,16 +240,16 @@ function extractStressLevel(
 function extractCheckupFrequency(
   answers: Record<string, string>,
   getOptionText: (id: string) => string
-): 'never' | 'rarely' | 'yearly' | 'regular' {
+): 'never' | 'rare' | 'annual' | 'biannual' {
   const h11Answer = getOptionText('h11').toLowerCase();
   
   if (h11Answer.includes('yes')) {
-    return 'yearly';
+    return 'annual'; // Changed from 'yearly' to match interface
   }
   if (h11Answer.includes('no')) {
-    return 'rarely';
+    return 'rare'; // Changed from 'rarely' to match interface
   }
-  return 'rarely';
+  return 'rare';
 }
 
 /**

@@ -312,15 +312,37 @@ export class SupabaseDatabaseManager {
    * @param options - Query options for filtering and pagination
    * @returns Array of session records with embedded assessments data
    */
+  /**
+   * Get completed assessment sessions with filtering, pagination, and sorting
+   * Enhanced for Client Hub UI v1 - Full Option A implementation
+   */
   async getCompletedSessions(
     distributorId: string,
     options: {
+      // Pagination
+      page?: number;
+      pageSize?: number;
+      // Filters
+      dateRange?: '7d' | '30d' | '90d' | 'all';
+      assessmentType?: 'health' | 'wealth' | 'hybrid' | 'all';
+      status?: 'completed' | 'incomplete' | 'all';
+      progressRange?: '0-25' | '25-50' | '50-75' | '75-100' | 'all';
+      scoreGrade?: 'A' | 'B' | 'C' | 'D' | 'F' | 'all';
+      searchQuery?: string;
+      // Sorting
+      sortBy?: 'date' | 'progress' | 'score' | 'type';
+      sortOrder?: 'asc' | 'desc';
+      // Legacy support
       limit?: number;
       offset?: number;
     } = {}
-  ): Promise<any[]> {
+  ): Promise<{
+    sessions: any[];
+    totalCount: number;
+    filteredCount: number;
+  }> {
     if (!this.isInitialized) {
-      return [];
+      return { sessions: [], totalCount: 0, filteredCount: 0 };
     }
 
     try {
@@ -328,11 +350,16 @@ export class SupabaseDatabaseManager {
       const distributorUuid = await this.resolveDistributorId(distributorId);
       if (!distributorUuid) {
         console.error('❌ Cannot fetch sessions: Distributor not found:', distributorId);
-        return [];
+        return { sessions: [], totalCount: 0, filteredCount: 0 };
       }
 
-      // Query assessment_sessions with JOIN to assessments for distributor filtering
-      const { data, error } = await supabase
+      // Calculate pagination (defaults: page 1, 25 per page)
+      const page = options.page || 1;
+      const pageSize = options.pageSize || options.limit || 25;
+      const offset = options.offset !== undefined ? options.offset : (page - 1) * pageSize;
+
+      // Build base query
+      let query = supabase
         .from('assessment_sessions')
         .select(`
           id,
@@ -350,27 +377,146 @@ export class SupabaseDatabaseManager {
             status,
             completed_at
           )
-        `)
-        .eq('assessments.distributor_id', distributorUuid)
-        .order('updated_at', { ascending: false })
-        .range(options.offset || 0, (options.offset || 0) + (options.limit || 100) - 1);
+        `, { count: 'exact' })
+        .eq('assessments.distributor_id', distributorUuid);
+
+      // Apply date range filter
+      if (options.dateRange && options.dateRange !== 'all') {
+        const now = new Date();
+        let cutoffDate: Date;
+        
+        switch (options.dateRange) {
+          case '7d':
+            cutoffDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            break;
+          case '30d':
+            cutoffDate = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+            break;
+          case '90d':
+            cutoffDate = new Date(now.getTime() - (90 * 24 * 60 * 60 * 1000));
+            break;
+          default:
+            cutoffDate = new Date(0); // All time
+        }
+        
+        query = query.gte('created_at', cutoffDate.toISOString());
+      }
+
+      // Apply assessment type filter
+      if (options.assessmentType && options.assessmentType !== 'all') {
+        query = query.eq('assessments.assessment_type', options.assessmentType);
+      }
+
+      // Apply status filter
+      // ⚠️ NOTE: Filter logic based on PROGRESS, not assessments.status
+      // "completed" = progress_percentage === 100
+      // "incomplete" = progress_percentage < 100
+      if (options.status && options.status !== 'all') {
+        console.log('🔍 Applying status filter:', options.status);
+        if (options.status === 'completed') {
+          query = query.eq('progress_percentage', 100);
+        } else if (options.status === 'incomplete') {
+          query = query.lt('progress_percentage', 100);
+        }
+      }
+
+      // Apply progress range filter
+      if (options.progressRange && options.progressRange !== 'all') {
+        const [min, max] = options.progressRange.split('-').map(Number);
+        query = query.gte('progress_percentage', min).lte('progress_percentage', max);
+      }
+
+      // Apply sorting
+      const sortBy = options.sortBy || 'date';
+      const sortOrder = options.sortOrder || 'desc';
+      
+      switch (sortBy) {
+        case 'date':
+          query = query.order('updated_at', { ascending: sortOrder === 'asc' });
+          break;
+        case 'progress':
+          query = query.order('progress_percentage', { ascending: sortOrder === 'asc' });
+          break;
+        case 'type':
+          query = query.order('assessments.assessment_type', { ascending: sortOrder === 'asc' });
+          break;
+        case 'score':
+          // Score is in session_data JSONB, sort by updated_at as fallback
+          query = query.order('updated_at', { ascending: sortOrder === 'asc' });
+          break;
+        default:
+          query = query.order('updated_at', { ascending: false });
+      }
+
+      // Apply pagination
+      query = query.range(offset, offset + pageSize - 1);
+
+      // Execute query
+      const { data, error, count } = await query;
 
       if (error) {
         console.error('❌ Error fetching assessment sessions:', error);
-        return [];
+        return { sessions: [], totalCount: 0, filteredCount: 0 };
       }
 
-      const result = data || [];
+      // Filter by search query in session_data (customer_name, customer_email) and session_id
+      let filteredData = data || [];
+      if (options.searchQuery && options.searchQuery.trim()) {
+        const searchLower = options.searchQuery.trim().toLowerCase();
+        filteredData = filteredData.filter(session => {
+          const sessionData = session.session_data || {};
+          const customerName = (sessionData.customer_name || '').toLowerCase();
+          const customerEmail = (sessionData.customer_email || '').toLowerCase();
+          const sessionId = (session.session_id || '').toLowerCase();
+          
+          return customerName.includes(searchLower) || 
+                 customerEmail.includes(searchLower) || 
+                 sessionId.includes(searchLower);
+        });
+      }
+
+      // Filter by score grade (in-memory, as score is in session_data)
+      if (options.scoreGrade && options.scoreGrade !== 'all') {
+        filteredData = filteredData.filter(session => {
+          const sessionData = session.session_data || {};
+          const grade = sessionData.grade || sessionData.score_grade || '';
+          return grade.toUpperCase().startsWith(options.scoreGrade!);
+        });
+      }
 
       if (FeatureFlags.debugMode) {
-        console.log('📊 Fetched assessment sessions:', result.length, 'sessions');
+        console.log('📊 Fetched sessions:', {
+          totalCount: count || 0,
+          filteredCount: filteredData.length,
+          page,
+          pageSize,
+          filters: {
+            dateRange: options.dateRange,
+            assessmentType: options.assessmentType,
+            status: options.status,
+            progressRange: options.progressRange,
+            scoreGrade: options.scoreGrade,
+            searchQuery: options.searchQuery,
+            sortBy,
+            sortOrder
+          },
+          sampleData: filteredData.slice(0, 3).map(s => ({
+            sessionId: s.session_id,
+            assessmentStatus: s.assessments?.status,
+            progress: s.progress_percentage
+          }))
+        });
       }
 
-      return result;
+      return {
+        sessions: filteredData,
+        totalCount: count || 0,
+        filteredCount: filteredData.length
+      };
 
     } catch (error) {
       console.error('❌ Error in getCompletedSessions:', error);
-      return [];
+      return { sessions: [], totalCount: 0, filteredCount: 0 };
     }
   }
 

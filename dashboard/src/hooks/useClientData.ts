@@ -56,16 +56,47 @@ export interface UnifiedClient {
 }
 
 /**
+ * Filter options for Client Hub
+ * Enhanced for Client Hub UI v1 - Full Option A
+ */
+export interface ClientDataFilters {
+  // Pagination
+  page?: number;
+  pageSize?: number;
+  // Filters
+  dateRange?: '7d' | '30d' | '90d' | 'all';
+  assessmentType?: 'health' | 'wealth' | 'hybrid' | 'all';
+  status?: 'completed' | 'incomplete' | 'all';
+  progressRange?: '0-25' | '25-50' | '50-75' | '75-100' | 'all';
+  scoreGrade?: 'A' | 'B' | 'C' | 'D' | 'F' | 'all';
+  searchQuery?: string;
+  // Sorting
+  sortBy?: 'date' | 'progress' | 'score' | 'type';
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
  * Custom hook for managing client data and operations
  * Extracted from ClientHub.tsx to follow .cursorrules
+ * Enhanced for Client Hub UI v1 with filtering, pagination, and sorting
  * 
  * @param distributorId - The distributor code (not UUID)
  * @param commissions - Commission data for purchase integration
+ * @param filters - Filter options for querying sessions
  * @returns Client data management functions and state
  */
-export function useClientData(distributorId?: string, commissions?: any[]) {
+export function useClientData(
+  distributorId?: string, 
+  commissions?: any[], 
+  filters?: ClientDataFilters
+) {
   const [clients, setClients] = useState<UnifiedClient[]>([]);
+  const [allClients, setAllClients] = useState<UnifiedClient[]>([]); // All clients for stats (unfiltered)
   const [isLoading, setIsLoading] = useState(false);
+  const [isFilterLoading, setIsFilterLoading] = useState(false); // Separate loading state for filters
+  const [totalCount, setTotalCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track if it's the first load
   
   // Stable reference for real-time callbacks
   const loadClientDataRef = useRef<() => void>();
@@ -117,18 +148,41 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
       return;
     }
 
-    setIsLoading(true);
+    // Use different loading states for initial load vs filter changes
+    if (isInitialLoad) {
+      setIsLoading(true); // Full screen skeleton for initial load
+    } else {
+      setIsFilterLoading(true); // Just table overlay for filter changes
+    }
     
     try {
       // ✅ SCALABLE: Query assessment_sessions table directly (not events)
       const databaseManager = new SupabaseDatabaseManager();
       await databaseManager.initialize();
       
-      const sessionRecords = await databaseManager.getCompletedSessions(distributorId, {
-        limit: 100
+      const result = await databaseManager.getCompletedSessions(distributorId, {
+        page: filters?.page || 1,
+        pageSize: filters?.pageSize || 25,
+        dateRange: filters?.dateRange || 'all',
+        assessmentType: filters?.assessmentType || 'all',
+        status: filters?.status || 'all',
+        progressRange: filters?.progressRange || 'all',
+        scoreGrade: filters?.scoreGrade || 'all',
+        searchQuery: filters?.searchQuery || '',
+        sortBy: filters?.sortBy || 'date',
+        sortOrder: filters?.sortOrder || 'desc'
       });
       
-      console.log('📊 Loaded sessions from assessment_sessions table:', sessionRecords.length, 'sessions for', distributorId);
+      const sessionRecords = result.sessions;
+      setTotalCount(result.totalCount);
+      setFilteredCount(result.filteredCount);
+      
+      console.log('📊 Loaded sessions from assessment_sessions table:', {
+        sessions: sessionRecords.length,
+        totalCount: result.totalCount,
+        filteredCount: result.filteredCount,
+        distributorId
+      });
       
       // Debug LIVE detection
       const now = Date.now();
@@ -223,14 +277,36 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
       });
       
       setClients(unifiedClients);
+      
+      // ✅ Core cards reflect filtered results
+      setAllClients(unifiedClients);
+      
       } catch (error) {
         console.error('Error loading client data:', error);
         // No fallback data - show empty state when no assessment data exists
         setClients([]);
+        setAllClients([]);
       }
       
       setIsLoading(false);
-  }, [distributorId, getPurchaseBySession, getPurchaseByClientName]);
+      setIsFilterLoading(false);
+      setIsInitialLoad(false); // After first load, all subsequent loads are filter changes
+  }, [
+    isInitialLoad,
+    distributorId, 
+    filters?.page,
+    filters?.pageSize,
+    filters?.dateRange,
+    filters?.assessmentType,
+    filters?.status,
+    filters?.progressRange,
+    filters?.scoreGrade,
+    filters?.searchQuery,
+    filters?.sortBy,
+    filters?.sortOrder,
+    getPurchaseBySession, 
+    getPurchaseByClientName
+  ]);
 
   // Update the ref whenever loadClientData changes
   loadClientDataRef.current = loadClientData;
@@ -249,8 +325,12 @@ export function useClientData(distributorId?: string, commissions?: any[]) {
   }, []);
 
   return {
-    clients,
+    clients, // Filtered clients for table display
+    allClients, // All clients for stats cards (unfiltered)
     isLoading,
+    isFilterLoading, // New: separate loading state for smooth filter transitions
+    totalCount,
+    filteredCount,
     loadClientData,
     loadClientDataRef,
     handleDeleteClient,

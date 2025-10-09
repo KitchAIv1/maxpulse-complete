@@ -159,9 +159,10 @@ export const useDashboardStats = (distributorId: string) => {
             const databaseManager = new SupabaseDatabaseManager();
             await databaseManager.initialize();
             
-            const sessions = await databaseManager.getCompletedSessions(distributorId, {
+            const result = await databaseManager.getCompletedSessions(distributorId, {
               limit: 1000 // Get all sessions for accurate count
             });
+            const sessions = result.sessions; // Extract sessions array from new return format
             
             // Calculate current month boundaries
             const now = new Date();

@@ -17,8 +17,37 @@ export interface CompoundRiskAnalysis {
   diabetesRisk: number;
   cardiovascularRisk: number;
   metabolicSyndromeRisk: number;
+  mentalHealthRisk: number; // NEW: Mental health risk score (0-90%)
   primaryRiskFactors: RiskFactor[];
   riskCategory: string;
+}
+
+// NEW: Structured input for compound risk analysis (cleaner parameter passing)
+export interface CompoundRiskInput {
+  demographics: {
+    age: number;
+    weight: number;
+    height: number;
+    gender: 'male' | 'female' | 'other';
+  };
+  healthScores: {
+    sleep: number;      // 1-10
+    hydration: number;  // 1-10
+    exercise: number;   // 1-10
+  };
+  lifestyleFactors: {
+    isSmoker: boolean;
+    alcoholLevel: 'none' | 'light' | 'moderate' | 'heavy';
+    stressLevel: 'low' | 'moderate' | 'high';
+    checkupFrequency: 'never' | 'rare' | 'annual' | 'biannual';
+    
+    // Mental health factors (h7-h10)
+    energyLevel: 'low' | 'medium' | 'high';
+    mindfulnessPractice: 'never' | 'occasionally' | 'regularly';
+    socialSupport: 'supported' | 'unsupported' | 'mixed';
+    burnoutLevel: 'low' | 'moderate' | 'high';
+  };
+  medicalConditions: string[];
 }
 
 export class RiskCalculator {
@@ -39,6 +68,65 @@ export class RiskCalculator {
     if (bmi < 30) return 'Overweight';
     if (bmi < 35) return 'Obese';
     return 'Severely obese';
+  }
+
+  /**
+   * Calculate Mental Health Risk Score (0-90%)
+   * Science: The Lancet (stress-CVD), Obesity Journal (cortisol), Health Psychology (support-adherence)
+   * 
+   * Considers: Stress, Energy, Mindfulness, Social Support, Burnout
+   * Returns: Composite mental health risk (0-90%)
+   */
+  calculateMentalHealthRisk(
+    stressLevel: 'low' | 'moderate' | 'high',
+    energyLevel: 'low' | 'medium' | 'high',
+    mindfulnessPractice: 'never' | 'occasionally' | 'regularly',
+    socialSupport: 'supported' | 'unsupported' | 'mixed',
+    burnoutLevel: 'low' | 'moderate' | 'high'
+  ): number {
+    let risk = 0;
+    
+    // Stress baseline (The Lancet: +27% CVD risk for chronic stress)
+    if (stressLevel === 'high') risk += 30;
+    else if (stressLevel === 'moderate') risk += 15;
+    else risk += 5; // Low stress still has baseline
+    
+    // Energy impact (Appetite Journal: low energy → +300-500 cal/day)
+    if (energyLevel === 'low') risk += 20;
+    else if (energyLevel === 'medium') risk += 5;
+    // High energy: no addition
+    
+    // Mindfulness protective factor (Psychosomatic Medicine: -23% cortisol)
+    if (mindfulnessPractice === 'never') risk += 15;
+    else if (mindfulnessPractice === 'occasionally') risk += 5;
+    else risk -= 10; // Regular practice reduces risk
+    
+    // Social support protective factor (AJPM: +65% adherence with support)
+    if (socialSupport === 'unsupported') risk += 20;
+    else if (socialSupport === 'mixed') risk += 10;
+    else risk -= 10; // Strong support reduces risk
+    
+    // Burnout amplifier (J Occup Health Psych: -50% adherence)
+    if (burnoutLevel === 'high') risk += 25;
+    else if (burnoutLevel === 'moderate') risk += 10;
+    // Low burnout: no addition
+    
+    // Compound effects (when multiple negative factors combine)
+    if (stressLevel === 'high' && socialSupport === 'unsupported') {
+      risk += 15; // No stress management support
+    }
+    if (energyLevel === 'low' && burnoutLevel === 'high') {
+      risk += 15; // Physical and emotional exhaustion
+    }
+    if (mindfulnessPractice === 'never' && stressLevel === 'high') {
+      risk += 10; // High stress with no coping tools
+    }
+    if (burnoutLevel === 'high' && socialSupport === 'unsupported') {
+      risk += 10; // Burnout with no support system
+    }
+    
+    // Cap at 0-90% (mental health risk is serious but not directly lethal like CVD)
+    return Math.min(Math.max(risk, 0), 90);
   }
 
   /**
@@ -214,30 +302,26 @@ export class RiskCalculator {
 
   /**
    * Generate comprehensive risk analysis with all variables including medical conditions
+   * NOW INCLUDES: Mental health factors (energy, mindfulness, support, burnout)
    */
-  analyzeCompoundRisk(
-    age: number,
-    weight: number,
-    height: number,
-    sleepScore: number,
-    hydrationScore: number,
-    exerciseScore: number,
-    gender: 'male' | 'female' | 'other' = 'male',
-    isSmoker: boolean = false,
-    alcoholLevel: 'none' | 'light' | 'moderate' | 'heavy' = 'none',
-    stressLevel: 'low' | 'moderate' | 'high' = 'moderate',
-    checkupFrequency: 'never' | 'rare' | 'annual' | 'biannual' = 'annual',
-    medicalConditions: string[] = []
-  ): CompoundRiskAnalysis {
+  analyzeCompoundRisk(input: CompoundRiskInput): CompoundRiskAnalysis {
+    const { demographics, healthScores, lifestyleFactors, medicalConditions } = input;
+    const { age, weight, height, gender } = demographics;
+    const { sleep, hydration, exercise } = healthScores;
+    const { 
+      isSmoker, alcoholLevel, stressLevel, checkupFrequency,
+      energyLevel, mindfulnessPractice, socialSupport, burnoutLevel
+    } = lifestyleFactors;
+    
     const bmi = this.calculateBMI(weight, height);
-    const sleepHours = this.estimateSleepHours(sleepScore);
+    const sleepHours = this.estimateSleepHours(sleep);
 
     // Calculate individual risks with all factors
     let diabetesRisk = this.calculateDiabetesRisk(age, bmi, sleepHours, isSmoker);
     let cardiovascularRisk = this.calculateCardiovascularRisk(
       age, 
       bmi, 
-      exerciseScore,
+      exercise,
       isSmoker,
       stressLevel,
       gender
@@ -245,10 +329,19 @@ export class RiskCalculator {
     let metabolicSyndromeRisk = this.calculateMetabolicSyndromeRisk(
       age, 
       bmi, 
-      sleepScore, 
-      hydrationScore,
+      sleep, 
+      hydration,
       alcoholLevel,
       stressLevel
+    );
+    
+    // Calculate mental health risk (NEW)
+    const mentalHealthRisk = this.calculateMentalHealthRisk(
+      stressLevel,
+      energyLevel,
+      mindfulnessPractice,
+      socialSupport,
+      burnoutLevel
     );
 
     // Adjust risks based on existing medical conditions
@@ -318,6 +411,36 @@ export class RiskCalculator {
     let checkupRiskModifier = 0;
     if (checkupFrequency === 'never') checkupRiskModifier = 10;
     else if (checkupFrequency === 'rare') checkupRiskModifier = 5;
+    
+    // NEW: Mental health impact on physical health risks
+    // Low energy increases metabolic risk (eating more, moving less)
+    if (energyLevel === 'low') {
+      metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 10, 90);
+      diabetesRisk = Math.min(diabetesRisk + 5, 90); // Low energy → less exercise → higher diabetes risk
+    }
+    
+    // Mindfulness practice reduces stress-related risks
+    if (mindfulnessPractice === 'regularly') {
+      cardiovascularRisk = Math.max(0, cardiovascularRisk - 8); // Cortisol -23% (Psychosomatic Medicine)
+      metabolicSyndromeRisk = Math.max(0, metabolicSyndromeRisk - 5);
+    } else if (mindfulnessPractice === 'never' && stressLevel === 'high') {
+      // No stress management tools + high stress = compound effect
+      cardiovascularRisk = Math.min(cardiovascularRisk + 5, 95);
+      metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 5, 90);
+    }
+    
+    // Burnout compounds all stress-related risks
+    if (burnoutLevel === 'high') {
+      if (stressLevel === 'high' || stressLevel === 'moderate') {
+        cardiovascularRisk = Math.min(cardiovascularRisk + 8, 95); // Chronic stress activation
+        metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 8, 90);
+        diabetesRisk = Math.min(diabetesRisk + 5, 90);
+      }
+      if (energyLevel === 'low') {
+        // Burnout + low energy = significant metabolic dysfunction
+        metabolicSyndromeRisk = Math.min(metabolicSyndromeRisk + 10, 90);
+      }
+    }
 
     // Determine overall risk level
     const avgRisk = (diabetesRisk + cardiovascularRisk + metabolicSyndromeRisk) / 3 + checkupRiskModifier;
@@ -327,9 +450,9 @@ export class RiskCalculator {
     const primaryRiskFactors = this.identifyPrimaryRiskFactors(
       age,
       bmi,
-      sleepScore,
-      hydrationScore,
-      exerciseScore,
+      sleep,
+      hydration,
+      exercise,
       diabetesRisk,
       cardiovascularRisk,
       isSmoker,
@@ -342,8 +465,9 @@ export class RiskCalculator {
       diabetesRisk,
       cardiovascularRisk,
       metabolicSyndromeRisk,
+      mentalHealthRisk, // NEW: Include mental health risk in output
       primaryRiskFactors,
-      riskCategory: this.getRiskCategory(age, bmi, sleepScore, isSmoker, stressLevel)
+      riskCategory: this.getRiskCategory(age, bmi, sleep, isSmoker, stressLevel)
     };
   }
 
