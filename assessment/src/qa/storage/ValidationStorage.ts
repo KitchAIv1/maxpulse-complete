@@ -11,17 +11,21 @@ import * as path from 'path';
 
 export class ValidationStorage {
   private supabase;
+  private hasSupabase: boolean;
   
   constructor() {
-    // Initialize Supabase client
+    // Initialize Supabase client (optional)
     const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
     
-    if (!supabaseUrl || !supabaseKey) {
-      console.warn('⚠️  Supabase credentials not found. Using local storage only.');
-    }
+    this.hasSupabase = !!(supabaseUrl && supabaseKey);
     
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    if (!this.hasSupabase) {
+      console.warn('⚠️  Supabase credentials not found. Using local storage only.');
+      this.supabase = null as any; // Will not be used
+    } else {
+      this.supabase = createClient(supabaseUrl, supabaseKey);
+    }
   }
   
   /**
@@ -34,10 +38,12 @@ export class ValidationStorage {
     await this.saveToJSON(result);
     
     // 2. Save to Supabase (if configured)
-    try {
-      await this.saveToSupabase(result);
-    } catch (error) {
-      console.warn('⚠️  Failed to save to Supabase:', error);
+    if (this.hasSupabase) {
+      try {
+        await this.saveToSupabase(result);
+      } catch (error) {
+        console.warn('⚠️  Failed to save to Supabase:', error);
+      }
     }
     
     console.log('✅ Results saved successfully\n');
