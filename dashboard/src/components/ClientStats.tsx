@@ -18,15 +18,15 @@ interface ClientStatsProps {
 export function ClientStats({ clients, totalCount, isLoading }: ClientStatsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {[...Array(4)].map((_, index) => (
-          <div key={index} className="bg-white p-4 rounded-lg border animate-pulse">
+          <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <Skeleton className="h-4 w-20 mb-2" />
-                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-4 w-24 mb-2 bg-gray-200 animate-pulse" />
+                <Skeleton className="h-8 w-16 bg-gray-200 animate-pulse" />
               </div>
-              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
             </div>
           </div>
         ))}

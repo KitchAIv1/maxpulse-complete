@@ -84,8 +84,10 @@ export function ClientHub({ user }: ClientHubProps) {
   
   // ✅ ENHANCED: Use custom hook for client data management with filters
   const { 
-    clients, 
+    clients, // Filtered clients for table
+    allClients, // All clients for stats cards (unfiltered)
     isLoading,
+    isFilterLoading, // Separate loading state for smooth filter transitions
     totalCount,
     filteredCount,
     loadClientData, 
@@ -183,8 +185,8 @@ export function ClientHub({ user }: ClientHubProps) {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <ClientStats clients={clients} totalCount={totalCount} isLoading={isLoading} />
+      {/* Stats Cards - Use allClients for overall stats (not filtered) */}
+      <ClientStats clients={allClients} totalCount={totalCount} isLoading={isLoading} />
 
       {/* NEW: Client Hub Filters v1 */}
       <ClientHubFilters
@@ -197,7 +199,7 @@ export function ClientHub({ user }: ClientHubProps) {
       />
 
       {/* Client List or Empty State */}
-      {clients.length === 0 && !isLoading ? (
+      {clients.length === 0 && !isLoading && !isFilterLoading ? (
         <ClientHubEmptyState
           hasFilters={
             filters.dateRange !== 'all' ||
@@ -210,15 +212,26 @@ export function ClientHub({ user }: ClientHubProps) {
           onClearFilters={resetFilters}
         />
       ) : (
-        <ClientTable
-          clients={clients}
-          isLoading={isLoading}
-          onEdit={setSelectedClient}
-          onDelete={handleDeleteClient}
-          onStatusChange={handleStatusChange}
-          getPurchaseBySession={getPurchaseBySession}
-          getPurchaseByClientName={getPurchaseByClientName}
-        />
+        <div className="relative">
+          {/* Smooth loading overlay for filter changes */}
+          {isFilterLoading && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
+              <div className="flex flex-col items-center gap-3">
+                <RefreshCw className="h-8 w-8 text-blue-600 animate-spin" />
+                <p className="text-sm font-medium text-gray-700">Updating results...</p>
+              </div>
+            </div>
+          )}
+          <ClientTable
+            clients={clients}
+            isLoading={isLoading} // Only full skeleton on initial load
+            onEdit={setSelectedClient}
+            onDelete={handleDeleteClient}
+            onStatusChange={handleStatusChange}
+            getPurchaseBySession={getPurchaseBySession}
+            getPurchaseByClientName={getPurchaseByClientName}
+          />
+        </div>
       )}
 
       {/* NEW: Pagination Controls */}

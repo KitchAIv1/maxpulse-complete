@@ -91,9 +91,12 @@ export function useClientData(
   filters?: ClientDataFilters
 ) {
   const [clients, setClients] = useState<UnifiedClient[]>([]);
+  const [allClients, setAllClients] = useState<UnifiedClient[]>([]); // All clients for stats (unfiltered)
   const [isLoading, setIsLoading] = useState(false);
+  const [isFilterLoading, setIsFilterLoading] = useState(false); // Separate loading state for filters
   const [totalCount, setTotalCount] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track if it's the first load
   
   // Stable reference for real-time callbacks
   const loadClientDataRef = useRef<() => void>();
@@ -145,7 +148,12 @@ export function useClientData(
       return;
     }
 
-    setIsLoading(true);
+    // Use different loading states for initial load vs filter changes
+    if (isInitialLoad) {
+      setIsLoading(true); // Full screen skeleton for initial load
+    } else {
+      setIsFilterLoading(true); // Just table overlay for filter changes
+    }
     
     try {
       // ✅ SCALABLE: Query assessment_sessions table directly (not events)
@@ -269,14 +277,23 @@ export function useClientData(
       });
       
       setClients(unifiedClients);
+      
+      // ✅ FIX #3: Always use unfiltered clients for stats cards
+      // Stats should always show overall numbers, not filtered results
+      setAllClients(unifiedClients);
+      
       } catch (error) {
         console.error('Error loading client data:', error);
         // No fallback data - show empty state when no assessment data exists
         setClients([]);
+        setAllClients([]);
       }
       
       setIsLoading(false);
+      setIsFilterLoading(false);
+      setIsInitialLoad(false); // After first load, all subsequent loads are filter changes
   }, [
+    isInitialLoad,
     distributorId, 
     filters?.page,
     filters?.pageSize,
@@ -309,8 +326,10 @@ export function useClientData(
   }, []);
 
   return {
-    clients,
+    clients, // Filtered clients for table display
+    allClients, // All clients for stats cards (unfiltered)
     isLoading,
+    isFilterLoading, // New: separate loading state for smooth filter transitions
     totalCount,
     filteredCount,
     loadClientData,
