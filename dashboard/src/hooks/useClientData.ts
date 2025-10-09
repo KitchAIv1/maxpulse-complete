@@ -278,10 +278,8 @@ export function useClientData(
       
       setClients(unifiedClients);
       
-      // ✅ SIMPLIFIED: Only update allClients on initial load (stats should never change)
-      if (isInitialLoad || allClients.length === 0) {
-        setAllClients(unifiedClients);
-      }
+      // ✅ Core cards reflect filtered results
+      setAllClients(unifiedClients);
       
       } catch (error) {
         console.error('Error loading client data:', error);
