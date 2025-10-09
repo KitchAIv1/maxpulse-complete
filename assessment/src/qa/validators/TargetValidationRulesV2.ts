@@ -354,6 +354,18 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     description: 'Men: 0.035 L/kg, Women: 0.031 L/kg (National Academies)',
     category: 'target',
     validate: (profile, result) => {
+      // Defensive check
+      if (!result.personalizedTargets?.hydration?.target) {
+        return {
+          ruleId: 'target_hydration_gender_specific',
+          passed: false,
+          expected: 'Hydration target exists',
+          actual: 'Missing',
+          message: 'Hydration target missing',
+          severity: 'critical'
+        };
+      }
+      
       const gender = profile.demographics.gender;
       const weight = profile.demographics.weight;
       const hydrationTarget = result.personalizedTargets.hydration.target;
@@ -389,6 +401,19 @@ export const TargetValidationRulesV2: ValidationRule[] = [
     validate: (profile, result) => {
       const medicalConditions = profile.medicalData?.conditions || [];
       const isPregnant = medicalConditions.includes('pregnancy_breastfeeding');
+      
+      // Defensive check
+      if (!result.personalizedTargets?.hydration?.target) {
+        return {
+          ruleId: 'target_hydration_pregnancy_bonus',
+          passed: false,
+          expected: 'Hydration target exists',
+          actual: 'Missing',
+          message: 'Hydration target missing',
+          severity: 'critical'
+        };
+      }
+      
       const hydrationTarget = result.personalizedTargets.hydration.target;
       const gender = profile.demographics.gender;
       const weight = profile.demographics.weight;

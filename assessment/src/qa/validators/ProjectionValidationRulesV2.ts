@@ -335,12 +335,36 @@ export const ProjectionValidationRulesV2: ValidationRule[] = [
     description: 'Better sleep/hydration/exercise should improve energy',
     category: 'projection',
     validate: (profile, result) => {
+      // Defensive checks
+      if (!result.ninetyDayProjection?.energyLevel || !result.ninetyDayProjection?.sleep || !result.ninetyDayProjection?.hydration) {
+        return {
+          ruleId: 'projection_energy_correlates_improvements',
+          passed: false,
+          expected: 'All projections exist',
+          actual: 'Missing projections',
+          message: 'Missing energy/sleep/hydration projections',
+          severity: 'critical'
+        };
+      }
+      
       const energyProjection = result.ninetyDayProjection.energyLevel;
       const currentEnergy = energyProjection.current;
       const projectedEnergy = energyProjection.projected;
       
       const sleepProjection = result.ninetyDayProjection.sleep;
       const hydrationProjection = result.ninetyDayProjection.hydration;
+      
+      if (sleepProjection.projected === undefined || sleepProjection.current === undefined ||
+          hydrationProjection.projected === undefined || hydrationProjection.current === undefined) {
+        return {
+          ruleId: 'projection_energy_correlates_improvements',
+          passed: false,
+          expected: 'Complete projection data',
+          actual: 'Incomplete',
+          message: 'Missing current/projected values',
+          severity: 'critical'
+        };
+      }
       
       const sleepImprovement = sleepProjection.projected - sleepProjection.current;
       const hydrationImprovement = ((hydrationProjection.projected - hydrationProjection.current) / hydrationProjection.current) * 100;
