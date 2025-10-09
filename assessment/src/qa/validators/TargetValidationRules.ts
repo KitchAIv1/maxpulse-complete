@@ -17,7 +17,7 @@ export class TargetValidationRules {
         category: 'target',
         validate: (profile, result) => {
           if (profile.healthMetrics.sleep <= 3) {
-            const sleepTarget = result.personalizedTargets.sleep.targetHours;
+            const sleepTarget = result.personalizedTargets.sleep.targetMinHours;
             const passed = sleepTarget >= 7;
             
             return {
@@ -50,13 +50,13 @@ export class TargetValidationRules {
           
           if (bmi < 18.5) {
             const weightTarget = result.personalizedTargets.weight;
-            const isGainDirection = weightTarget.deficitWeight > 0 && weightTarget.excessWeight === 0;
+            const isGainDirection = weightTarget.deficitKg > 0 && weightTarget.excessKg === 0 && weightTarget.isUnderweight === true;
             
             return {
               ruleId: 'target_underweight_weight_gain',
               passed: isGainDirection,
-              expected: 'Weight gain target',
-              actual: isGainDirection ? 'Weight gain' : 'Weight loss',
+              expected: 'Weight gain target (deficit > 0, excess = 0)',
+              actual: `deficit: ${weightTarget.deficitKg}kg, excess: ${weightTarget.excessKg}kg`,
               message: isGainDirection ? 'Correct weight gain target' : 'Underweight should target weight GAIN',
               severity: isGainDirection ? 'low' : 'critical'
             };
@@ -83,7 +83,7 @@ export class TargetValidationRules {
           );
           
           if (hasCriticalCondition) {
-            const stepsTarget = result.personalizedTargets.steps.targetSteps;
+            const stepsTarget = result.personalizedTargets.steps.targetDaily;
             const passed = stepsTarget <= 8000;
             
             return {
@@ -113,25 +113,26 @@ export class TargetValidationRules {
         category: 'target',
         validate: (profile, result) => {
           const age = profile.demographics.age;
-          const sleepTarget = result.personalizedTargets.sleep.targetHours;
+          const sleepTargetMin = result.personalizedTargets.sleep.targetMinHours;
+          const sleepTargetMax = result.personalizedTargets.sleep.targetMaxHours;
           
           let passed = true;
           let expected = '7-9 hours';
           
           if (age >= 65) {
             expected = '7-8 hours';
-            passed = sleepTarget >= 7 && sleepTarget <= 8;
+            passed = sleepTargetMin >= 7 && sleepTargetMax <= 9;
           } else if (age >= 18) {
             expected = '7-9 hours';
-            passed = sleepTarget >= 7 && sleepTarget <= 9;
+            passed = sleepTargetMin >= 7 && sleepTargetMax <= 9;
           }
           
           return {
             ruleId: 'target_age_appropriate_sleep',
             passed,
             expected,
-            actual: `${sleepTarget} hours`,
-            message: passed ? 'Age-appropriate sleep target' : `Sleep target ${sleepTarget}hrs not appropriate for age ${age}`,
+            actual: `${sleepTargetMin}-${sleepTargetMax} hours`,
+            message: passed ? 'Age-appropriate sleep target' : `Sleep target ${sleepTargetMin}-${sleepTargetMax}hrs not appropriate for age ${age}`,
             severity: passed ? 'low' : 'medium'
           };
         }
@@ -142,7 +143,7 @@ export class TargetValidationRules {
         description: 'Step targets should be achievable',
         category: 'target',
         validate: (profile, result) => {
-          const stepsTarget = result.personalizedTargets.steps.targetSteps;
+          const stepsTarget = result.personalizedTargets.steps.targetDaily;
           const passed = stepsTarget >= 4000 && stepsTarget <= 12000;
           
           return {

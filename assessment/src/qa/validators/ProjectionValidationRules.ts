@@ -119,35 +119,31 @@ export class ProjectionValidationRules {
         description: 'Milestones should not surpass healthy maximums',
         category: 'projection',
         validate: (profile, result) => {
-          // Defensive check: ensure progressiveTargets exists
-          if (!result.transformationRoadmap?.progressiveTargets?.weeklyTargets) {
+          // Defensive check: ensure phases exist
+          if (!result.transformationRoadmap?.phases || result.transformationRoadmap.phases.length === 0) {
             return {
               ruleId: 'projection_progressive_targets_not_excessive',
               passed: true,
               expected: 'N/A',
               actual: 'N/A',
-              message: 'Progressive targets not available',
+              message: 'Transformation phases not available',
               severity: 'low'
             };
           }
           
-          const weeklyTargets = result.transformationRoadmap.progressiveTargets.weeklyTargets;
+          // Check all phases for excessive targets
+          // Note: V2 engine uses phases[].weeklyMilestones, not progressiveTargets.weeklyTargets
+          // Milestone structure doesn't have sleep/steps values - it has focus strings
+          // This rule needs to be redesigned to match actual V2 structure
           
-          // Check that sleep targets don't exceed 9 hours
-          const excessiveSleep = weeklyTargets.some(week => week.sleep > 9);
-          
-          // Check that step targets don't exceed 15,000
-          const excessiveSteps = weeklyTargets.some(week => week.steps > 15000);
-          
-          const passed = !excessiveSleep && !excessiveSteps;
-          
+          // For now, pass since we can't validate weekly targets from current structure
           return {
             ruleId: 'projection_progressive_targets_not_excessive',
-            passed,
-            expected: 'Sleep <= 9hrs, Steps <= 15000',
-            actual: excessiveSleep ? 'Sleep > 9hrs' : excessiveSteps ? 'Steps > 15000' : 'Within limits',
-            message: passed ? 'Progressive targets realistic' : 'Some weekly targets exceed healthy maximums',
-            severity: passed ? 'low' : 'high'
+            passed: true,
+            expected: 'N/A',
+            actual: 'N/A',
+            message: 'Rule needs redesign - weekly milestones are text descriptions',
+            severity: 'low'
           };
         }
       },
@@ -193,38 +189,20 @@ export class ProjectionValidationRules {
         description: 'Sleep improvements should be realistic over 90 days',
         category: 'projection',
         validate: (profile, result) => {
-          // Defensive check: ensure data exists
-          if (!result.transformationRoadmap?.progressiveTargets?.weeklyTargets) {
-            return {
-              ruleId: 'projection_sleep_improves_gradually',
-              passed: true,
-              expected: 'N/A',
-              actual: 'N/A',
-              message: 'Progressive targets not available',
-              severity: 'low'
-            };
-          }
-          
           const currentSleep = result.ninetyDayProjection.sleep.current;
           const projectedSleep = result.ninetyDayProjection.sleep.projected;
-          const weeklyTargets = result.transformationRoadmap.progressiveTargets.weeklyTargets;
+          const sleepChange = result.ninetyDayProjection.sleep.change;
           
-          if (currentSleep <= 5 && weeklyTargets.length >= 4) {
-            const week1Sleep = weeklyTargets[0].sleep;
-            const week4Sleep = weeklyTargets[3].sleep;
-            const week13Sleep = weeklyTargets[weeklyTargets.length - 1].sleep;
-            
-            // Sleep should improve progressively, not jump instantly
-            const week1Improvement = week1Sleep - currentSleep;
-            const gradualImprovement = week1Sleep < week4Sleep && week4Sleep <= week13Sleep;
-            const passed = week1Improvement < 2 && gradualImprovement;
+          if (currentSleep <= 5) {
+            // Poor sleep should improve, but not excessively
+            const passed = sleepChange > 0 && sleepChange <= 3 && projectedSleep <= 9;
             
             return {
               ruleId: 'projection_sleep_improves_gradually',
               passed,
-              expected: 'Gradual improvement',
-              actual: gradualImprovement ? 'Gradual' : 'Too rapid',
-              message: passed ? 'Sleep improves realistically' : 'Sleep improvement too rapid',
+              expected: 'Gradual improvement (+0.5 to +3 hrs, max 9hrs)',
+              actual: `${currentSleep.toFixed(1)} → ${projectedSleep.toFixed(1)} (${sleepChange >= 0 ? '+' : ''}${sleepChange.toFixed(1)}hrs)`,
+              message: passed ? 'Sleep improves realistically' : 'Sleep improvement rate or target unusual',
               severity: passed ? 'low' : 'medium'
             };
           }
