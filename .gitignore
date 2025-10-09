@@ -71,3 +71,7 @@ Thumbs.db
 # Vercel
 .vercel
 */.vercel
+# QA Results - Large files excluded from Git
+assessment/qa-results/*.json
+assessment/qa-results/validation_*.json
+*.json.large
