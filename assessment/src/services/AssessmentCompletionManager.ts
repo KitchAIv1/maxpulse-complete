@@ -130,17 +130,16 @@ export class AssessmentCompletionManager {
    */
   private async createAssessmentRecord(data: AssessmentCompletionData): Promise<string | null> {
     try {
+      // Use insert instead of upsert - each assessment completion is unique
       const { data: assessment, error } = await supabase
         .from('assessments')
-        .upsert({
+        .insert({
           distributor_id: data.distributorId,
           assessment_type: data.assessmentType,
           status: 'completed',
           started_at: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago estimate
           completed_at: data.completedAt,
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'distributor_id,assessment_type,completed_at'
         })
         .select('id')
         .single();
