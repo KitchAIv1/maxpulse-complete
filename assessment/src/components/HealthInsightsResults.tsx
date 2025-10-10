@@ -326,6 +326,7 @@ export function HealthInsightsResults({
             <RiskFactorCards
               riskAnalysis={v2Analysis.analysis.riskAnalysis}
               hardTruth={v2Analysis.analysis.hardTruth}
+              onStartJourney={onContinueToPersonalizedPlan}
             />
             <TransformationRoadmap
               roadmap={v2Analysis.analysis.transformationRoadmap}
@@ -333,6 +334,7 @@ export function HealthInsightsResults({
             <ProjectionTable
               projection={v2Analysis.analysis.ninetyDayProjection}
               priorityActions={v2Analysis.analysis.priorityActions}
+              onStartTransformation={onContinueToPersonalizedPlan}
             />
           </div>
         ) : null

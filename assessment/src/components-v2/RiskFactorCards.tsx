@@ -11,11 +11,13 @@ import { CompoundRiskAnalysis } from '../services-v2/RiskCalculator';
 interface RiskFactorCardsProps {
   riskAnalysis: CompoundRiskAnalysis;
   hardTruth: string;
+  onStartJourney?: () => void;
 }
 
 export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
   riskAnalysis,
-  hardTruth
+  hardTruth,
+  onStartJourney
 }) => {
   
   // Get severity colors (Cal AI style: minimal, clean)
@@ -168,7 +170,10 @@ export const RiskFactorCards: React.FC<RiskFactorCardsProps> = ({
           <p className="text-blue-100 text-sm mb-4">
             Your transformation starts with a single decision
           </p>
-          <button className="w-full py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">
+          <button 
+            onClick={onStartJourney}
+            className="w-full py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-gray-50 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+          >
             Start Your Journey Now
           </button>
         </div>
