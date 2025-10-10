@@ -87,58 +87,12 @@ export default function App() {
     return <PersonalizedAnalysisV2Preview />;
   }
   
-  // Persist app state on refresh - lock to V2 analysis/CTA pages (SESSION-SPECIFIC)
-  const [appState, setAppState] = useState<AppState>(() => {
-    // Get current session ID from URL to make localStorage session-specific
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get('session');
-    
-    if (sessionId) {
-      const sessionKey = `maxpulse_app_state_${sessionId}`;
-      const saved = localStorage.getItem(sessionKey);
-      // Only restore if user was on results/analysis/CTA pages AND it's the same session
-      if (saved && ['health-insights', 'personalized-plan', 'wealth-results', 'hybrid-results'].includes(saved)) {
-        return saved as AppState;
-      }
-    }
-    
-    return 'welcome';
-  });
-  
+  const [appState, setAppState] = useState<AppState>('welcome');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [selectedPriority, setSelectedPriority] = useState<Priority | null>(() => {
-    // Get current session ID from URL to make localStorage session-specific
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get('session');
-    
-    if (sessionId) {
-      const sessionKey = `maxpulse_priority_${sessionId}`;
-      const saved = localStorage.getItem(sessionKey);
-      return saved as Priority | null;
-    }
-    
-    return null;
-  });
+  const [selectedPriority, setSelectedPriority] = useState<Priority | null>(null);
   const [startTime, setStartTime] = useState<number>(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  
-  // Persist state to localStorage whenever it changes (for refresh lock) - SESSION-SPECIFIC
-  React.useEffect(() => {
-    if (appState === 'health-insights' || appState === 'personalized-plan' || 
-        appState === 'wealth-results' || appState === 'hybrid-results') {
-      // Get current session ID from URL to make localStorage session-specific
-      const params = new URLSearchParams(window.location.search);
-      const sessionId = params.get('session');
-      
-      if (sessionId) {
-        localStorage.setItem(`maxpulse_app_state_${sessionId}`, appState);
-        if (selectedPriority) {
-          localStorage.setItem(`maxpulse_priority_${sessionId}`, selectedPriority);
-        }
-      }
-    }
-  }, [appState, selectedPriority]);
   const [userProfile, setUserProfile] = useState<UserProfile>({});
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentEducationalSlide, setCurrentEducationalSlide] = useState<any>(null);
