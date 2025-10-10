@@ -87,12 +87,35 @@ export default function App() {
     return <PersonalizedAnalysisV2Preview />;
   }
   
-  const [appState, setAppState] = useState<AppState>('welcome');
+  // Persist app state on refresh - lock to V2 analysis/CTA pages
+  const [appState, setAppState] = useState<AppState>(() => {
+    const saved = localStorage.getItem('maxpulse_app_state');
+    // Only restore if user was on results/analysis/CTA pages
+    if (saved && ['health-insights', 'personalized-plan', 'wealth-results', 'hybrid-results'].includes(saved)) {
+      return saved as AppState;
+    }
+    return 'welcome';
+  });
+  
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [selectedPriority, setSelectedPriority] = useState<Priority | null>(null);
+  const [selectedPriority, setSelectedPriority] = useState<Priority | null>(() => {
+    const saved = localStorage.getItem('maxpulse_priority');
+    return saved as Priority | null;
+  });
   const [startTime, setStartTime] = useState<number>(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  
+  // Persist state to localStorage whenever it changes (for refresh lock)
+  React.useEffect(() => {
+    if (appState === 'health-insights' || appState === 'personalized-plan' || 
+        appState === 'wealth-results' || appState === 'hybrid-results') {
+      localStorage.setItem('maxpulse_app_state', appState);
+      if (selectedPriority) {
+        localStorage.setItem('maxpulse_priority', selectedPriority);
+      }
+    }
+  }, [appState, selectedPriority]);
   const [userProfile, setUserProfile] = useState<UserProfile>({});
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentEducationalSlide, setCurrentEducationalSlide] = useState<any>(null);

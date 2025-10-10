@@ -2,6 +2,7 @@
  * MAXPULSE CTA Page - Isolated CSS Module
  * 100% independent from global styles, Tailwind, and other components
  * Zero impact on assessment flow or other pages
+ * Brand Color: Red/Amber (#dc2626, #f59e0b) - matches landing page
  */
 
 /* ==================== CONTAINER ==================== */
@@ -44,7 +45,7 @@
 .heroSection {
   max-width: 1024px;
   margin: 0 auto;
-  padding: 80px 32px;
+  padding: 48px 32px 32px;
   text-align: center;
 }
 
@@ -58,19 +59,19 @@
 .logoIcon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 12px;
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
 }
 
 .logoText {
   font-size: 36px;
   font-weight: 700;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -87,7 +88,7 @@
 .heroTitleGradient {
   display: block;
   margin-top: 8px;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -120,7 +121,7 @@
 .featuresSection {
   max-width: 1536px;
   margin: 0 auto;
-  padding: 96px 32px;
+  padding: 48px 32px 64px;
 }
 
 .featuresGrid {
@@ -146,7 +147,7 @@
 .featureIconContainer {
   width: 64px;
   height: 64px;
-  background-color: #eff6ff;
+  background-color: #fef2f2;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -158,7 +159,7 @@
 .featureIcon {
   width: 32px;
   height: 32px;
-  color: #2563eb;
+  color: #dc2626;
 }
 
 .featureTitle {
@@ -180,18 +181,18 @@
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
-  background-color: #eff6ff;
-  border: 1px solid #dbeafe;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 500;
-  color: #2563eb;
+  color: #dc2626;
 }
 
 /* ==================== HOW IT WORKS SECTION ==================== */
 .howItWorksSection {
   background-color: #f9fafb;
-  padding: 96px 0;
+  padding: 64px 0;
 }
 
 .howItWorksContainer {
@@ -227,12 +228,12 @@
 .stepIconBox {
   width: 96px;
   height: 96px;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
   border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
 }
 
 .stepIcon {
@@ -249,14 +250,14 @@
   width: 48px;
   height: 48px;
   background-color: #ffffff;
-  border: 3px solid #2563eb;
+  border: 3px solid #dc2626;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   font-weight: 700;
-  color: #2563eb;
+  color: #dc2626;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -278,7 +279,7 @@
 .ctaSection {
   max-width: 1024px;
   margin: 0 auto;
-  padding: 96px 32px;
+  padding: 64px 32px;
 }
 
 .ctaCard {
@@ -345,19 +346,19 @@
   align-items: center;
   gap: 12px;
   padding: 24px 48px;
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
   color: #ffffff;
   font-size: 20px;
   font-weight: 600;
   border: none;
   border-radius: 16px;
   cursor: pointer;
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4);
   transition: all 0.2s ease;
 }
 
 .purchaseButton:hover:not(:disabled) {
-  box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 20px 25px -5px rgba(220, 38, 38, 0.4);
   transform: scale(1.02);
 }
 
@@ -455,12 +456,12 @@
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background-color: #2563eb;
+  background-color: #dc2626;
   color: #ffffff;
   padding: 16px 24px;
   border-radius: 16px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-  border: 1px solid #1d4ed8;
+  border: 1px solid #b91c1c;
   z-index: 9999;
   display: flex;
   align-items: center;
