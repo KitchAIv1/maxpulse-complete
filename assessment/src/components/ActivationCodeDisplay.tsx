@@ -49,7 +49,14 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
   };
   
   return (
-    <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-200">
+    <div 
+      className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-200"
+      style={{ 
+        position: 'relative',
+        zIndex: 999,
+        pointerEvents: 'auto'
+      }}
+    >
       {/* Success Header */}
       <div className="text-center mb-6">
         <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -136,11 +143,35 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
         Download MAXPULSE App
       </button>
       
-      {/* Close Link (optional) */}
+      {/* Close Button */}
       {onClose && (
         <button
-          onClick={onClose}
-          className="w-full mt-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition"
+          onClick={() => {
+            console.log('🔴 Close button clicked!');
+            onClose();
+          }}
+          style={{
+            width: '100%',
+            marginTop: '16px',
+            padding: '12px 24px',
+            backgroundColor: '#f3f4f6',
+            color: '#374151',
+            border: 'none',
+            borderRadius: '12px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            zIndex: 1000
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#e5e7eb';
+            e.currentTarget.style.color = '#111827';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#f3f4f6';
+            e.currentTarget.style.color = '#374151';
+          }}
         >
           Close
         </button>
