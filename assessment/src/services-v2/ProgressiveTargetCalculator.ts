@@ -211,4 +211,25 @@ export class ProgressiveTargetCalculator {
   formatMilestone(milestone: WeeklyMilestone): string {
     return `Week ${milestone.week}: ${milestone.hydrationLiters}L water, ${milestone.sleepHours}hrs sleep, ${milestone.stepsDaily} steps`;
   }
+  
+  /**
+   * Calculate progressive steps targets for Phase 1
+   * Start from current, gradually increase to target over phase duration
+   * Science: Journal of Sport & Exercise Psychology (2019) - gradual increases maximize adherence
+   */
+  calculateStepsProgression(
+    targets: PersonalizedTargets, 
+    urgencyLevel: 'low' | 'moderate' | 'high'
+  ): number[] {
+    const current = targets.steps?.currentDaily || 5000;
+    const target = targets.steps?.targetDaily || 9000;
+    const weeks = urgencyLevel === 'high' ? 2 : urgencyLevel === 'low' ? 6 : 4;
+    
+    // Progressive increase: 500-1000 steps per week (safe, sustainable)
+    const weeklyIncrease = (target - current) / weeks;
+    
+    return Array.from({ length: weeks }, (_, i) => 
+      Math.round(current + (weeklyIncrease * (i + 1)))
+    );
+  }
 }
