@@ -13,7 +13,9 @@ import {
   Star,
   Zap,
   Calendar,
-  BarChart3
+  BarChart3,
+  Activity,
+  Award
 } from 'lucide-react';
 import { AssessmentResults } from '../types/assessment';
 import styles from './PersonalizedHealthPlan.module.css';
@@ -51,74 +53,41 @@ export function PersonalizedHealthPlan({
   // Extract user name from results, distributorInfo, or use default
   const userName = results.userProfile?.name || distributorInfo?.customerName || 'there';
 
-  // MAXPULSE App Features
+  // Core Value Props for MAXPULSE App
   const appFeatures = [
     {
-      icon: Target,
-      title: "Personalized Daily Targets",
-      description: "Your exact sleep, hydration, and exercise goals from your assessment - automatically tracked and adjusted.",
-      highlight: "Based on your V2 analysis"
+      icon: Activity,
+      title: "Your Daily Balance — Reinvented",
+      description: "Every sip, step, and sleep cycle charges your LIFE Battery, the heart of your health. See your daily energy, focus, and mood improve in real-time — no guesswork, no overwhelm.",
+      highlight: "Real-time vitality tracking"
     },
     {
       icon: Brain,
       title: "AI Health Coach",
-      description: "Smart recommendations that adapt to your progress, challenges, and lifestyle changes in real-time.",
-      highlight: "Powered by advanced AI"
+      description: "A coach that knows you. Ask anything, anytime — your AI coach tracks your habits, adjusts your plan, and recommends supplements or lifestyle tweaks built around your goals.",
+      highlight: "Adaptive & personalized"
     },
     {
-      icon: TrendingUp,
-      title: "Progress Analytics",
-      description: "Visual dashboards showing your health improvements, risk reductions, and milestone achievements.",
-      highlight: "See your transformation"
-    },
-    {
-      icon: Users,
-      title: "Community Support",
-      description: "Connect with others on similar health journeys, share wins, and get motivation when you need it most.",
-      highlight: "Never journey alone"
-    },
-    {
-      icon: Heart,
-      title: "Health Risk Monitoring",
-      description: "Track your cardiovascular, diabetes, and metabolic risks as they improve with your lifestyle changes.",
-      highlight: "Science-backed insights"
-    },
-    {
-      icon: Calendar,
-      title: "Habit Building System",
-      description: "Gamified daily routines that make healthy habits stick through proven behavioral psychology.",
-      highlight: "Make it enjoyable"
+      icon: Award,
+      title: "Rewards for Progress",
+      description: "Healthy habits now come with points. Stay consistent, earn rewards, and celebrate milestones — every day you live better, you get closer to free products, perks, and exclusive upgrades.",
+      highlight: "Consistency pays off"
     }
   ];
 
-  // How It Works Steps
-  const howItWorksSteps = [
-    {
-      step: "1",
-      title: "Import Your Data",
-      description: "Your assessment results automatically sync to create your personalized health profile.",
-      icon: Smartphone
-    },
-    {
-      step: "2", 
-      title: "Follow Daily Guidance",
-      description: "Get specific daily actions, reminders, and coaching based on your unique health targets.",
-      icon: Target
-    },
-    {
-      step: "3",
-      title: "Track Your Progress",
-      description: "Watch your health score improve and risks decrease as you build sustainable habits.",
-      icon: BarChart3
-    }
+  // Why Upgrade - Impact Narrative
+  const whyUpgradePoints = [
+    "Personalized daily targets (hydration, steps, sleep, and mood)",
+    "Adaptive coaching based on your actual progress",
+    "Visual LIFE Battery to track your true vitality",
+    "Rewards system that turns consistency into currency"
   ];
 
   // Trust Indicators
   const trustIndicators = [
-    { icon: Star, text: "4.8/5 App Store Rating" },
-    { icon: Shield, text: "HIPAA Compliant & Secure" },
-    { icon: Check, text: "30-Day Money Back Guarantee" },
-    { icon: Zap, text: "Used by 50,000+ People" }
+    { icon: Users, text: "Trusted by 50,000+ active users worldwide" },
+    { icon: Shield, text: "HIPAA-compliant, private, and secure" },
+    { icon: Star, text: "4.8★ average app rating" }
   ];
 
   // External Purchase URL (replace with actual URL)
@@ -222,18 +191,18 @@ export function PersonalizedHealthPlan({
         </div>
 
         <h1 className={styles.heroTitle}>
-          Your Personal Health
+          Your Plan to Greatness
           <span className={styles.heroTitleGradient}>
-            Transformation App
+            Starts Now
           </span>
         </h1>
         
         <p className={styles.heroDescription}>
-          Hi {userName}! Transform your assessment insights into lasting health changes with the MAXPULSE app - your personalized daily health companion.
+          Turn your health assessment into daily action with <strong>MAXPULSE</strong> — your AI-powered lifestyle builder that grows <em>with you.</em>
         </p>
 
         <div className={styles.heroBadge}>
-          ✨ Personalized for your unique health profile
+          💡 Your personal AI has already analyzed your health data. Now it's time to activate your personalized plan — one that guides your hydration, sleep, movement, mood, and energy every single day.
         </div>
       </div>
 
@@ -262,36 +231,74 @@ export function PersonalizedHealthPlan({
         </div>
       </div>
 
-      {/* How It Works Section */}
+      {/* Why Upgrade Section */}
       <div className={styles.howItWorksSection}>
         <div className={styles.howItWorksContainer}>
           <h2 className={styles.howItWorksTitle}>
-            How MAXPULSE Works
+            Why Upgrade?
           </h2>
           
-          <div className={styles.howItWorksGrid}>
-            {howItWorksSteps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div key={index} className={styles.stepContainer}>
-                  <div className={styles.stepIconWrapper}>
-                    <div className={styles.stepIconBox}>
-                      <Icon className={styles.stepIcon} />
-                    </div>
-                    <div className={styles.stepBadge}>
-                      {step.step}
-                    </div>
-                  </div>
-                  <h3 className={styles.stepTitle}>
-                    {step.title}
-                  </h3>
-                  <p className={styles.stepDescription}>
-                    {step.description}
-                  </p>
-                </div>
-              );
-            })}
+          <p style={{ 
+            fontSize: '18px', 
+            lineHeight: '1.7', 
+            color: '#374151', 
+            maxWidth: '700px', 
+            margin: '0 auto 32px',
+            textAlign: 'center'
+          }}>
+            Your assessment gave you insight.<br />
+            <strong style={{ color: '#dc2626' }}>The MAXPULSE app gives you transformation.</strong>
+          </p>
+
+          <div style={{
+            maxWidth: '600px',
+            margin: '0 auto',
+            backgroundColor: '#ffffff',
+            border: '2px solid #fee2e2',
+            borderRadius: '16px',
+            padding: '32px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          }}>
+            {whyUpgradePoints.map((point, index) => (
+              <div key={index} style={{
+                display: 'flex',
+                alignItems: 'start',
+                gap: '12px',
+                marginBottom: index < whyUpgradePoints.length - 1 ? '20px' : '0'
+              }}>
+                <Check style={{ 
+                  width: '24px', 
+                  height: '24px', 
+                  color: '#16a34a', 
+                  flexShrink: 0,
+                  marginTop: '2px'
+                }} />
+                <span style={{ 
+                  fontSize: '16px', 
+                  lineHeight: '1.6', 
+                  color: '#1f2937',
+                  fontWeight: '500'
+                }}>
+                  {point}
+                </span>
+              </div>
+            ))}
           </div>
+
+          <p style={{ 
+            fontSize: '18px', 
+            lineHeight: '1.7', 
+            color: '#111827', 
+            fontWeight: '600',
+            maxWidth: '650px', 
+            margin: '32px auto 0',
+            textAlign: 'center'
+          }}>
+            👉 <strong>Your plan to greatness is already waiting inside.</strong><br />
+            <span style={{ fontWeight: '400', fontSize: '16px', color: '#6b7280' }}>
+              All you need to do is activate it.
+            </span>
+          </p>
         </div>
       </div>
 
@@ -299,10 +306,10 @@ export function PersonalizedHealthPlan({
       <div className={styles.ctaSection}>
         <div className={styles.ctaCard}>
           <h2 className={styles.ctaTitle}>
-            Ready to Transform Your Health?
+            Choose Your Path to Progress
           </h2>
           <p className={styles.ctaDescription}>
-            Get the MAXPULSE app and turn your assessment insights into lasting results.
+            Activate your MAXPULSE plan today and watch your daily actions become lifelong transformation.
           </p>
           
           {/* Plan Selector */}
@@ -350,10 +357,10 @@ export function PersonalizedHealthPlan({
                 <span style={{ fontSize: '16px', fontWeight: '400', color: '#6b7280' }}>/year</span>
               </div>
               <div style={{ fontSize: '14px', color: '#16a34a', fontWeight: '600', marginBottom: '8px' }}>
-                Save 48% • Best Value
+                🌟 Best Value
               </div>
               <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                Just $4.16/month when paid annually
+                Save 40% + Unlock bonus reward points
               </div>
             </button>
 
@@ -394,10 +401,10 @@ export function PersonalizedHealthPlan({
                 <span style={{ fontSize: '16px', fontWeight: '400', color: '#6b7280' }}>/month</span>
               </div>
               <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500', marginBottom: '8px' }}>
-                Flexible billing
+                🧩 Monthly
               </div>
               <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                Cancel anytime, no commitment
+                Full AI Health Coach, LIFE Battery, Rewards, and all features
               </div>
             </button>
           </div>
@@ -420,7 +427,7 @@ export function PersonalizedHealthPlan({
                 </>
               ) : (
                 <>
-                  Get MAXPULSE App - {selectedPlan === 'annual' ? '$49.99/year' : '$8/month'}
+                  Activate My Plan - {selectedPlan === 'annual' ? '$49.99/year' : '$8/month'}
                   <ExternalLink className={styles.purchaseButtonIcon} />
                 </>
               )}
