@@ -1063,7 +1063,11 @@ export default function App() {
               <motion.div
                 key="results"
                 {...pageTransition}
-                className="px-4 py-8 min-h-screen bg-white dark:bg-gray-900"
+                className={
+                  appState === 'personalized-plan'
+                    ? "min-h-screen"  // CTA page: No padding, full layout control
+                    : "px-4 py-8 min-h-screen bg-white dark:bg-gray-900"  // Other pages: Keep existing layout
+                }
               >
                 <SmartResultsRouter
                   results={getResults()}
