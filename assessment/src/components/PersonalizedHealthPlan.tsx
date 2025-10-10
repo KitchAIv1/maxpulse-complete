@@ -233,13 +233,14 @@ export function PersonalizedHealthPlan({
 
   // ✅ NEW: Show activation code modal (but don't exit flow when closed)
   const [showActivationModal, setShowActivationModal] = useState(false);
+  const [hasUserClosedModal, setHasUserClosedModal] = useState(false);
   
-  // ✅ Show activation code modal when code is first generated
+  // ✅ Show activation code modal when code is first generated (but not if user closed it)
   useEffect(() => {
-    if (activationCode && !showActivationModal) {
+    if (activationCode && !showActivationModal && !hasUserClosedModal) {
       setShowActivationModal(true);
     }
-  }, [activationCode, showActivationModal]);
+  }, [activationCode, showActivationModal, hasUserClosedModal]);
   
   if (showActivationModal && activationCode) {
     return (
@@ -248,7 +249,10 @@ export function PersonalizedHealthPlan({
           code={activationCode}
           customerName={distributorInfo?.customerName}
           planType={selectedPlan}
-          onClose={() => setShowActivationModal(false)} // ✅ Just hide modal, don't exit flow
+          onClose={() => {
+            setShowActivationModal(false);
+            setHasUserClosedModal(true);
+          }} // ✅ Hide modal and prevent re-opening
         />
       </div>
     );
@@ -578,14 +582,30 @@ export function PersonalizedHealthPlan({
           {purchaseCompleted && activationCode ? (
             // ✅ NEW: Already Purchased State
             <div className={styles.alreadyPurchasedContainer}>
-              <div className={styles.purchaseSuccess}>
-                <Check className={styles.purchaseSuccessIcon} />
-                <span>Plan Activated Successfully!</span>
+              {/* Status & Completion Group */}
+              <div className={styles.statusGroup}>
+                <h3 className={styles.statusTitle}>
+                  <Check className={styles.statusIcon} />
+                  Plan Activated Successfully!
+                </h3>
+                
+                <h3 
+                  className={styles.statusTitle}
+                  onClick={onCompletePersonalizedPlan}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Check className={styles.statusIcon} />
+                  Complete Assessment
+                </h3>
               </div>
               
+              {/* MAXPULSE Actions Group */}
               <div className={styles.purchasedActions}>
                 <button
-                  onClick={() => setShowActivationModal(true)} // Show code modal again
+                  onClick={() => {
+                    setShowActivationModal(true);
+                    setHasUserClosedModal(false);
+                  }}
                   className={styles.viewCodeButton}
                 >
                   <Smartphone className={styles.actionIcon} />

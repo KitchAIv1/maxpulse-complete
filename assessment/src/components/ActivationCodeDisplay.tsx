@@ -53,7 +53,7 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
       className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-200"
       style={{ 
         position: 'relative',
-        zIndex: 999,
+        zIndex: '999',
         pointerEvents: 'auto'
       }}
     >
@@ -153,24 +153,25 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
           style={{
             width: '100%',
             marginTop: '16px',
-            padding: '12px 24px',
-            backgroundColor: '#f3f4f6',
-            color: '#374151',
-            border: 'none',
+            padding: '16px 24px',
+            backgroundColor: '#dc2626',
+            color: '#ffffff',
+            border: '2px solid #dc2626',
             borderRadius: '12px',
-            fontSize: '16px',
-            fontWeight: '600',
+            fontSize: '18px',
+            fontWeight: '700',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            zIndex: 1000
+            zIndex: '9999',
+            position: 'relative'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#e5e7eb';
-            e.currentTarget.style.color = '#111827';
+            e.currentTarget.style.backgroundColor = '#b91c1c';
+            e.currentTarget.style.color = '#ffffff';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#f3f4f6';
-            e.currentTarget.style.color = '#374151';
+            e.currentTarget.style.backgroundColor = '#dc2626';
+            e.currentTarget.style.color = '#ffffff';
           }}
         >
           Close
