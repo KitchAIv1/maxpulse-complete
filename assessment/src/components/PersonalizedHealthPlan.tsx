@@ -375,7 +375,6 @@ export function PersonalizedHealthPlan({
             })}
           </div>
         </div>
-        </div>
       </div>
 
       {/* CTA Section - Narrow, Focused */}
