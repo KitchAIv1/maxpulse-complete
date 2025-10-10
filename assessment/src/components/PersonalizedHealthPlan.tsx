@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Smartphone, 
   Target, 
@@ -42,6 +42,33 @@ export function PersonalizedHealthPlan({
   const [purchaseCompleted, setPurchaseCompleted] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
   const [activationCode, setActivationCode] = useState<string | null>(null);
+  
+  // ✅ NEW: Purchase state persistence
+  const purchaseStateKey = `maxpulse_purchase_${distributorInfo?.code || 'unknown'}`;
+  
+  // ✅ Load purchase state on mount
+  useEffect(() => {
+    const savedPurchaseState = localStorage.getItem(purchaseStateKey);
+    if (savedPurchaseState) {
+      const { purchased, code, plan } = JSON.parse(savedPurchaseState);
+      if (purchased) {
+        setPurchaseCompleted(true);
+        setActivationCode(code);
+        setSelectedPlan(plan);
+      }
+    }
+  }, [purchaseStateKey]);
+  
+  // ✅ Save purchase state when completed
+  const savePurchaseState = (code: string, plan: 'annual' | 'monthly') => {
+    const purchaseState = {
+      purchased: true,
+      code,
+      plan,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(purchaseStateKey, JSON.stringify(purchaseState));
+  };
   
   // Add error handling for missing results
   if (!results) {
@@ -135,6 +162,9 @@ export function PersonalizedHealthPlan({
       if (result.success && result.code) {
         setActivationCode(result.code);
         
+        // ✅ NEW: Save purchase state for persistence
+        savePurchaseState(result.code, selectedPlan);
+        
         // Track activation code generation
         if (trackProgress) {
           trackProgress('activation_code_generated', {
@@ -200,15 +230,24 @@ export function PersonalizedHealthPlan({
     }
   };
 
-  // ✅ NEW: Show activation code display if code was generated
-  if (activationCode) {
+  // ✅ NEW: Show activation code modal (but don't exit flow when closed)
+  const [showActivationModal, setShowActivationModal] = useState(false);
+  
+  // ✅ Show activation code modal when code is first generated
+  useEffect(() => {
+    if (activationCode && !showActivationModal) {
+      setShowActivationModal(true);
+    }
+  }, [activationCode, showActivationModal]);
+  
+  if (showActivationModal && activationCode) {
     return (
       <div className={styles.ctaContainer} style={{ padding: '40px 20px' }}>
         <ActivationCodeDisplay
           code={activationCode}
           customerName={distributorInfo?.customerName}
           planType={selectedPlan}
-          onClose={onCompletePersonalizedPlan}
+          onClose={() => setShowActivationModal(false)} // ✅ Just hide modal, don't exit flow
         />
       </div>
     );
@@ -535,7 +574,37 @@ export function PersonalizedHealthPlan({
             </button>
           </div>
 
-          {purchaseCompleted ? (
+          {purchaseCompleted && activationCode ? (
+            // ✅ NEW: Already Purchased State
+            <div className={styles.alreadyPurchasedContainer}>
+              <div className={styles.purchaseSuccess}>
+                <Check className={styles.purchaseSuccessIcon} />
+                <span>Plan Activated Successfully!</span>
+              </div>
+              
+              <div className={styles.purchasedActions}>
+                <button
+                  onClick={() => setShowActivationModal(true)} // Show code modal again
+                  className={styles.viewCodeButton}
+                >
+                  <Smartphone className={styles.actionIcon} />
+                  View My Activation Code
+                </button>
+                
+                <button
+                  onClick={() => window.open('https://apps.apple.com/app/maxpulse', '_blank')}
+                  className={styles.downloadButton}
+                >
+                  <ExternalLink className={styles.actionIcon} />
+                  Download MAXPULSE App
+                </button>
+              </div>
+              
+              <p className={styles.purchasedNote}>
+                Your {selectedPlan} plan is ready! Use your activation code in the MAXPULSE app to get started.
+              </p>
+            </div>
+          ) : purchaseCompleted ? (
             <div className={styles.purchaseSuccess}>
               <Check className={styles.purchaseSuccessIcon} />
               Purchase Confirmed! Redirecting...

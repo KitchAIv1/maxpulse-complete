@@ -407,6 +407,102 @@
   height: 24px;
 }
 
+/* ==================== ALREADY PURCHASED STATE ==================== */
+.alreadyPurchasedContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 32px;
+  background-color: #f8fafc;
+  border-radius: 20px;
+  border: 2px solid #e2e8f0;
+}
+
+.purchasedActions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.viewCodeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.viewCodeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.downloadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background-color: white;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.downloadButton:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.actionIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.purchasedNote {
+  text-align: center;
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 400px;
+}
+
+/* Mobile Responsiveness for Already Purchased */
+@media (max-width: 640px) {
+  .alreadyPurchasedContainer {
+    padding: 24px 20px;
+  }
+  
+  .purchasedActions {
+    max-width: 100%;
+  }
+  
+  .viewCodeButton,
+  .downloadButton {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+}
+
 /* ==================== TRUST INDICATORS ==================== */
 .trustSection {
   max-width: 1280px;
