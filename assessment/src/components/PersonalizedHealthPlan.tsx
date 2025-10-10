@@ -36,6 +36,7 @@ export function PersonalizedHealthPlan({
   
   const [isPurchaseTracking, setIsPurchaseTracking] = useState(false);
   const [purchaseCompleted, setPurchaseCompleted] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
   
   // Add error handling for missing results
   if (!results) {
@@ -129,6 +130,8 @@ export function PersonalizedHealthPlan({
       trackProgress('maxpulse_app_cta_clicked', {
         userName,
         distributorCode: distributorInfo.code,
+        selectedPlan,
+        price: selectedPlan === 'annual' ? 49.99 : 8.00,
         timestamp: new Date().toISOString()
       });
     }
@@ -136,8 +139,8 @@ export function PersonalizedHealthPlan({
     // Start purchase tracking
     setIsPurchaseTracking(true);
     
-    // Open external purchase page
-    window.open(PURCHASE_URL, '_blank');
+    // Open external purchase page with plan parameter
+    window.open(`${PURCHASE_URL}?plan=${selectedPlan}`, '_blank');
     
     // Start monitoring for purchase completion
     startPurchaseMonitoring();
@@ -168,8 +171,9 @@ export function PersonalizedHealthPlan({
             trackProgress('maxpulse_app_purchase_completed', {
               userName,
               distributorCode: distributorInfo.code,
-              timestamp: new Date().toISOString(),
-              purchaseValue: 29.99 // Replace with actual price
+              selectedPlan,
+              purchaseValue: selectedPlan === 'annual' ? 49.99 : 8.00,
+              timestamp: new Date().toISOString()
             });
           }
           
@@ -301,12 +305,101 @@ export function PersonalizedHealthPlan({
             Get the MAXPULSE app and turn your assessment insights into lasting results.
           </p>
           
-          <div className={styles.pricingContainer}>
-            <div className={styles.priceMain}>$29.99</div>
-            <div className={styles.priceDetails}>
-              <div className={styles.priceOriginal}>$49.99</div>
-              <div className={styles.priceDiscount}>Limited Time: 40% OFF</div>
-            </div>
+          {/* Plan Selector */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '16px', 
+            justifyContent: 'center', 
+            marginBottom: '32px',
+            flexWrap: 'wrap'
+          }}>
+            {/* Annual Plan */}
+            <button
+              onClick={() => setSelectedPlan('annual')}
+              style={{
+                flex: '1',
+                minWidth: '240px',
+                maxWidth: '280px',
+                padding: '24px',
+                backgroundColor: selectedPlan === 'annual' ? '#fef2f2' : '#ffffff',
+                border: selectedPlan === 'annual' ? '2px solid #dc2626' : '2px solid #e5e7eb',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                textAlign: 'left'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>Annual Plan</div>
+                {selectedPlan === 'annual' && (
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    backgroundColor: '#dc2626',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Check style={{ width: '16px', height: '16px', color: '#ffffff' }} />
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>
+                $49.99
+                <span style={{ fontSize: '16px', fontWeight: '400', color: '#6b7280' }}>/year</span>
+              </div>
+              <div style={{ fontSize: '14px', color: '#16a34a', fontWeight: '600', marginBottom: '8px' }}>
+                Save 48% • Best Value
+              </div>
+              <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                Just $4.16/month when paid annually
+              </div>
+            </button>
+
+            {/* Monthly Plan */}
+            <button
+              onClick={() => setSelectedPlan('monthly')}
+              style={{
+                flex: '1',
+                minWidth: '240px',
+                maxWidth: '280px',
+                padding: '24px',
+                backgroundColor: selectedPlan === 'monthly' ? '#fef2f2' : '#ffffff',
+                border: selectedPlan === 'monthly' ? '2px solid #dc2626' : '2px solid #e5e7eb',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                textAlign: 'left'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>Monthly Plan</div>
+                {selectedPlan === 'monthly' && (
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    backgroundColor: '#dc2626',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Check style={{ width: '16px', height: '16px', color: '#ffffff' }} />
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#111827', marginBottom: '4px' }}>
+                $8.00
+                <span style={{ fontSize: '16px', fontWeight: '400', color: '#6b7280' }}>/month</span>
+              </div>
+              <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500', marginBottom: '8px' }}>
+                Flexible billing
+              </div>
+              <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                Cancel anytime, no commitment
+              </div>
+            </button>
           </div>
 
           {purchaseCompleted ? (
@@ -327,7 +420,7 @@ export function PersonalizedHealthPlan({
                 </>
               ) : (
                 <>
-                  Get MAXPULSE App
+                  Get MAXPULSE App - {selectedPlan === 'annual' ? '$49.99/year' : '$8/month'}
                   <ExternalLink className={styles.purchaseButtonIcon} />
                 </>
               )}
