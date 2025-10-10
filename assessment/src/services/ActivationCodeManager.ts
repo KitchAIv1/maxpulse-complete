@@ -92,9 +92,11 @@ export class ActivationCodeManager {
         return { success: false, error: 'Session not found' };
       }
       
-      // Get customer name/email from session or metadata
-      const customerName = session.session_data?.customerName || 'MAXPULSE User';
-      const customerEmail = session.session_data?.customerEmail || '';
+      // ✅ FIXED: Get customer name/email from session_data (stored by SupabaseDualWriteManager)
+      // URL params are stored as customer_name and customer_email in session_data JSONB
+      const sessionData = session.session_data || {};
+      const customerName = sessionData.customer_name || sessionData.customerName || 'MAXPULSE User';
+      const customerEmail = sessionData.customer_email || sessionData.customerEmail || '';
       
       // 5. Insert activation code record
       const { data, error } = await supabase

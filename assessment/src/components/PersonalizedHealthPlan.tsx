@@ -194,7 +194,8 @@ export function PersonalizedHealthPlan({
     // ✅ FIXED: Single setTimeout to prevent duplicate code generation
     // For now, simulate with a timeout (replace with real logic)
     setTimeout(() => {
-      const purchaseConfirmed = Math.random() > 0.7; // Simulate 30% conversion
+      // ✅ FIXED: Always confirm purchase for testing (remove randomness)
+      const purchaseConfirmed = true; // Always succeed for now
       
       if (purchaseConfirmed) {
         setPurchaseCompleted(true);
