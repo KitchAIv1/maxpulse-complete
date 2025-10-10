@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { AssessmentResults } from '../types/assessment';
 import styles from './PersonalizedHealthPlan.module.css';
+import { ActivationCodeDisplay } from './ActivationCodeDisplay';
+import { ActivationCodeManager } from '../services/ActivationCodeManager';
 
 interface PersonalizedHealthPlanProps {
   results: AssessmentResults;
@@ -39,6 +41,7 @@ export function PersonalizedHealthPlan({
   const [isPurchaseTracking, setIsPurchaseTracking] = useState(false);
   const [purchaseCompleted, setPurchaseCompleted] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'monthly'>('annual');
+  const [activationCode, setActivationCode] = useState<string | null>(null);
   
   // Add error handling for missing results
   if (!results) {
@@ -115,6 +118,40 @@ export function PersonalizedHealthPlan({
     startPurchaseMonitoring();
   };
 
+  // ✅ NEW: Generate activation code after purchase
+  const generateActivationCode = async () => {
+    try {
+      const manager = new ActivationCodeManager();
+      const result = await manager.generateActivationCode(
+        distributorInfo?.code || '',
+        distributorInfo?.distributorId || '',
+        {
+          purchaseId: `SIMULATED-${Date.now()}`, // Replace with real transaction ID
+          planType: selectedPlan,
+          amount: selectedPlan === 'annual' ? 49.99 : 8.00
+        }
+      );
+      
+      if (result.success && result.code) {
+        setActivationCode(result.code);
+        
+        // Track activation code generation
+        if (trackProgress) {
+          trackProgress('activation_code_generated', {
+            code: result.code,
+            planType: selectedPlan,
+            sessionId: distributorInfo?.code,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } else {
+        console.error('Failed to generate activation code:', result.error);
+      }
+    } catch (error) {
+      console.error('Exception generating activation code:', error);
+    }
+  };
+
   const startPurchaseMonitoring = () => {
     // Simulate purchase completion monitoring
     // In production, this would integrate with actual purchase system
@@ -146,10 +183,11 @@ export function PersonalizedHealthPlan({
             });
           }
           
-          // Trigger completion callback after short delay
-          setTimeout(() => {
-            onCompletePersonalizedPlan();
-          }, 2000);
+          // ✅ NEW: Generate activation code
+          generateActivationCode();
+          
+          // Note: Don't auto-trigger completion callback anymore
+          // User will manually close activation code display
         }
       }, 5000);
     }, 1000);
@@ -167,6 +205,20 @@ export function PersonalizedHealthPlan({
       onBackToResults();
     }
   };
+
+  // ✅ NEW: Show activation code display if code was generated
+  if (activationCode) {
+    return (
+      <div className={styles.ctaContainer} style={{ padding: '40px 20px' }}>
+        <ActivationCodeDisplay
+          code={activationCode}
+          customerName={distributorInfo?.customerName}
+          planType={selectedPlan}
+          onClose={onCompletePersonalizedPlan}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.ctaContainer}>
