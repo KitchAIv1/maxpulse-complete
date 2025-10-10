@@ -198,7 +198,83 @@ export function PersonalizedHealthPlan({
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="maxpulse-cta-wrapper min-h-screen bg-white" style={{ colorScheme: 'light' }}>
+      <style>{`
+        /* Force light mode for CTA page - override system dark mode */
+        .maxpulse-cta-wrapper * {
+          color-scheme: light !important;
+        }
+        .maxpulse-cta-wrapper {
+          background-color: white !important;
+          color: #111827 !important;
+        }
+        /* Force specific text colors */
+        .maxpulse-cta-wrapper h1,
+        .maxpulse-cta-wrapper h2,
+        .maxpulse-cta-wrapper h3,
+        .maxpulse-cta-wrapper p,
+        .maxpulse-cta-wrapper span,
+        .maxpulse-cta-wrapper div {
+          color: inherit !important;
+        }
+        /* Ensure cards have proper backgrounds */
+        .maxpulse-cta-wrapper .bg-white {
+          background-color: white !important;
+        }
+        .maxpulse-cta-wrapper .bg-gray-50 {
+          background-color: #f9fafb !important;
+        }
+        .maxpulse-cta-wrapper .bg-blue-50 {
+          background-color: #eff6ff !important;
+        }
+        .maxpulse-cta-wrapper .bg-green-50 {
+          background-color: #f0fdf4 !important;
+        }
+        /* Text colors that should be preserved */
+        .maxpulse-cta-wrapper .text-gray-900 {
+          color: #111827 !important;
+        }
+        .maxpulse-cta-wrapper .text-gray-700 {
+          color: #374151 !important;
+        }
+        .maxpulse-cta-wrapper .text-gray-600 {
+          color: #4b5563 !important;
+        }
+        .maxpulse-cta-wrapper .text-gray-500 {
+          color: #6b7280 !important;
+        }
+        .maxpulse-cta-wrapper .text-blue-600 {
+          color: #2563eb !important;
+        }
+        .maxpulse-cta-wrapper .text-indigo-600 {
+          color: #4f46e5 !important;
+        }
+        .maxpulse-cta-wrapper .text-green-600 {
+          color: #16a34a !important;
+        }
+        .maxpulse-cta-wrapper .text-green-800 {
+          color: #166534 !important;
+        }
+        .maxpulse-cta-wrapper .text-white {
+          color: white !important;
+        }
+        /* Border colors */
+        .maxpulse-cta-wrapper .border-gray-100 {
+          border-color: #f3f4f6 !important;
+        }
+        .maxpulse-cta-wrapper .border-gray-200 {
+          border-color: #e5e7eb !important;
+        }
+        .maxpulse-cta-wrapper .border-blue-100 {
+          border-color: #dbeafe !important;
+        }
+        .maxpulse-cta-wrapper .border-blue-200 {
+          border-color: #bfdbfe !important;
+        }
+        .maxpulse-cta-wrapper .border-green-200 {
+          border-color: #bbf7d0 !important;
+        }
+      `}</style>
       {/* Back Button */}
       {onBackToResults && (
         <div className="max-w-5xl mx-auto px-6 pt-8 pb-4">
