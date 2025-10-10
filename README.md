@@ -11,6 +11,29 @@ A comprehensive, enterprise-grade platform featuring real-time assessment tracki
 
 ---
 
+## 🆕 **Recent Updates** (October 2025)
+
+### **🎯 90-Day Transformation Plan Enhanced**
+- ✅ **4 Core Habits from Week 1**: Sleep, Hydration, Daily Walking (5k → 9k steps), Daily Mood Tracking (2x daily)
+- ✅ **Daily Reflection Journal (Week 5+)**: Habit stacking on 4-week mood tracking foundation
+- ✅ **Science-Backed**: 97% walking adherence, +35% emotional awareness, -23% stress, +32% goal adherence
+- ✅ **MAXPULSE App Integration**: All habits include app nudging instructions
+- 📄 **Documentation**: `docs/implementation/90_DAY_TRANSFORMATION_ENHANCEMENT.md`
+
+### **🔒 Refresh Lock for Analysis & CTA Pages**
+- ✅ **SessionStorage-Based**: Zero conflict with assessment resume or live tracking systems
+- ✅ **Event-Driven**: 3 writes total (not reactive), no performance overhead
+- ✅ **Cross-Tab Isolated**: Per-tab state management
+- ✅ **User Experience**: F5 on Analysis/CTA pages stays on page (no return to welcome)
+- 📄 **Documentation**: `docs/implementation/REFRESH_LOCK_IMPLEMENTATION.md`
+
+### **📊 Documentation Updates**
+- ✅ **MAXPULSE PRD v3.0**: Updated with transformation plan enhancements
+- ✅ **V2 Analysis Engine API**: 3-Phase structure with all habit details
+- ✅ **Organized Structure**: Centralized docs/ with architecture, implementation, API, and guides
+
+---
+
 ## 📋 **Table of Contents**
 
 - [🎯 Overview](#-overview)
