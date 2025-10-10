@@ -578,7 +578,95 @@ Provide distributors with a powerful, all-in-one platform that delivers instant,
 - Automated follow-up scheduling
 - Results email delivery (future)
 
-#### 6.4 V2 Analysis Engine - Technical Architecture ⭐️ NEW SECTION
+#### 6.4 Activation Code & MAXPULSE App Integration ⭐️ NEW SECTION
+
+**Purpose**: Seamless transition from assessment completion to MAXPULSE app onboarding with comprehensive data transfer
+
+**Integration Flow**:
+```
+Assessment Completion → V2 Analysis Results → CTA Page → Purchase Confirmation → Activation Code Generation → MAXPULSE App Onboarding
+```
+
+**Activation Code System Features**:
+- **Unique 8-Character Codes**: Alphanumeric, collision-resistant generation
+- **30-Day Expiration**: Automatic expiry for security
+- **One-Time Use**: Code becomes invalid after activation
+- **Comprehensive Data Package**: Full assessment + V2 analysis results
+- **Enterprise Security**: Row Level Security (RLS) with anonymous insert capability
+
+**Onboarding Data Package** (Stored as JSONB):
+```typescript
+interface OnboardingData {
+  // Customer Information
+  customerInfo: {
+    name: string;
+    email: string;
+    planType: 'annual' | 'monthly';
+    distributorCode: string;
+  };
+  
+  // Raw Assessment Data (19 Variables)
+  assessmentResults: {
+    demographics: { age, gender, weight, height, bmi };
+    healthMetrics: { sleep, hydration, steps, energy, mood };
+    medicalData: { conditions, medications, allergies };
+    lifestyleFactors: { activityLevel, nutritionQuality, dietPattern };
+  };
+  
+  // V2 Analysis Results
+  v2Analysis: {
+    overallScore: number; // 0-100
+    letterGrade: string; // A+ to F
+    riskAnalysis: {
+      diabetesRisk: number; // 0-90%
+      cardiovascularRisk: number; // 0-95%
+      metabolicRisk: number; // 0-90%
+      mentalHealthRisk: number; // 0-90%
+      overallRiskLevel: 'Critical' | 'High' | 'Moderate' | 'Low';
+    };
+    personalizedTargets: {
+      sleep: { current: number, target: number };
+      hydration: { current: number, target: number };
+      steps: { current: number, target: number };
+      energy: { current: number, target: number };
+    };
+    projections: {
+      weight: { current: number, projected: number };
+      bmi: { current: number, projected: number };
+      energy: { current: number, projected: number };
+      adherenceRate: number; // 40-80%
+    };
+    transformationRoadmap: {
+      phase1: { focus: string, actions: string[], milestones: string[] };
+      phase2: { focus: string, actions: string[], milestones: string[] };
+      phase3: { focus: string, actions: string[], milestones: string[] };
+    };
+  };
+  
+  // System Metadata
+  activationCode: string;
+  generatedAt: string;
+  expiresAt: string;
+  sessionId: string;
+}
+```
+
+**Database Integration**:
+- **Table**: `activation_codes`
+- **Primary Key**: UUID
+- **Unique Constraint**: `activation_code`
+- **Foreign Keys**: `assessment_session_id`, `distributor_id`
+- **Security**: RLS policies for anonymous insert, authenticated read
+- **Performance**: Indexed on `activation_code` for fast lookups
+
+**MAXPULSE App Benefits**:
+1. **Zero Re-Entry**: All assessment data pre-populated
+2. **Personalized Onboarding**: App starts with user's specific targets
+3. **Immediate Value**: 90-day transformation plan ready on Day 1
+4. **Data Continuity**: Assessment insights drive daily tracking
+5. **Trust Building**: Seamless experience reinforces professional credibility
+
+#### 6.5 V2 Analysis Engine - Technical Architecture ⭐️ NEW SECTION
 
 **Purpose**: Deterministic, science-backed health analysis engine providing instant, personalized assessments without AI dependency
 

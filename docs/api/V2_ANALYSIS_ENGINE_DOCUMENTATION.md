@@ -826,6 +826,62 @@ else {
 
 ---
 
+## 🔑 Activation Code & Onboarding Integration
+
+### Overview
+The V2 Analysis Engine seamlessly integrates with the **Activation Code System** to provide a complete assessment-to-app onboarding experience.
+
+### Integration Flow
+```
+Assessment Completion → V2 Analysis → CTA Page → Activation Code Generation → MAXPULSE App Onboarding
+```
+
+### Onboarding Data Package
+When an activation code is generated, the system aggregates all assessment data into a comprehensive onboarding package:
+
+#### Core Assessment Data
+- **Personal Demographics**: Age, gender, weight, height, BMI
+- **Health Metrics**: Current scores for sleep, hydration, steps, energy, mood
+- **Medical Information**: Conditions, medications, allergies
+- **Lifestyle Factors**: Activity level, nutrition quality, diet patterns
+
+#### V2 Analysis Results
+- **Risk Analysis**: CVD risk, diabetes risk, mental health risk, compound risk factors
+- **Personalized Targets**: Sleep hours, hydration goals, step targets, energy improvements
+- **90-Day Projections**: Weight, BMI, energy, sleep quality, mood improvements
+- **Transformation Roadmap**: 3-phase plan with weekly milestones and progressive targets
+
+#### Technical Implementation
+```typescript
+// Activation Code Generation with V2 Data
+const onboardingData = {
+  customerInfo: { name, email, planType },
+  assessmentResults: { /* Raw assessment data */ },
+  v2Analysis: {
+    riskAnalysis: { /* Risk calculations */ },
+    personalizedTargets: { /* Target calculations */ },
+    projections: { /* 90-day projections */ },
+    transformationRoadmap: { /* 3-phase plan */ }
+  },
+  activationCode: "UNIQUE-8-CHAR-CODE",
+  expiresAt: "30 days from generation"
+}
+```
+
+### Database Integration
+- **Table**: `activation_codes`
+- **Onboarding Data**: Stored as JSONB for flexible structure
+- **Security**: Row Level Security (RLS) with anonymous insert capability
+- **Expiration**: 30-day automatic expiry
+
+### Benefits
+1. **Seamless Transition**: No data re-entry in MAXPULSE app
+2. **Personalized Onboarding**: App starts with user's specific targets and plan
+3. **Data Continuity**: Assessment insights carry forward to daily tracking
+4. **Enterprise Ready**: Scalable activation code system with proper security
+
+---
+
 ## 🧪 Testing & Validation
 
 ### Test Profiles
