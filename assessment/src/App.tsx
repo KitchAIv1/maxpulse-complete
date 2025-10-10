@@ -87,10 +87,24 @@ export default function App() {
     return <PersonalizedAnalysisV2Preview />;
   }
   
-  const [appState, setAppState] = useState<AppState>('welcome');
+  const [appState, setAppState] = useState<AppState>(() => {
+    // Only restore Analysis/CTA pages (not assessment flow)
+    const saved = sessionStorage.getItem('maxpulse_app_state');
+    const validStates = ['health-insights', 'personalized-plan', 'wealth-results', 'hybrid-results'];
+    
+    if (saved && validStates.includes(saved)) {
+      console.log('🔒 Refresh lock: Restoring', saved);
+      return saved as AppState;
+    }
+    
+    return 'welcome';
+  });
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [selectedPriority, setSelectedPriority] = useState<Priority | null>(null);
+  const [selectedPriority, setSelectedPriority] = useState<Priority | null>(() => {
+    const saved = sessionStorage.getItem('maxpulse_priority');
+    return (saved as Priority | null) || null;
+  });
   const [startTime, setStartTime] = useState<number>(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>({});
@@ -638,10 +652,16 @@ export default function App() {
     // Route to priority-specific results pages
     if (selectedPriority === 'health') {
       setAppState('health-insights');
+      sessionStorage.setItem('maxpulse_app_state', 'health-insights'); // ✅ Write once
+      sessionStorage.setItem('maxpulse_priority', selectedPriority);
     } else if (selectedPriority === 'wealth') {
       setAppState('wealth-results');
+      sessionStorage.setItem('maxpulse_app_state', 'wealth-results'); // ✅ Write once
+      sessionStorage.setItem('maxpulse_priority', selectedPriority);
     } else if (selectedPriority === 'both') {
       setAppState('hybrid-results');
+      sessionStorage.setItem('maxpulse_app_state', 'hybrid-results'); // ✅ Write once
+      sessionStorage.setItem('maxpulse_priority', selectedPriority);
     } else {
       setAppState('results'); // Fallback
     }
@@ -694,6 +714,10 @@ export default function App() {
     localStorage.removeItem('assessment-progress');
     localStorage.removeItem('current-session-id');
     
+    // ✅ Clear refresh lock
+    sessionStorage.removeItem('maxpulse_app_state');
+    sessionStorage.removeItem('maxpulse_priority');
+    
     // Reset performance metrics
     setPerformanceMetrics({
       loadTime: 0,
@@ -715,6 +739,7 @@ export default function App() {
   // New handler functions for CTA flows
   const handleContinueToPersonalizedPlan = useCallback(() => {
     setAppState('personalized-plan');
+    sessionStorage.setItem('maxpulse_app_state', 'personalized-plan'); // ✅ Write once
   }, []);
 
   const handleCompletePersonalizedPlan = useCallback(() => {
