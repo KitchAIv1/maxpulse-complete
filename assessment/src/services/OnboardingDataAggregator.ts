@@ -7,7 +7,7 @@
 import { supabase } from '../lib/supabase';
 import { OnboardingData } from '../types/activation';
 import { mapAssessmentToV2Input } from '../utils/v2DataMapper';
-import { generatePersonalizedAnalysisV2 } from '../hooks/usePersonalizedAnalysisV2';
+import { PersonalizedNarrativeBuilder } from '../services-v2/PersonalizedNarrativeBuilder';
 import { AssessmentResults } from '../types/assessment';
 import { Demographics, HealthMetrics } from '../types/aiAnalysis';
 
@@ -140,7 +140,9 @@ export class OnboardingDataAggregator {
       }
     );
     
-    const v2Analysis = generatePersonalizedAnalysisV2(v2Input);
+    // Generate V2 analysis using PersonalizedNarrativeBuilder service
+    const narrativeBuilder = new PersonalizedNarrativeBuilder();
+    const v2AnalysisResult = narrativeBuilder.generateAnalysis(v2Input, 'User');
     
     // 7. Extract mental health factors
     const mentalHealth = this.extractMentalHealth(responses);
@@ -155,12 +157,12 @@ export class OnboardingDataAggregator {
         completedAt: session.created_at || new Date().toISOString()
       },
       v2Analysis: {
-        riskAnalysis: v2Analysis.analysis.riskAnalysis,
-        personalizedTargets: v2Analysis.analysis.personalizedTargets,
-        ninetyDayProjection: v2Analysis.analysis.ninetyDayProjection,
-        transformationRoadmap: v2Analysis.analysis.transformationRoadmap,
-        priorityActions: v2Analysis.analysis.priorityActions,
-        hardTruth: v2Analysis.analysis.hardTruth
+        riskAnalysis: v2AnalysisResult.riskAnalysis,
+        personalizedTargets: v2AnalysisResult.personalizedTargets,
+        ninetyDayProjection: v2AnalysisResult.ninetyDayProjection,
+        transformationRoadmap: v2AnalysisResult.transformationRoadmap,
+        priorityActions: v2AnalysisResult.priorityActions,
+        hardTruth: v2AnalysisResult.hardTruth
       },
       mentalHealth,
       metadata: {
