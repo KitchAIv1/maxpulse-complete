@@ -200,10 +200,90 @@ export function PersonalizedHealthPlan({
         <p className={styles.heroDescription}>
           Turn your health assessment into daily action with <strong>MAXPULSE</strong> — your AI-powered lifestyle builder that grows <em>with you.</em>
         </p>
+      </div>
 
-        <div className={styles.heroBadge}>
-          💡 Your personal AI has already analyzed your health data. Now it's time to activate your personalized plan — one that guides your hydration, sleep, movement, mood, and energy every single day.
+      {/* Subheadline Section - Text + Image */}
+      <div style={{
+        backgroundColor: '#f9fafb',
+        padding: '48px 32px',
+        borderTop: '1px solid #e5e7eb',
+        borderBottom: '1px solid #e5e7eb'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '48px',
+          alignItems: 'center'
+        }}>
+          {/* Left: Text */}
+          <div>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: '600',
+              color: '#111827',
+              lineHeight: '1.4',
+              marginBottom: '16px'
+            }}>
+              💡 Your personal AI has already analyzed your health data.
+            </h2>
+            <p style={{
+              fontSize: '18px',
+              lineHeight: '1.6',
+              color: '#4b5563'
+            }}>
+              Now it's time to <strong style={{ color: '#dc2626' }}>activate your personalized plan</strong> — one that guides your hydration, sleep, movement, mood, and energy every single day.
+            </p>
+          </div>
+
+          {/* Right: Image Placeholder */}
+          <div style={{
+            backgroundColor: '#e5e7eb',
+            borderRadius: '16px',
+            height: '280px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '2px dashed #9ca3af',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              color: '#6b7280'
+            }}>
+              <Smartphone style={{ 
+                width: '64px', 
+                height: '64px', 
+                margin: '0 auto 16px',
+                opacity: 0.5
+              }} />
+              <p style={{ 
+                fontSize: '14px',
+                fontWeight: '500'
+              }}>
+                App Screenshot Placeholder
+              </p>
+              <p style={{ 
+                fontSize: '12px',
+                marginTop: '4px'
+              }}>
+                MAXPULSE Dashboard
+              </p>
+            </div>
+          </div>
         </div>
+
+        {/* Mobile Responsive */}
+        <style>{`
+          @media (max-width: 768px) {
+            div[style*="gridTemplateColumns"] {
+              grid-template-columns: 1fr !important;
+              gap: 32px !important;
+            }
+          }
+        `}</style>
       </div>
 
       {/* Features Section */}
