@@ -1,0 +1,533 @@
+/**
+ * MAXPULSE CTA Page - Isolated CSS Module
+ * 100% independent from global styles, Tailwind, and other components
+ * Zero impact on assessment flow or other pages
+ */
+
+/* ==================== CONTAINER ==================== */
+.ctaContainer {
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #111827;
+}
+
+/* Force light mode - prevent dark mode interference */
+.ctaContainer * {
+  color-scheme: light !important;
+}
+
+/* ==================== BACK BUTTON ==================== */
+.backButtonContainer {
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 24px 32px 8px;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.backButton:hover {
+  color: #111827;
+}
+
+/* ==================== HERO SECTION ==================== */
+.heroSection {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 80px 32px;
+  text-align: center;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.logoIcon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+}
+
+.logoText {
+  font-size: 36px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroTitle {
+  font-size: 48px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.heroTitleGradient {
+  display: block;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroDescription {
+  font-size: 20px;
+  color: #374151;
+  margin-bottom: 32px;
+  line-height: 1.6;
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #166534;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ==================== FEATURES SECTION ==================== */
+.featuresSection {
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 96px 32px;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.featureCard {
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 48px;
+  border: 1px solid #f3f4f6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.featureCard:hover {
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.featureIconContainer {
+  width: 64px;
+  height: 64px;
+  background-color: #eff6ff;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.featureIcon {
+  width: 32px;
+  height: 32px;
+  color: #2563eb;
+}
+
+.featureTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.featureDescription {
+  font-size: 16px;
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.featureHighlight {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2563eb;
+}
+
+/* ==================== HOW IT WORKS SECTION ==================== */
+.howItWorksSection {
+  background-color: #f9fafb;
+  padding: 96px 0;
+}
+
+.howItWorksContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.howItWorksTitle {
+  font-size: 36px;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.howItWorksGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 64px;
+}
+
+.stepContainer {
+  text-align: center;
+}
+
+.stepIconWrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 32px;
+}
+
+.stepIconBox {
+  width: 96px;
+  height: 96px;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+}
+
+.stepIcon {
+  width: 48px;
+  height: 48px;
+  color: #ffffff;
+}
+
+.stepBadge {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 48px;
+  background-color: #ffffff;
+  border: 3px solid #2563eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2563eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stepTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+  margin-top: 16px;
+}
+
+.stepDescription {
+  font-size: 16px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* ==================== CTA SECTION ==================== */
+.ctaSection {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 96px 32px;
+}
+
+.ctaCard {
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border-radius: 24px;
+  padding: 56px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.ctaTitle {
+  font-size: 36px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 20px;
+}
+
+.ctaDescription {
+  font-size: 20px;
+  color: #374151;
+  margin-bottom: 40px;
+  line-height: 1.6;
+  max-width: 672px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pricingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.priceMain {
+  font-size: 56px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.priceDetails {
+  text-align: left;
+}
+
+.priceOriginal {
+  font-size: 18px;
+  color: #6b7280;
+  text-decoration: line-through;
+}
+
+.priceDiscount {
+  font-size: 16px;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.purchaseButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 48px;
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+  transition: all 0.2s ease;
+}
+
+.purchaseButton:hover:not(:disabled) {
+  box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.4);
+  transform: scale(1.02);
+}
+
+.purchaseButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.purchaseButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.purchaseButtonIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.purchaseSuccess {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 40px;
+  background-color: #22c55e;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.purchaseSuccessIcon {
+  width: 24px;
+  height: 24px;
+}
+
+/* ==================== TRUST INDICATORS ==================== */
+.trustSection {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+.trustGrid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+}
+
+.trustItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trustIconContainer {
+  width: 48px;
+  height: 48px;
+  background-color: #f0fdf4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.trustIcon {
+  width: 24px;
+  height: 24px;
+  color: #16a34a;
+}
+
+.trustText {
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* ==================== PURCHASE TRACKING TOAST ==================== */
+.trackingToast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 16px 24px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  border: 1px solid #1d4ed8;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trackingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.trackingText {
+  font-weight: 500;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet */
+@media (min-width: 640px) {
+  .heroTitle {
+    font-size: 56px;
+  }
+  
+  .ctaTitle {
+    font-size: 40px;
+  }
+  
+  .priceMain {
+    font-size: 64px;
+  }
+}
+
+/* Desktop - 2 columns */
+@media (min-width: 768px) {
+  .featuresGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .howItWorksGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Large Desktop - 3 columns */
+@media (min-width: 1024px) {
+  .featuresGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .heroTitle {
+    font-size: 64px;
+  }
+  
+  .heroSection {
+    padding: 96px 32px;
+  }
+  
+  .featuresSection {
+    padding: 112px 32px;
+  }
+  
+  .ctaSection {
+    padding: 112px 32px;
+  }
+}
+

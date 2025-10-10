@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useState } from 'react';
 import { 
   Smartphone, 
   Target, 
@@ -16,9 +15,8 @@ import {
   Calendar,
   BarChart3
 } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { AssessmentResults } from '../types/assessment';
+import styles from './PersonalizedHealthPlan.module.css';
 
 interface PersonalizedHealthPlanProps {
   results: AssessmentResults;
@@ -198,145 +196,61 @@ export function PersonalizedHealthPlan({
   };
 
   return (
-    <div className="maxpulse-cta-wrapper min-h-screen bg-white" style={{ colorScheme: 'light' }}>
-      <style>{`
-        /* Force light mode for CTA page - override system dark mode */
-        .maxpulse-cta-wrapper * {
-          color-scheme: light !important;
-        }
-        .maxpulse-cta-wrapper {
-          background-color: white !important;
-          color: #111827 !important;
-        }
-        /* Force specific text colors */
-        .maxpulse-cta-wrapper h1,
-        .maxpulse-cta-wrapper h2,
-        .maxpulse-cta-wrapper h3,
-        .maxpulse-cta-wrapper p,
-        .maxpulse-cta-wrapper span,
-        .maxpulse-cta-wrapper div {
-          color: inherit !important;
-        }
-        /* Ensure cards have proper backgrounds */
-        .maxpulse-cta-wrapper .bg-white {
-          background-color: white !important;
-        }
-        .maxpulse-cta-wrapper .bg-gray-50 {
-          background-color: #f9fafb !important;
-        }
-        .maxpulse-cta-wrapper .bg-blue-50 {
-          background-color: #eff6ff !important;
-        }
-        .maxpulse-cta-wrapper .bg-green-50 {
-          background-color: #f0fdf4 !important;
-        }
-        /* Text colors that should be preserved */
-        .maxpulse-cta-wrapper .text-gray-900 {
-          color: #111827 !important;
-        }
-        .maxpulse-cta-wrapper .text-gray-700 {
-          color: #374151 !important;
-        }
-        .maxpulse-cta-wrapper .text-gray-600 {
-          color: #4b5563 !important;
-        }
-        .maxpulse-cta-wrapper .text-gray-500 {
-          color: #6b7280 !important;
-        }
-        .maxpulse-cta-wrapper .text-blue-600 {
-          color: #2563eb !important;
-        }
-        .maxpulse-cta-wrapper .text-indigo-600 {
-          color: #4f46e5 !important;
-        }
-        .maxpulse-cta-wrapper .text-green-600 {
-          color: #16a34a !important;
-        }
-        .maxpulse-cta-wrapper .text-green-800 {
-          color: #166534 !important;
-        }
-        .maxpulse-cta-wrapper .text-white {
-          color: white !important;
-        }
-        /* Border colors */
-        .maxpulse-cta-wrapper .border-gray-100 {
-          border-color: #f3f4f6 !important;
-        }
-        .maxpulse-cta-wrapper .border-gray-200 {
-          border-color: #e5e7eb !important;
-        }
-        .maxpulse-cta-wrapper .border-blue-100 {
-          border-color: #dbeafe !important;
-        }
-        .maxpulse-cta-wrapper .border-blue-200 {
-          border-color: #bfdbfe !important;
-        }
-        .maxpulse-cta-wrapper .border-green-200 {
-          border-color: #bbf7d0 !important;
-        }
-      `}</style>
+    <div className={styles.ctaContainer}>
       {/* Back Button */}
       {onBackToResults && (
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 pt-6 pb-2">
-          <button
-            onClick={handleBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to Results</span>
+        <div className={styles.backButtonContainer}>
+          <button onClick={handleBack} className={styles.backButton}>
+            <ArrowLeft style={{ width: '16px', height: '16px' }} />
+            <span>Back to Results</span>
           </button>
         </div>
       )}
 
-      {/* Hero Section - Narrow, Focused */}
-      <div className="max-w-4xl mx-auto px-6 sm:px-8 py-16 sm:py-20 text-center">
+      {/* Hero Section */}
+      <div className={styles.heroSection}>
         {/* MAXPULSE Logo */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mr-3 shadow-lg">
-            <Heart className="w-7 h-7 text-white" />
+        <div className={styles.logoContainer}>
+          <div className={styles.logoIcon}>
+            <Heart style={{ width: '28px', height: '28px', color: '#ffffff' }} />
           </div>
-          <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            MAXPULSE
-          </span>
+          <span className={styles.logoText}>MAXPULSE</span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+        <h1 className={styles.heroTitle}>
           Your Personal Health
-          <span className="block mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <span className={styles.heroTitleGradient}>
             Transformation App
           </span>
         </h1>
         
-        <p className="text-lg sm:text-xl text-gray-700 mb-8 leading-relaxed max-w-3xl mx-auto">
+        <p className={styles.heroDescription}>
           Hi {userName}! Transform your assessment insights into lasting health changes with the MAXPULSE app - your personalized daily health companion.
         </p>
 
-        <div className="inline-flex items-center px-5 py-3 bg-green-50 border border-green-200 rounded-full shadow-sm">
-          <span className="text-sm font-medium text-green-800">✨ Personalized for your unique health profile</span>
+        <div className={styles.heroBadge}>
+          ✨ Personalized for your unique health profile
         </div>
       </div>
 
-      {/* Features Section - Wide, Breathable */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 py-20 sm:py-24">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+      {/* Features Section */}
+      <div className={styles.featuresSection}>
+        <div className={styles.featuresGrid}>
           {appFeatures.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <div
-                key={index}
-                className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all"
-              >
-                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-                  <Icon className="w-8 h-8 text-blue-600" />
+              <div key={index} className={styles.featureCard}>
+                <div className={styles.featureIconContainer}>
+                  <Icon className={styles.featureIcon} />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3 leading-tight">
+                <h3 className={styles.featureTitle}>
                   {feature.title}
                 </h3>
-                <p className="text-gray-700 text-base leading-relaxed mb-5">
+                <p className={styles.featureDescription}>
                   {feature.description}
                 </p>
-                <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full">
-                  <span className="text-xs font-medium text-blue-600">{feature.highlight}</span>
+                <div className={styles.featureHighlight}>
+                  {feature.highlight}
                 </div>
               </div>
             );
@@ -344,30 +258,30 @@ export function PersonalizedHealthPlan({
         </div>
       </div>
 
-      {/* How It Works - Medium, Structured */}
-      <div className="bg-gray-50 py-20 sm:py-24">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-16">
+      {/* How It Works Section */}
+      <div className={styles.howItWorksSection}>
+        <div className={styles.howItWorksContainer}>
+          <h2 className={styles.howItWorksTitle}>
             How MAXPULSE Works
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-12 sm:gap-16">
+          <div className={styles.howItWorksGrid}>
             {howItWorksSteps.map((step, index) => {
               const Icon = step.icon;
               return (
-                <div key={index} className="text-center">
-                  <div className="relative inline-block mb-8">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-lg">
-                      <Icon className="w-12 h-12 text-white" />
+                <div key={index} className={styles.stepContainer}>
+                  <div className={styles.stepIconWrapper}>
+                    <div className={styles.stepIconBox}>
+                      <Icon className={styles.stepIcon} />
                     </div>
-                    <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-white border-3 border-blue-600 rounded-full flex items-center justify-center shadow-md">
-                      <span className="text-blue-600 font-bold text-lg">{step.step}</span>
+                    <div className={styles.stepBadge}>
+                      {step.step}
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4 mt-4">
+                  <h3 className={styles.stepTitle}>
                     {step.title}
                   </h3>
-                  <p className="text-gray-700 text-base leading-relaxed">
+                  <p className={styles.stepDescription}>
                     {step.description}
                   </p>
                 </div>
@@ -377,44 +291,44 @@ export function PersonalizedHealthPlan({
         </div>
       </div>
 
-      {/* CTA Section - Narrow, Focused */}
-      <div className="max-w-4xl mx-auto px-6 sm:px-8 py-20 sm:py-24">
-        <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-10 sm:p-14 shadow-lg border border-gray-200 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-5">
+      {/* CTA Section */}
+      <div className={styles.ctaSection}>
+        <div className={styles.ctaCard}>
+          <h2 className={styles.ctaTitle}>
             Ready to Transform Your Health?
           </h2>
-          <p className="text-gray-700 text-lg sm:text-xl mb-10 leading-relaxed max-w-2xl mx-auto">
+          <p className={styles.ctaDescription}>
             Get the MAXPULSE app and turn your assessment insights into lasting results.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-10 pb-10 border-b border-gray-200">
-            <div className="text-5xl sm:text-6xl font-bold text-gray-900">$29.99</div>
-            <div className="text-center sm:text-left">
-              <div className="text-gray-500 line-through text-lg">$49.99</div>
-              <div className="text-green-600 font-semibold text-base">Limited Time: 40% OFF</div>
+          <div className={styles.pricingContainer}>
+            <div className={styles.priceMain}>$29.99</div>
+            <div className={styles.priceDetails}>
+              <div className={styles.priceOriginal}>$49.99</div>
+              <div className={styles.priceDiscount}>Limited Time: 40% OFF</div>
             </div>
           </div>
 
           {purchaseCompleted ? (
-            <div className="inline-flex items-center px-10 py-5 bg-green-500 text-white rounded-2xl font-semibold text-lg shadow-md">
-              <Check className="w-6 h-6 mr-3" />
+            <div className={styles.purchaseSuccess}>
+              <Check className={styles.purchaseSuccessIcon} />
               Purchase Confirmed! Redirecting...
             </div>
           ) : (
             <button
               onClick={handleGetMaxPulse}
               disabled={isPurchaseTracking}
-              className="inline-flex items-center px-12 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg sm:text-xl font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className={styles.purchaseButton}
             >
               {isPurchaseTracking ? (
                 <>
-                  <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full mr-3"></div>
+                  <div className={styles.spinner}></div>
                   Processing...
                 </>
               ) : (
                 <>
                   Get MAXPULSE App
-                  <ExternalLink className="w-6 h-6 ml-3" />
+                  <ExternalLink className={styles.purchaseButtonIcon} />
                 </>
               )}
             </button>
@@ -422,30 +336,28 @@ export function PersonalizedHealthPlan({
         </div>
       </div>
 
-      {/* Trust Indicators - Balanced */}
-      <div className="max-w-6xl mx-auto px-6 sm:px-8 py-12 pb-20">
-        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12">
+      {/* Trust Indicators */}
+      <div className={styles.trustSection}>
+        <div className={styles.trustGrid}>
           {trustIndicators.map((indicator, index) => {
             const Icon = indicator.icon;
             return (
-              <div key={index} className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center shadow-sm">
-                  <Icon className="w-6 h-6 text-green-600" />
+              <div key={index} className={styles.trustItem}>
+                <div className={styles.trustIconContainer}>
+                  <Icon className={styles.trustIcon} />
                 </div>
-                <span className="text-sm sm:text-base font-medium text-gray-700">{indicator.text}</span>
+                <span className={styles.trustText}>{indicator.text}</span>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Purchase Tracking Status */}
+      {/* Purchase Tracking Toast */}
       {isPurchaseTracking && (
-        <div className="fixed bottom-6 right-6 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl border border-blue-500 z-50">
-          <div className="flex items-center space-x-3">
-            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-            <span className="font-medium">Monitoring purchase...</span>
-          </div>
+        <div className={styles.trackingToast}>
+          <div className={styles.trackingSpinner}></div>
+          <span className={styles.trackingText}>Monitoring purchase...</span>
         </div>
       )}
     </div>
