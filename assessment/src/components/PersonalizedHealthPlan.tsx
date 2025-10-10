@@ -155,48 +155,42 @@ export function PersonalizedHealthPlan({
   const startPurchaseMonitoring = () => {
     // Simulate purchase completion monitoring
     // In production, this would integrate with actual purchase system
-    const checkInterval = setInterval(() => {
-      // Check if user returned and completed purchase
-      // This could be done via:
-      // 1. URL parameters when they return
-      // 2. API polling
-      // 3. Webhook notifications
-      // 4. Local storage flags
-      
-      // For now, simulate with a timeout (replace with real logic)
-      setTimeout(() => {
-        const purchaseConfirmed = Math.random() > 0.7; // Simulate 30% conversion
-        
-        if (purchaseConfirmed) {
-          setPurchaseCompleted(true);
-          setIsPurchaseTracking(false);
-          clearInterval(checkInterval);
-          
-          // Track successful purchase
-          if (distributorInfo && trackProgress) {
-            trackProgress('maxpulse_app_purchase_completed', {
-              userName,
-              distributorCode: distributorInfo.code,
-              selectedPlan,
-              purchaseValue: selectedPlan === 'annual' ? 49.99 : 8.00,
-              timestamp: new Date().toISOString()
-            });
-          }
-          
-          // ✅ NEW: Generate activation code
-          generateActivationCode();
-          
-          // Note: Don't auto-trigger completion callback anymore
-          // User will manually close activation code display
-        }
-      }, 5000);
-    }, 1000);
-
-    // Clear interval after 2 minutes to prevent infinite checking
+    // This could be done via:
+    // 1. URL parameters when they return
+    // 2. API polling
+    // 3. Webhook notifications
+    // 4. Local storage flags
+    
+    // ✅ FIXED: Single setTimeout to prevent duplicate code generation
+    // For now, simulate with a timeout (replace with real logic)
     setTimeout(() => {
-      clearInterval(checkInterval);
-      setIsPurchaseTracking(false);
-    }, 120000);
+      const purchaseConfirmed = Math.random() > 0.7; // Simulate 30% conversion
+      
+      if (purchaseConfirmed) {
+        setPurchaseCompleted(true);
+        setIsPurchaseTracking(false);
+        
+        // Track successful purchase
+        if (distributorInfo && trackProgress) {
+          trackProgress('maxpulse_app_purchase_completed', {
+            userName,
+            distributorCode: distributorInfo.code,
+            selectedPlan,
+            purchaseValue: selectedPlan === 'annual' ? 49.99 : 8.00,
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        // ✅ Generate activation code (only once!)
+        generateActivationCode();
+        
+        // Note: Don't auto-trigger completion callback anymore
+        // User will manually close activation code display
+      } else {
+        // Purchase not confirmed, stop tracking
+        setIsPurchaseTracking(false);
+      }
+    }, 5000); // Single check after 5 seconds
   };
 
   // Handle back navigation
