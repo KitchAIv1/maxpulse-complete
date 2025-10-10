@@ -198,205 +198,180 @@ export function PersonalizedHealthPlan({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* Back Button */}
-        {onBackToResults && (
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+    <div className="min-h-screen bg-white">
+      {/* Back Button */}
+      {onBackToResults && (
+        <div className="max-w-5xl mx-auto px-6 pt-8 pb-4">
+          <button
             onClick={handleBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Results</span>
-          </motion.button>
-        )}
+            <span className="text-sm font-medium">Back to Results</span>
+          </button>
+        </div>
+      )}
 
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          {/* MAXPULSE Logo */}
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mr-3">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              MAXPULSE
-            </span>
+      {/* Hero Section - Narrow, Focused */}
+      <div className="max-w-3xl mx-auto px-6 py-12 text-center">
+        {/* MAXPULSE Logo */}
+        <div className="flex items-center justify-center mb-6">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mr-3">
+            <Heart className="w-6 h-6 text-white" />
           </div>
+          <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            MAXPULSE
+          </span>
+        </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Your Personal Health
-            <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Transformation App
-            </span>
-          </h1>
-          
-          <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            Hi {userName}! Transform your assessment insights into lasting health changes with the MAXPULSE app - your personalized daily health companion.
-          </p>
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+          Your Personal Health
+          <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Transformation App
+          </span>
+        </h1>
+        
+        <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+          Hi {userName}! Transform your assessment insights into lasting health changes with the MAXPULSE app - your personalized daily health companion.
+        </p>
 
-          <Badge className="bg-green-100 text-green-800 px-4 py-2 text-sm font-medium">
-            ✨ Personalized for your unique health profile
-          </Badge>
-        </motion.div>
+        <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-full">
+          <span className="text-sm font-medium text-green-800">✨ Personalized for your unique health profile</span>
+        </div>
+      </div>
 
-        {/* Key Features Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
-        >
+      {/* Features Section - Wide, Breathable */}
+      <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {appFeatures.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+                className="bg-white rounded-3xl p-10 shadow-sm border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                  <Icon className="w-6 h-6 text-blue-600" />
+                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+                  <Icon className="w-7 h-7 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm mb-3">
+                <p className="text-gray-700 text-sm leading-relaxed mb-4">
                   {feature.description}
                 </p>
-                <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
-                  {feature.highlight}
-                </Badge>
-              </motion.div>
+                <div className="inline-flex items-center px-3 py-1 bg-blue-50 border border-blue-100 rounded-full">
+                  <span className="text-xs font-medium text-blue-600">{feature.highlight}</span>
+                </div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
+      </div>
 
-        {/* How It Works */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-12"
-        >
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+      {/* How It Works - Medium, Structured */}
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             How MAXPULSE Works
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12">
             {howItWorksSteps.map((step, index) => {
               const Icon = step.icon;
               return (
                 <div key={index} className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon className="w-8 h-8 text-white" />
+                  <div className="relative inline-block mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center">
+                      <Icon className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-white border-2 border-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-base">{step.step}</span>
+                    </div>
                   </div>
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 -mt-12 border-4 border-white">
-                    <span className="text-blue-600 font-bold text-sm">{step.step}</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-4">
                     {step.title}
                   </h3>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-700 text-sm leading-relaxed">
                     {step.description}
                   </p>
                 </div>
               );
             })}
           </div>
-        </motion.div>
+        </div>
+      </div>
 
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-center text-white mb-8"
-        >
-          <h2 className="text-3xl font-bold mb-4">
+      {/* CTA Section - Narrow, Focused */}
+      <div className="max-w-3xl mx-auto px-6 py-12">
+        <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-12 shadow-lg border border-gray-200 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
             Ready to Transform Your Health?
           </h2>
-          <p className="text-blue-100 mb-6 text-lg">
+          <p className="text-gray-700 text-lg mb-8 leading-relaxed">
             Get the MAXPULSE app and turn your assessment insights into lasting results.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-            <div className="text-4xl font-bold">$29.99</div>
-            <div className="text-blue-200">
-              <div className="line-through text-sm">$49.99</div>
-              <div className="text-sm font-medium">Limited Time: 40% OFF</div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 pb-8 border-b border-gray-200">
+            <div className="text-5xl font-bold text-gray-900">$29.99</div>
+            <div>
+              <div className="text-gray-500 line-through text-base">$49.99</div>
+              <div className="text-green-600 font-semibold">Limited Time: 40% OFF</div>
             </div>
           </div>
 
           {purchaseCompleted ? (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-green-500 text-white px-8 py-4 rounded-xl font-semibold text-lg"
-            >
-              ✅ Purchase Confirmed! Redirecting...
-            </motion.div>
+            <div className="inline-flex items-center px-8 py-4 bg-green-500 text-white rounded-2xl font-semibold text-lg shadow-md">
+              <Check className="w-6 h-6 mr-2" />
+              Purchase Confirmed! Redirecting...
+            </div>
           ) : (
-            <Button
+            <button
               onClick={handleGetMaxPulse}
               disabled={isPurchaseTracking}
-              className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isPurchaseTracking ? (
                 <>
-                  <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"></div>
                   Processing...
                 </>
               ) : (
                 <>
                   Get MAXPULSE App
-                  <ExternalLink className="w-5 h-5 ml-2" />
+                  <ExternalLink className="w-5 h-5 ml-3" />
                 </>
               )}
-            </Button>
+            </button>
           )}
-        </motion.div>
+        </div>
+      </div>
 
-        {/* Trust Indicators */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="flex flex-wrap items-center justify-center gap-6 text-gray-600"
-        >
+      {/* Trust Indicators - Balanced */}
+      <div className="max-w-5xl mx-auto px-6 py-8 mb-12">
+        <div className="flex flex-wrap items-center justify-center gap-8">
           {trustIndicators.map((indicator, index) => {
             const Icon = indicator.icon;
             return (
-              <div key={index} className="flex items-center space-x-2">
-                <Icon className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium">{indicator.text}</span>
+              <div key={index} className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">{indicator.text}</span>
               </div>
             );
           })}
-        </motion.div>
-
-        {/* Purchase Tracking Status */}
-        {isPurchaseTracking && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg"
-          >
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-              <span className="text-sm font-medium">Monitoring purchase...</span>
-            </div>
-          </motion.div>
-        )}
+        </div>
       </div>
+
+      {/* Purchase Tracking Status */}
+      {isPurchaseTracking && (
+        <div className="fixed bottom-6 right-6 bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl border border-blue-500">
+          <div className="flex items-center space-x-3">
+            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+            <span className="font-medium">Monitoring purchase...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
