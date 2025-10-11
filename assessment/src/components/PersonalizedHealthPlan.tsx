@@ -81,7 +81,7 @@ export function PersonalizedHealthPlan({
   }
   
   // Extract user name from results, distributorInfo, or use default
-  const userName = results.userProfile?.name || distributorInfo?.customerName || 'there';
+  const userName = distributorInfo?.customerName || 'there';
 
   // Core Value Props for MAXPULSE App
   const appFeatures = [
@@ -231,7 +231,7 @@ export function PersonalizedHealthPlan({
     }
   };
 
-  // ✅ NEW: Show activation code modal (but don't exit flow when closed)
+  // ✅ Modal state management
   const [showActivationModal, setShowActivationModal] = useState(false);
   const [hasUserClosedModal, setHasUserClosedModal] = useState(false);
   

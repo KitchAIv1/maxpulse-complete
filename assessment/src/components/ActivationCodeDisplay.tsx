@@ -49,14 +49,7 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
   };
   
   return (
-    <div 
-      className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-200"
-      style={{ 
-        position: 'relative',
-        zIndex: '999',
-        pointerEvents: 'auto'
-      }}
-    >
+    <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-200 relative z-50">
       {/* Success Header */}
       <div className="text-center mb-6">
         <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -143,40 +136,35 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
         Download MAXPULSE App
       </button>
       
-      {/* Close Button */}
-      {onClose && (
+      {/* Close Button - Clean Design */}
+      <div style={{ marginTop: '24px', textAlign: 'center' }}>
         <button
           onClick={() => {
-            console.log('🔴 Close button clicked!');
-            onClose();
+            if (onClose) onClose();
           }}
           style={{
-            width: '100%',
-            marginTop: '16px',
-            padding: '16px 24px',
             backgroundColor: '#dc2626',
-            color: '#ffffff',
-            border: '2px solid #dc2626',
+            color: 'white',
+            border: 'none',
+            padding: '16px 32px',
+            fontSize: '16px',
+            fontWeight: '600',
             borderRadius: '12px',
-            fontSize: '18px',
-            fontWeight: '700',
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            zIndex: '9999',
-            position: 'relative'
+            display: 'block',
+            width: '100%',
+            transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#b91c1c';
-            e.currentTarget.style.color = '#ffffff';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = '#dc2626';
-            e.currentTarget.style.color = '#ffffff';
           }}
         >
           Close
         </button>
-      )}
+      </div>
       
       {/* Fine Print */}
       <p className="text-xs text-center text-gray-500 mt-6">
