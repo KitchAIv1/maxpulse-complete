@@ -298,17 +298,23 @@ export class PDFExportManager {
         pdf.setFont('helvetica', 'normal');
         
         extractedData.targets.forEach((target, index) => {
-          if (yPos > 270) {
+          // Better page break logic - check if we have space for the full row
+          if (yPos > 250) {
             pdf.addPage();
             yPos = 20;
           }
           
-          // Calculate row height based on content
-          const metricLines = pdf.splitTextToSize(target.metric, col1Width - 4);
-          const currentLines = pdf.splitTextToSize(target.current, col2Width - 4);
-          const targetLines = pdf.splitTextToSize(target.target, col3Width - 4);
+          // Clean and truncate text to prevent overflow
+          const cleanMetric = target.metric.length > 25 ? target.metric.substring(0, 25) + '...' : target.metric;
+          const cleanCurrent = target.current.length > 30 ? target.current.substring(0, 30) + '...' : target.current;
+          const cleanTarget = target.target.length > 30 ? target.target.substring(0, 30) + '...' : target.target;
+          
+          // Calculate row height based on content (limit to 2 lines max per cell)
+          const metricLines = pdf.splitTextToSize(cleanMetric, col1Width - 4).slice(0, 2);
+          const currentLines = pdf.splitTextToSize(cleanCurrent, col2Width - 4).slice(0, 2);
+          const targetLines = pdf.splitTextToSize(cleanTarget, col3Width - 4).slice(0, 2);
           const maxLines = Math.max(metricLines.length, currentLines.length, targetLines.length);
-          const rowHeight = Math.max(7, maxLines * 4 + 2);
+          const rowHeight = Math.max(10, maxLines * 4 + 4);
           
           // Alternating row background
           if (index % 2 === 0) {
@@ -346,10 +352,9 @@ export class PDFExportManager {
 
       // ========== TRANSFORMATION PLAN (Beautiful Phase Design) ==========
       if (extractedData.transformationPlan.length > 0) {
-        if (yPos > 200) {
-          pdf.addPage();
-          yPos = 20;
-        }
+        // Always start transformation plan on a new page for better layout
+        pdf.addPage();
+        yPos = 20;
         
         // Section header
         pdf.setFontSize(13);
@@ -574,34 +579,57 @@ export class PDFExportManager {
       data.transformationPlan.push(currentPhase);
     }
 
-    // If no phases found, extract any action-like items
+    // If no phases found, create a default transformation plan
     if (data.transformationPlan.length === 0) {
       const actionItems: string[] = [];
+      
+      // Look for any action-like items or create defaults
       allElements.forEach(el => {
         const text = el.textContent?.trim() || '';
-        if (text.match(/^(•|-)\s/) && text.length > 20 && text.length < 150) {
+        if (text.match(/^(•|-)\s/) && text.length > 15 && text.length < 200) {
           const action = text.replace(/^(•|-)\s*/, '').trim();
-          if (actionItems.length < 10) {
+          if (actionItems.length < 12) {
             actionItems.push(action);
           }
         }
       });
       
+      // If still no actions found, create default ones based on targets
+      if (actionItems.length === 0 && data.targets.length > 0) {
+        data.targets.forEach(target => {
+          if (target.metric.toLowerCase().includes('sleep')) {
+            actionItems.push(`Improve sleep quality: ${target.current} → ${target.target}`);
+          } else if (target.metric.toLowerCase().includes('hydration')) {
+            actionItems.push(`Increase daily hydration: ${target.current} → ${target.target}`);
+          } else if (target.metric.toLowerCase().includes('steps')) {
+            actionItems.push(`Boost daily activity: ${target.current} → ${target.target}`);
+          } else {
+            actionItems.push(`Focus on ${target.metric}: ${target.current} → ${target.target}`);
+          }
+        });
+      }
+      
       if (actionItems.length > 0) {
-        // Group actions into phases
-        const mid = Math.ceil(actionItems.length / 3);
+        // Group actions into 3 phases
+        const phase1Count = Math.ceil(actionItems.length / 3);
+        const phase2Count = Math.ceil((actionItems.length - phase1Count) / 2);
+        
         data.transformationPlan.push({
-          title: 'Phase 1: Foundation',
-          actions: actionItems.slice(0, mid)
+          title: 'Phase 1: Foundation (Days 1-30)',
+          actions: actionItems.slice(0, phase1Count)
         });
-        data.transformationPlan.push({
-          title: 'Phase 2: Building',
-          actions: actionItems.slice(mid, mid * 2)
-        });
-        if (actionItems.length > mid * 2) {
+        
+        if (actionItems.length > phase1Count) {
           data.transformationPlan.push({
-            title: 'Phase 3: Transformation',
-            actions: actionItems.slice(mid * 2)
+            title: 'Phase 2: Building (Days 31-60)',
+            actions: actionItems.slice(phase1Count, phase1Count + phase2Count)
+          });
+        }
+        
+        if (actionItems.length > phase1Count + phase2Count) {
+          data.transformationPlan.push({
+            title: 'Phase 3: Transformation (Days 61-90)',
+            actions: actionItems.slice(phase1Count + phase2Count)
           });
         }
       }
