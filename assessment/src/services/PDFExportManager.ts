@@ -378,15 +378,22 @@ export class PDFExportManager {
             yPos = 20;
           }
           
-          // Phase header with red background
+          // Phase header with red background and proper formatting
           pdf.setFillColor(220, 38, 38);
-          pdf.roundedRect(margin, yPos, contentWidth, 8, 1, 1, 'F');
+          pdf.roundedRect(margin, yPos, contentWidth, 10, 1, 1, 'F');
           
           pdf.setFontSize(10);
           pdf.setTextColor(255, 255, 255);
           pdf.setFont('helvetica', 'bold');
-          pdf.text(phase.title.toUpperCase(), margin + 3, yPos + 5.5);
-          yPos += 10;
+          
+          // Clean and format phase title properly
+          let cleanTitle = phase.title.replace(/(\d+)([A-Z])/g, '$1. $2'); // Add space after numbers
+          cleanTitle = cleanTitle.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2'); // Add space between words
+          cleanTitle = cleanTitle.replace(/WEEKS?/gi, '(WEEKS'); // Format weeks
+          cleanTitle = cleanTitle.replace(/(\d+-\d+)/, '$1)'); // Close parentheses
+          
+          pdf.text(cleanTitle.toUpperCase(), margin + 3, yPos + 6.5);
+          yPos += 12;
           
           // Phase actions as numbered list
           pdf.setFontSize(8.5);
@@ -399,9 +406,17 @@ export class PDFExportManager {
               yPos = 20;
             }
             
-            // Clean and format action text
-            const cleanAction = action.trim().replace(/\s+/g, ' ');
-            const truncatedAction = cleanAction.length > 80 ? cleanAction.substring(0, 80) + '...' : cleanAction;
+            // Clean and format action text with proper spacing
+            let cleanAction = action.trim();
+            
+            // Add spaces between concatenated words (e.g., "SleepHydrationSteps" → "Sleep Hydration Steps")
+            cleanAction = cleanAction.replace(/([a-z])([A-Z])/g, '$1 $2');
+            // Add spaces around colons and other punctuation
+            cleanAction = cleanAction.replace(/([a-zA-Z]):([a-zA-Z])/g, '$1: $2');
+            // Normalize whitespace
+            cleanAction = cleanAction.replace(/\s+/g, ' ');
+            // Truncate if too long
+            const truncatedAction = cleanAction.length > 85 ? cleanAction.substring(0, 85) + '...' : cleanAction;
             
             // Action number circle
             pdf.setFillColor(220, 38, 38);
@@ -507,29 +522,43 @@ export class PDFExportManager {
       data.grade = gradeMatch[1];
     }
 
-    // Extract key findings from V2 analysis sections
-    const sections = element.querySelectorAll('div, p, span');
+    // Extract key findings from V2 analysis sections with better text processing
+    const sections = element.querySelectorAll('div, p, span, h1, h2, h3, h4');
     let findingCount = 0;
     
     sections.forEach(section => {
       if (findingCount >= 8) return;
-      const text = section.textContent?.trim() || '';
+      let text = section.textContent?.trim() || '';
       
-      // Look for V2 analysis patterns
+      // Skip if text is too long (likely contains multiple sections)
+      if (text.length > 500) return;
+      
+      // Look for specific V2 content patterns
       if (text.includes('What you told us:') || 
           text.includes('Why this matters:') ||
-          text.includes('Your Current Reality') ||
-          text.includes('At 44 years old') ||
-          text.includes('At 80kg') ||
           text.includes('chronic dehydration') ||
-          text.includes('basal metabolic rate')) {
+          text.includes('basal metabolic rate') ||
+          text.includes('diabetes risk') ||
+          text.includes('metabolic slowdown')) {
         
-        // Clean and extract meaningful insights
-        const cleanText = text.replace(/What you told us:|Why this matters:/g, '').trim();
-        if (cleanText.length > 40 && cleanText.length < 400 && 
-            !cleanText.includes('Download') && !cleanText.includes('button')) {
-          data.keyFindings.push(cleanText);
-          findingCount++;
+        // Clean the text properly
+        text = text.replace(/What you told us:\s*/g, '');
+        text = text.replace(/Why this matters:\s*/g, '');
+        text = text.replace(/\s+/g, ' '); // Normalize whitespace
+        text = text.trim();
+        
+        // Split long text into sentences and take the first meaningful one
+        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
+        if (sentences.length > 0) {
+          let insight = sentences[0].trim();
+          if (insight.length > 200) {
+            insight = insight.substring(0, 200) + '...';
+          }
+          
+          if (insight.length > 40 && !insight.includes('Download') && !insight.includes('button')) {
+            data.keyFindings.push(insight);
+            findingCount++;
+          }
         }
       }
     });
@@ -543,14 +572,14 @@ export class PDFExportManager {
       
       // Enhanced patterns for V2 analysis targets
       const targetPatterns = [
-        // Standard arrow patterns
-        /(Sleep|Hydration|Steps|Energy|Exercise|Weight|BMI|Mood)[\s:]*([^→\n]+)→\s*([^\n•]+)/i,
-        // V2 specific patterns
+        // V2 Daily Health Targets format: "Sleep goal 7-9 hours Current 6 hours"
+        /(Sleep|Hydration|Exercise|Daily step|Weight)\s+goal[\s:]*([^\n]+?)Current[\s:]*([^\n]+)/i,
+        // Standard arrow patterns: "Sleep: 6 hours → 8 hours"
+        /(Sleep|Hydration|Steps|Energy|Exercise|Weight|BMI)[\s:]*([^→\n]+)→\s*([^\n•]+)/i,
+        // Projection patterns: "Current 80 kg → 90 days 76.4 kg"
         /Current[\s:]*([^→\n]+)→[\s]*90 days[\s:]*([^\n•]+)/i,
-        // Goal patterns from V2
-        /(Sleep goal|Hydration goal|Exercise goal|Daily step goal|Weight target)[\s:]*([^\n]+)Current[\s:]*([^\n]+)/i,
-        // Direct value patterns
-        /(2\.8L|7-9 hours|150 min\/week|10,000 steps|60-81 kg)/i
+        // Direct goal statements: "2.8L", "7-9 hours", etc.
+        /(Hydration|Sleep|Exercise|Steps|Weight).*?(2\.8L|7-9 hours|150 min\/week|10,?000 steps|60-81 kg)/i
       ];
       
       for (const pattern of targetPatterns) {
@@ -558,18 +587,23 @@ export class PDFExportManager {
         if (targetMatch && targetMatch[0].length < 200) {
           let metric, current, target;
           
-          if (pattern.source.includes('Current')) {
-            // Handle "Current X → 90 days Y" pattern
-            metric = 'Health Metric';
-            current = targetMatch[1]?.trim() || '';
-            target = targetMatch[2]?.trim() || '';
-          } else if (pattern.source.includes('goal')) {
-            // Handle "Sleep goal X Current Y" pattern
-            metric = targetMatch[1]?.replace(' goal', '').trim() || '';
+          if (pattern.source.includes('goal.*Current')) {
+            // Handle "Sleep goal 7-9 hours Current 6 hours" pattern
+            metric = targetMatch[1]?.trim() || '';
             target = targetMatch[2]?.trim() || '';
             current = targetMatch[3]?.trim() || '';
+          } else if (pattern.source.includes('Current.*90 days')) {
+            // Handle "Current 80 kg → 90 days 76.4 kg" pattern
+            metric = 'Weight';
+            current = targetMatch[1]?.trim() || '';
+            target = targetMatch[2]?.trim() || '';
+          } else if (pattern.source.includes('2\\.8L|7-9 hours')) {
+            // Handle direct goal statements
+            metric = targetMatch[1]?.trim() || '';
+            target = targetMatch[2]?.trim() || '';
+            current = 'Current level'; // Placeholder
           } else if (targetMatch[1] && targetMatch[2] && targetMatch[3]) {
-            // Standard pattern
+            // Standard arrow pattern
             metric = targetMatch[1].trim();
             current = targetMatch[2].trim();
             target = targetMatch[3].trim().split(/[•\n]/)[0].trim();
