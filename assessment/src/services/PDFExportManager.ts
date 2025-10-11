@@ -273,21 +273,27 @@ export class PDFExportManager {
         pdf.line(margin, yPos + 2, margin + 80, yPos + 2);
         yPos += 10;
 
+        // Define column widths (must match row columns)
+        const col1Width = 35; // Metric
+        const col2Width = 45; // Current
+        const col3Width = 45; // Target
+        const col4Width = 25; // Improvement arrow
+        
         // Table header
         pdf.setFillColor(220, 38, 38);
         pdf.rect(margin, yPos, contentWidth, 8, 'F');
         
-        pdf.setFontSize(9);
+        pdf.setFontSize(8);
         pdf.setTextColor(255, 255, 255);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('METRIC', margin + 3, yPos + 5.5);
-        pdf.text('CURRENT', margin + 50, yPos + 5.5);
-        pdf.text('TARGET', margin + 90, yPos + 5.5);
-        pdf.text('IMPROVEMENT', margin + 130, yPos + 5.5);
+        pdf.text('METRIC', margin + 2, yPos + 5.5);
+        pdf.text('CURRENT', margin + col1Width + 2, yPos + 5.5);
+        pdf.text('TARGET', margin + col1Width + col2Width + 2, yPos + 5.5);
+        pdf.text('→', margin + col1Width + col2Width + col3Width + 10, yPos + 5.5);
         yPos += 8;
 
-        // Table rows with alternating colors
-        pdf.setFontSize(8.5);
+        // Table rows with proper column widths and text wrapping
+        pdf.setFontSize(7.5);
         pdf.setTextColor(50, 50, 50);
         pdf.setFont('helvetica', 'normal');
         
@@ -297,26 +303,42 @@ export class PDFExportManager {
             yPos = 20;
           }
           
+          // Calculate row height based on content
+          const metricLines = pdf.splitTextToSize(target.metric, col1Width - 4);
+          const currentLines = pdf.splitTextToSize(target.current, col2Width - 4);
+          const targetLines = pdf.splitTextToSize(target.target, col3Width - 4);
+          const maxLines = Math.max(metricLines.length, currentLines.length, targetLines.length);
+          const rowHeight = Math.max(7, maxLines * 4 + 2);
+          
           // Alternating row background
           if (index % 2 === 0) {
             pdf.setFillColor(248, 250, 252);
-            pdf.rect(margin, yPos, contentWidth, 7, 'F');
+            pdf.rect(margin, yPos, contentWidth, rowHeight, 'F');
           }
           
+          // Column 1: Metric (bold)
           pdf.setFont('helvetica', 'bold');
-          pdf.text(target.metric, margin + 3, yPos + 5);
+          pdf.setTextColor(50, 50, 50);
+          pdf.text(metricLines, margin + 2, yPos + 4);
+          
+          // Column 2: Current (normal)
           pdf.setFont('helvetica', 'normal');
-          pdf.text(target.current, margin + 50, yPos + 5);
+          pdf.setTextColor(50, 50, 50);
+          pdf.text(currentLines, margin + col1Width + 2, yPos + 4);
           
-          pdf.setTextColor(220, 38, 38);
+          // Column 3: Target (bold red)
           pdf.setFont('helvetica', 'bold');
-          pdf.text(target.target, margin + 90, yPos + 5);
+          pdf.setTextColor(220, 38, 38);
+          pdf.text(targetLines, margin + col1Width + col2Width + 2, yPos + 4);
           
-          pdf.setTextColor(34, 197, 94); // Green
-          pdf.text('→', margin + 130, yPos + 5);
+          // Column 4: Improvement arrow (green)
+          pdf.setTextColor(34, 197, 94);
+          pdf.setFontSize(10);
+          pdf.text('→', margin + col1Width + col2Width + col3Width + 8, yPos + (rowHeight / 2) + 1);
+          pdf.setFontSize(7.5); // Reset font size
           
           pdf.setTextColor(50, 50, 50);
-          yPos += 7;
+          yPos += rowHeight;
         });
         
         yPos += 5;
