@@ -101,14 +101,48 @@ export class PDFExportManager {
         quality = 0.95
       } = options;
 
-      // Capture element as canvas
-      const canvas = await html2canvas(element, {
+      // ✅ FIX: Clone element and force compatible colors for html2canvas
+      // html2canvas doesn't support oklch() color functions from Tailwind v4
+      const clonedElement = element.cloneNode(true) as HTMLElement;
+      document.body.appendChild(clonedElement);
+      clonedElement.style.position = 'absolute';
+      clonedElement.style.left = '-9999px';
+      clonedElement.style.top = '0';
+      
+      // Force all oklch colors to standard colors
+      const allElements = clonedElement.querySelectorAll('*');
+      allElements.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        const computedStyle = window.getComputedStyle(htmlEl);
+        
+        // Force standard color values
+        if (computedStyle.color && computedStyle.color.includes('oklch')) {
+          htmlEl.style.color = 'rgb(0, 0, 0)'; // Force black
+        }
+        if (computedStyle.backgroundColor && computedStyle.backgroundColor.includes('oklch')) {
+          htmlEl.style.backgroundColor = 'rgb(255, 255, 255)'; // Force white
+        }
+        if (computedStyle.borderColor && computedStyle.borderColor.includes('oklch')) {
+          htmlEl.style.borderColor = 'rgb(229, 231, 235)'; // Force gray-200
+        }
+      });
+      
+      // Capture cloned element as canvas
+      const canvas = await html2canvas(clonedElement, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        imageTimeout: 0
+        imageTimeout: 0,
+        onclone: (clonedDoc) => {
+          // Additional cleanup in cloned document
+          const body = clonedDoc.body;
+          body.style.backgroundColor = '#ffffff';
+        }
       });
+      
+      // Remove cloned element
+      document.body.removeChild(clonedElement);
 
       const imgWidth = 210;
       const pageHeight = 297;
