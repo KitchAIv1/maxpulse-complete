@@ -26,21 +26,29 @@ export function AnalysisDownloadButton({
 
   const handleDownload = async () => {
     try {
+      console.log('🔽 PDF Download initiated...', { elementId, customerName, distributorName });
       setIsDownloading(true);
       setDownloadStatus('idle');
 
       // Get the analysis content element
       const element = document.getElementById(elementId);
+      console.log('📄 Element found:', element ? 'YES' : 'NO', element);
 
       if (!element) {
+        console.error('❌ Element not found with ID:', elementId);
         throw new Error('Analysis content not found. Please ensure the page is fully loaded.');
       }
 
       // Validate element is ready
-      if (!PDFExportManager.isElementReady(element)) {
+      const isReady = PDFExportManager.isElementReady(element);
+      console.log('✅ Element ready:', isReady);
+      
+      if (!isReady) {
+        console.error('❌ Element not ready for PDF capture');
         throw new Error('Analysis content is not ready. Please wait a moment and try again.');
       }
 
+      console.log('🎨 Starting PDF generation...');
       // Generate PDF
       await PDFExportManager.generateBrandedPDF(element, {
         customerName,
@@ -51,6 +59,7 @@ export function AnalysisDownloadButton({
         quality: 0.95
       });
 
+      console.log('✅ PDF generated successfully!');
       // Show success feedback
       setDownloadStatus('success');
       
@@ -60,7 +69,11 @@ export function AnalysisDownloadButton({
       }, 3000);
 
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error('❌ PDF Download failed:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       setDownloadStatus('error');
       
       // Reset after 5 seconds
