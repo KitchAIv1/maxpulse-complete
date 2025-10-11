@@ -16,6 +16,8 @@ import { PersonalizedTargetsTable } from '../components-v2/PersonalizedTargetsTa
 import { RiskFactorCards } from '../components-v2/RiskFactorCards';
 import { TransformationRoadmap } from '../components-v2/TransformationRoadmap';
 import { ProjectionTable } from '../components-v2/ProjectionTable';
+// 🆕 PDF Download Feature (External Add-On)
+import { AnalysisDownloadButton } from './AnalysisDownloadButton';
 
 interface HealthInsightsResultsProps {
   results: AssessmentResults;
@@ -310,13 +312,24 @@ export function HealthInsightsResults({
             <p style={{color: '#7f1d1d', fontSize: '14px'}}>{v2Analysis.error.message}</p>
           </div>
         ) : v2Analysis.analysis ? (
-          <div className="v2-analysis-wrapper">
-            <CurrentRealityCard
-              userProfile={v2Analysis.analysis.userProfile}
-              overallScore={v2Analysis.analysis.overallScore}
-              overallGrade={v2Analysis.analysis.overallGrade}
-              currentReality={v2Analysis.analysis.currentReality}
-            />
+          <>
+            {/* ✅ PDF Download Button - External Add-On */}
+            <div className="flex justify-end mb-6 px-4">
+              <AnalysisDownloadButton
+                customerName={fullName}
+                distributorName={distributorInfo?.name}
+                elementId="analysis-content"
+              />
+            </div>
+            
+            {/* ✅ Analysis Content Wrapper - ID for PDF capture */}
+            <div id="analysis-content" className="v2-analysis-wrapper">
+              <CurrentRealityCard
+                userProfile={v2Analysis.analysis.userProfile}
+                overallScore={v2Analysis.analysis.overallScore}
+                overallGrade={v2Analysis.analysis.overallGrade}
+                currentReality={v2Analysis.analysis.currentReality}
+              />
             <LifestyleBreakdownSection
               lifestyleBreakdown={v2Analysis.analysis.lifestyleBreakdown}
             />
@@ -336,7 +349,8 @@ export function HealthInsightsResults({
               priorityActions={v2Analysis.analysis.priorityActions}
               onStartTransformation={onContinueToPersonalizedPlan}
             />
-          </div>
+            </div>
+          </>
         ) : null
       ) : (
         // V1 Enhanced AI Analysis Section with header and cards
