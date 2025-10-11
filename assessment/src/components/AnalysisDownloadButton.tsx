@@ -24,6 +24,14 @@ export function AnalysisDownloadButton({
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Feature flag: Disable PDF in production, enable in development
+  const isPDFEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_PDF === 'true';
+  
+  // Don't render button if PDF is disabled
+  if (!isPDFEnabled) {
+    return null;
+  }
+
   const handleDownload = async () => {
     try {
       console.log('🔽 PDF Download initiated...', { elementId, customerName, distributorName });
@@ -160,6 +168,14 @@ export function AnalysisDownloadButtonCompact({
   elementId = 'analysis-content'
 }: AnalysisDownloadButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Feature flag: Disable PDF in production, enable in development
+  const isPDFEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_PDF === 'true';
+  
+  // Don't render button if PDF is disabled
+  if (!isPDFEnabled) {
+    return null;
+  }
 
   const handleDownload = async () => {
     try {
