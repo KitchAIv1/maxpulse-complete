@@ -304,15 +304,20 @@ export class PDFExportManager {
             yPos = 20;
           }
           
-          // Clean and truncate text to prevent overflow
-          const cleanMetric = target.metric.length > 25 ? target.metric.substring(0, 25) + '...' : target.metric;
-          const cleanCurrent = target.current.length > 30 ? target.current.substring(0, 30) + '...' : target.current;
-          const cleanTarget = target.target.length > 30 ? target.target.substring(0, 30) + '...' : target.target;
+          // Clean and format text properly with spacing
+          const cleanMetric = target.metric.trim().replace(/\s+/g, ' ');
+          const cleanCurrent = target.current.trim().replace(/\s+/g, ' ');
+          const cleanTarget = target.target.trim().replace(/\s+/g, ' ');
+          
+          // Truncate if too long
+          const finalMetric = cleanMetric.length > 20 ? cleanMetric.substring(0, 20) + '...' : cleanMetric;
+          const finalCurrent = cleanCurrent.length > 25 ? cleanCurrent.substring(0, 25) + '...' : cleanCurrent;
+          const finalTarget = cleanTarget.length > 25 ? cleanTarget.substring(0, 25) + '...' : cleanTarget;
           
           // Calculate row height based on content (limit to 2 lines max per cell)
-          const metricLines = pdf.splitTextToSize(cleanMetric, col1Width - 4).slice(0, 2);
-          const currentLines = pdf.splitTextToSize(cleanCurrent, col2Width - 4).slice(0, 2);
-          const targetLines = pdf.splitTextToSize(cleanTarget, col3Width - 4).slice(0, 2);
+          const metricLines = pdf.splitTextToSize(finalMetric, col1Width - 4).slice(0, 2);
+          const currentLines = pdf.splitTextToSize(finalCurrent, col2Width - 4).slice(0, 2);
+          const targetLines = pdf.splitTextToSize(finalTarget, col3Width - 4).slice(0, 2);
           const maxLines = Math.max(metricLines.length, currentLines.length, targetLines.length);
           const rowHeight = Math.max(10, maxLines * 4 + 4);
           
@@ -388,28 +393,32 @@ export class PDFExportManager {
           pdf.setTextColor(50, 50, 50);
           pdf.setFont('helvetica', 'normal');
           
-          phase.actions.slice(0, 5).forEach((action, actionIndex) => { // Limit to 5 actions per phase
+          phase.actions.slice(0, 4).forEach((action, actionIndex) => { // Limit to 4 actions per phase
             if (yPos > 270) {
               pdf.addPage();
               yPos = 20;
             }
             
+            // Clean and format action text
+            const cleanAction = action.trim().replace(/\s+/g, ' ');
+            const truncatedAction = cleanAction.length > 80 ? cleanAction.substring(0, 80) + '...' : cleanAction;
+            
             // Action number circle
             pdf.setFillColor(220, 38, 38);
-            pdf.circle(margin + 3, yPos + 1.5, 2, 'F');
+            pdf.circle(margin + 3, yPos + 3, 2, 'F');
             
             pdf.setTextColor(255, 255, 255);
             pdf.setFontSize(7);
             pdf.setFont('helvetica', 'bold');
-            pdf.text(`${actionIndex + 1}`, margin + 3, yPos + 2.5, { align: 'center' });
+            pdf.text(`${actionIndex + 1}`, margin + 3, yPos + 4, { align: 'center' });
             
-            // Action text
-            pdf.setFontSize(8.5);
+            // Action text with proper wrapping
+            pdf.setFontSize(8);
             pdf.setTextColor(50, 50, 50);
             pdf.setFont('helvetica', 'normal');
-            const actionLines = pdf.splitTextToSize(action, contentWidth - 10);
-            pdf.text(actionLines.slice(0, 2), margin + 7, yPos + 3); // Limit to 2 lines
-            yPos += (Math.min(actionLines.length, 2) * 4) + 2;
+            const actionLines = pdf.splitTextToSize(truncatedAction, contentWidth - 15);
+            pdf.text(actionLines.slice(0, 2), margin + 8, yPos + 5); // Limit to 2 lines, start after circle
+            yPos += Math.max(8, (Math.min(actionLines.length, 2) * 4) + 4);
           });
           
           yPos += 3;
@@ -527,18 +536,26 @@ export class PDFExportManager {
       for (const pattern of targetPatterns) {
         const targetMatch = text.match(pattern);
         if (targetMatch && targetMatch[0].length < 150) {
-          const metric = (targetMatch[2] || targetMatch[1]).trim();
-          const current = (targetMatch[3] || targetMatch[2]).trim();
-          const target = (targetMatch[4] || targetMatch[3]).trim().split(/[•\n]/)[0].trim();
+          let metric = (targetMatch[2] || targetMatch[1]).trim();
+          let current = (targetMatch[3] || targetMatch[2]).trim();
+          let target = (targetMatch[4] || targetMatch[3]).trim().split(/[•\n]/)[0].trim();
           
-          const key = `${metric}:${current}:${target}`;
-          if (!seenTargets.has(key) && data.targets.length < 8) {
-            seenTargets.add(key);
-            data.targets.push({
-              metric,
-              current,
-              target
-            });
+          // Clean up the extracted text
+          metric = metric.replace(/[^\w\s]/g, '').trim();
+          current = current.replace(/[^\w\s.:]/g, '').trim();
+          target = target.replace(/[^\w\s.:]/g, '').trim();
+          
+          // Ensure we have valid data
+          if (metric && current && target && metric.length > 2 && current.length > 1 && target.length > 1) {
+            const key = `${metric}:${current}:${target}`;
+            if (!seenTargets.has(key) && data.targets.length < 6) { // Limit to 6 for better layout
+              seenTargets.add(key);
+              data.targets.push({
+                metric: metric.substring(0, 15), // Limit metric length
+                current: current.substring(0, 20), // Limit current length
+                target: target.substring(0, 20) // Limit target length
+              });
+            }
           }
           break;
         }
@@ -575,8 +592,11 @@ export class PDFExportManager {
     });
     
     // Add last phase
-    if (currentPhase && currentPhase.actions.length > 0) {
-      data.transformationPlan.push(currentPhase);
+    if (currentPhase !== null) {
+      const phase = currentPhase as {title: string; actions: string[]};
+      if (phase.actions && phase.actions.length > 0) {
+        data.transformationPlan.push(phase);
+      }
     }
 
     // If no phases found, create a default transformation plan
