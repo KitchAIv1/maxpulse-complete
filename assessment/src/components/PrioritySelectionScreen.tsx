@@ -60,7 +60,8 @@ export function PrioritySelectionScreen({ onSelect }: PrioritySelectionScreenPro
         { icon: TrendingUp, text: 'Long-term Health Goals' }
       ],
       assessmentTime: '5-7 minutes',
-      questions: '15 targeted questions'
+      questions: '15 targeted questions',
+      disabled: false // ✅ Active
     },
     {
       id: 'wealth' as const,
@@ -81,7 +82,8 @@ export function PrioritySelectionScreen({ onSelect }: PrioritySelectionScreenPro
         { icon: Award, text: 'Wealth Mindset Development' }
       ],
       assessmentTime: '6-8 minutes',
-      questions: '18 strategic questions'
+      questions: '18 strategic questions',
+      disabled: true // ⏸️ Temporarily disabled
     },
     {
       id: 'both' as const,
@@ -102,11 +104,18 @@ export function PrioritySelectionScreen({ onSelect }: PrioritySelectionScreenPro
         { icon: Award, text: 'Complete Lifestyle Design' }
       ],
       assessmentTime: '8-10 minutes',
-      questions: '25 comprehensive questions'
+      questions: '25 comprehensive questions',
+      disabled: true // ⏸️ Temporarily disabled
     },
   ];
 
   const handleSelect = (priority: Priority) => {
+    // ✅ Prevent selection of disabled priorities
+    const priorityData = priorities.find(p => p.id === priority);
+    if (priorityData?.disabled) {
+      return; // Do nothing if priority is disabled
+    }
+    
     if (selectedPriority === priority) {
       // If clicking the same priority, deselect it
       setSelectedPriority(null);
@@ -148,6 +157,7 @@ export function PrioritySelectionScreen({ onSelect }: PrioritySelectionScreenPro
             {priorities.map((priority, index) => {
               const Icon = priority.icon;
               const isSelected = selectedPriority === priority.id;
+              const isDisabled = priority.disabled; // ✅ Check if priority is disabled
               
               return (
                 <motion.div
@@ -155,19 +165,40 @@ export function PrioritySelectionScreen({ onSelect }: PrioritySelectionScreenPro
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.2 }}
-                  className={`relative group cursor-pointer transition-all duration-300 ${
-                    isSelected ? 'scale-105 z-10' : 'hover:scale-102'
+                  className={`relative group transition-all duration-300 ${
+                    isDisabled 
+                      ? 'cursor-not-allowed opacity-60' // ✅ Disabled state
+                      : isSelected 
+                        ? 'cursor-pointer scale-105 z-10' 
+                        : 'cursor-pointer hover:scale-102'
                   }`}
                   onClick={() => handleSelect(priority.id)}
                 >
-                  <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+                  <div className={`relative h-[500px] rounded-2xl overflow-hidden transition-all duration-300 ${
+                    isDisabled 
+                      ? 'shadow-md' // ✅ Reduced shadow for disabled
+                      : 'shadow-lg hover:shadow-xl'
+                  }`}>
                     {/* Image Background */}
                     <div 
                       className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                       style={{ backgroundImage: `url(${priority.image})` }}
                     >
                       {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${
+                        isDisabled 
+                          ? 'from-black/90 via-black/60 to-black/30' // ✅ Darker overlay for disabled
+                          : 'from-black/80 via-black/20 to-transparent'
+                      }`} />
+                      
+                      {/* ✅ Coming Soon Badge for Disabled Cards */}
+                      {isDisabled && (
+                        <div className="absolute top-4 right-4 z-20">
+                          <div className="px-4 py-2 bg-amber-500/90 backdrop-blur-sm border border-amber-400/50 rounded-full shadow-lg">
+                            <span className="text-white text-xs font-bold tracking-wide">COMING SOON</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Default Content Overlay */}
@@ -196,8 +227,19 @@ export function PrioritySelectionScreen({ onSelect }: PrioritySelectionScreenPro
                               {priority.subtitle}
                             </p>
                             <p className="text-white/80 text-sm leading-relaxed">
-                              {priority.description}
+                              {isDisabled 
+                                ? 'This assessment path is being refined and will be available soon. Stay tuned!' 
+                                : priority.description
+                              }
                             </p>
+                            
+                            {/* ✅ Disabled Indicator */}
+                            {isDisabled && (
+                              <div className="mt-4 flex items-center gap-2 text-amber-400 text-sm font-medium">
+                                <Lock className="w-4 h-4" />
+                                <span>Currently Unavailable</span>
+                              </div>
+                            )}
                           </div>
 
 
