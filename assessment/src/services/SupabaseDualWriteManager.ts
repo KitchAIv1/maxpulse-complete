@@ -12,6 +12,7 @@ export interface AssessmentTrackingData {
   distributorId: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   assessmentType: 'health' | 'wealth' | 'hybrid';
   currentStep: number;
   totalSteps: number;
@@ -182,6 +183,7 @@ export class SupabaseDualWriteManager {
             original_session_id: data.sessionId, // Store original string ID for reference
             customer_name: data.customerName,
             customer_email: data.customerEmail,
+            customer_phone: data.customerPhone,
             assessment_type: data.assessmentType,
             current_step: data.currentStep,
             total_steps: data.totalSteps,
@@ -193,7 +195,8 @@ export class SupabaseDualWriteManager {
           timestamp: new Date().toISOString(),
           client_info: {
             name: data.customerName,
-            email: data.customerEmail
+            email: data.customerEmail,
+            phone: data.customerPhone
           }
         });
 
@@ -278,6 +281,7 @@ export class SupabaseDualWriteManager {
             distributor_id: distributorUuid,
             customer_name: data.customerName,
             customer_email: data.customerEmail,
+            customer_phone: data.customerPhone,
             assessment_type: data.assessmentType,
             status: data.status,
             started_at: data.startedAt,

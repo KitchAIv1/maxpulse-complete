@@ -89,8 +89,9 @@ export interface DistributorInfo {
   code: string;
   customerName?: string;
   customerEmail?: string;
+  customerPhone?: string;
   timestamp: number;
 }
 
-export type AppState = 'welcome' | 'priority' | 'assessment' | 'motivational' | 'educational-slide' | 'section-complete' | 'longevity-insight' | 'health-insights' | 'personalized-plan' | 'wealth-results' | 'hybrid-results' | 'results';
+export type AppState = 'campaign-capture' | 'welcome' | 'priority' | 'assessment' | 'motivational' | 'educational-slide' | 'section-complete' | 'longevity-insight' | 'health-insights' | 'personalized-plan' | 'wealth-results' | 'hybrid-results' | 'results';
 export type Priority = 'health' | 'wealth' | 'both';

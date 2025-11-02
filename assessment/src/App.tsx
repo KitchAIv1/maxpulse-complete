@@ -4,6 +4,7 @@ import { ArrowUp } from 'lucide-react';
 import { ThemeProvider } from './components/ThemeProvider';
 import { ThemeToggle } from './components/ThemeToggle';
 import { WelcomeScreen } from './components/WelcomeScreen';
+import { CampaignCustomerCapture } from './components/CampaignCustomerCapture';
 import { PrioritySelectionScreen } from './components/PrioritySelectionScreen';
 import { QuestionCard } from './components/QuestionCard';
 import { MotivationalCard } from './components/MotivationalCard';
@@ -202,8 +203,27 @@ export default function App() {
     const customerName = urlParams.get('customer');
     const customerEmail = urlParams.get('email');
     const sessionId = urlParams.get('session');
+    const campaignName = urlParams.get('campaign');
 
     if (distributorId && code) {
+      // Check if this is a campaign link without customer info
+      const isCampaignLinkWithoutCustomer = campaignName && !customerName && !customerEmail;
+      
+      if (isCampaignLinkWithoutCustomer) {
+        console.log('🎯 Campaign link detected - customer capture required:', campaignName);
+        // Store campaign info temporarily in sessionStorage
+        sessionStorage.setItem('pending_campaign', JSON.stringify({
+          campaignName,
+          distributorId,
+          code,
+          sessionId
+        }));
+        // DON'T set distributorInfo yet - wait for customer details
+        setAppState('campaign-capture');
+        return; // Exit early - don't process as normal link
+      }
+
+      // Normal personal link flow (has customer info or no campaign)
       const info: DistributorInfo = {
         distributorId,
         code,
@@ -883,8 +903,60 @@ export default function App() {
         )}
 
         {/* Main Content */}
-        <main className={`${(appState === 'welcome' || appState === 'assessment' || appState === 'motivational' || appState === 'educational-slide' || appState === 'section-complete' || appState === 'longevity-insight') ? '' : 'px-4 py-8'}`}>
+        <main className={`${(appState === 'campaign-capture' || appState === 'welcome' || appState === 'assessment' || appState === 'motivational' || appState === 'educational-slide' || appState === 'section-complete' || appState === 'longevity-insight') ? '' : 'px-4 py-8'}`}>
           <AnimatePresence mode="wait">
+            {/* Campaign Customer Capture Screen */}
+            {appState === 'campaign-capture' && (
+              <motion.div
+                key="campaign-capture"
+                {...pageTransition}
+                className="min-h-screen"
+              >
+                <CampaignCustomerCapture
+                  campaignName={
+                    JSON.parse(sessionStorage.getItem('pending_campaign') || '{}').campaignName || 'Special Campaign'
+                  }
+                  distributorId={
+                    JSON.parse(sessionStorage.getItem('pending_campaign') || '{}').distributorId
+                  }
+                  onSubmit={(details) => {
+                    // Retrieve pending campaign data
+                    const pendingCampaign = JSON.parse(sessionStorage.getItem('pending_campaign') || '{}');
+                    
+                    // Create complete DistributorInfo with customer details
+                    const info: DistributorInfo = {
+                      distributorId: pendingCampaign.distributorId,
+                      code: pendingCampaign.code,
+                      customerName: details.name,
+                      customerEmail: details.email,
+                      customerPhone: details.phone,
+                      timestamp: Date.now()
+                    };
+                    
+                    setDistributorInfo(info);
+                    
+                    // Store in localStorage with session key
+                    const sessionKey = info.code;
+                    localStorage.setItem(`distributor-tracking-${sessionKey}`, JSON.stringify(info));
+                    localStorage.setItem('current-session-id', sessionKey);
+                    
+                    // Clear pending data
+                    sessionStorage.removeItem('pending_campaign');
+                    
+                    // Log the capture
+                    console.log('✅ Campaign lead captured:', {
+                      campaign: pendingCampaign.campaignName,
+                      name: details.name,
+                      distributor: pendingCampaign.distributorId
+                    });
+                    
+                    // Proceed to welcome screen
+                    setAppState('welcome');
+                  }}
+                />
+              </motion.div>
+            )}
+
             {appState === 'welcome' && (
               <motion.div 
                 key="welcome" 
