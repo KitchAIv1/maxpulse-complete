@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { User, Mail, Phone, ArrowRight, Shield } from 'lucide-react';
-import { Button } from './ui/button';
 
 interface CampaignCustomerCaptureProps {
   campaignName: string;
@@ -198,21 +197,46 @@ export function CampaignCustomerCapture({
             </div>
 
             {/* Submit button */}
-            <Button
+            <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white hover:text-white py-3 sm:py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
-              style={{ maxWidth: '100%', color: 'white' }}
+              style={{ 
+                width: '100%',
+                maxWidth: '100%',
+                background: 'linear-gradient(to right, rgb(147, 51, 234), rgb(249, 115, 22))',
+                color: 'white !important',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                fontWeight: '600',
+                fontSize: '14px',
+                border: 'none',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.2s ease',
+                opacity: isSubmitting ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting) {
+                  e.currentTarget.style.background = 'linear-gradient(to right, rgb(126, 34, 206), rgb(234, 88, 12))';
+                  e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSubmitting) {
+                  e.currentTarget.style.background = 'linear-gradient(to right, rgb(147, 51, 234), rgb(249, 115, 22))';
+                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                }
+              }}
             >
               {isSubmitting ? (
-                <span style={{ color: 'white' }}>Processing...</span>
+                <span style={{ color: 'white', fontWeight: '600' }}>Processing...</span>
               ) : (
-                <span className="flex items-center justify-center gap-2" style={{ color: 'white' }}>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', fontWeight: '600' }}>
                   Continue to Assessment
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'white' }} />
+                  <ArrowRight style={{ width: '20px', height: '20px', color: 'white', stroke: 'white', strokeWidth: 2 }} />
                 </span>
               )}
-            </Button>
+            </button>
           </form>
 
           {/* Footer note */}
