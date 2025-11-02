@@ -116,12 +116,14 @@ serve(async (req) => {
     }
     
     // Initialize Supabase Admin Client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    // Note: Supabase doesn't allow env var names starting with SUPABASE_
+    const supabaseUrl = Deno.env.get('API_URL') || Deno.env.get('SUPABASE_URL');
     // Support both old JWT service_role key and new Secret API key
-    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SECRET_KEY');
+    const supabaseServiceRoleKey = Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SECRET_KEY');
     
     if (!supabaseUrl || !supabaseServiceRoleKey) {
       console.error('❌ Missing environment variables');
+      console.error('Available env vars:', Object.keys(Deno.env.toObject()));
       return new Response(
         JSON.stringify({ success: false, error: 'Server configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

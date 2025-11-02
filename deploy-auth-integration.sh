@@ -56,16 +56,12 @@ echo -e "${GREEN}✅ Logged in to Supabase${NC}"
 echo ""
 
 echo -e "${BLUE}Step 3: Setting Edge Function secrets...${NC}"
-# Set the appropriate key based on what was provided
-if [ -n "$SUPABASE_SECRET_KEY" ]; then
-    echo "Setting SUPABASE_SECRET_KEY (new Secret API key format)..."
-    supabase secrets set SUPABASE_SECRET_KEY="$SERVICE_ROLE_KEY" --project-ref pdgpktwmqxrljtdbnvyu
-else
-    echo "Setting SUPABASE_SERVICE_ROLE_KEY (JWT format)..."
-    supabase secrets set SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" --project-ref pdgpktwmqxrljtdbnvyu
-fi
-echo "Setting SUPABASE_URL..."
-supabase secrets set SUPABASE_URL="$SUPABASE_URL" --project-ref pdgpktwmqxrljtdbnvyu
+# Supabase doesn't allow env var names starting with SUPABASE_
+# Use SERVICE_ROLE_KEY and API_URL instead
+echo "Setting SERVICE_ROLE_KEY..."
+supabase secrets set SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" --project-ref pdgpktwmqxrljtdbnvyu
+echo "Setting API_URL..."
+supabase secrets set API_URL="$SUPABASE_URL" --project-ref pdgpktwmqxrljtdbnvyu
 echo -e "${GREEN}✅ Secrets configured${NC}"
 echo ""
 
