@@ -84,8 +84,13 @@ supabase functions list --project-ref pdgpktwmqxrljtdbnvyu
 echo ""
 
 echo -e "${BLUE}Step 8: Running database migration...${NC}"
-supabase db push --project-ref pdgpktwmqxrljtdbnvyu
-echo -e "${GREEN}✅ Migration applied${NC}"
+# Note: Older CLI versions don't support --project-ref for db push
+# The migration needs to be run manually or via linked project
+echo -e "${YELLOW}⚠️  Database migration needs to be run manually${NC}"
+echo "Run this command to apply the migration:"
+echo "  supabase db push"
+echo ""
+echo "Or apply it directly in Supabase Dashboard → Database → Migrations"
 echo ""
 
 echo -e "${GREEN}========================================${NC}"
