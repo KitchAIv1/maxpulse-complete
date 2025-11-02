@@ -117,7 +117,8 @@ serve(async (req) => {
     
     // Initialize Supabase Admin Client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    // Support both old JWT service_role key and new Secret API key
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SECRET_KEY');
     
     if (!supabaseUrl || !supabaseServiceRoleKey) {
       console.error('❌ Missing environment variables');
@@ -131,6 +132,14 @@ serve(async (req) => {
       auth: {
         autoRefreshToken: false,
         persistSession: false
+      },
+      global: {
+        headers: {
+          // Add authorization header for Secret API key if needed
+          ...(supabaseServiceRoleKey.startsWith('sb_secret_') ? {
+            'apikey': supabaseServiceRoleKey
+          } : {})
+        }
       }
     });
     

@@ -16,16 +16,24 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Configuration
-# IMPORTANT: Get your service role key from Supabase Dashboard
+# IMPORTANT: Get your secret key from Supabase Dashboard → Settings → API
 # DO NOT hardcode it here! Pass it as an environment variable instead.
-if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-    echo -e "${RED}❌ SUPABASE_SERVICE_ROLE_KEY environment variable not set${NC}"
-    echo "Please set it before running this script:"
-    echo "  export SUPABASE_SERVICE_ROLE_KEY='your_service_role_key_here'"
+
+# Support both old JWT service_role key and new Secret API key
+if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && [ -z "$SUPABASE_SECRET_KEY" ]; then
+    echo -e "${RED}❌ Neither SUPABASE_SERVICE_ROLE_KEY nor SUPABASE_SECRET_KEY environment variable is set${NC}"
+    echo "Please set one before running this script:"
+    echo ""
+    echo "For new Secret API key (starts with sb_secret_):"
+    echo "  export SUPABASE_SECRET_KEY='sb_secret_...'"
+    echo ""
+    echo "For old JWT service_role key (starts with eyJhbGci...):"
+    echo "  export SUPABASE_SERVICE_ROLE_KEY='eyJhbGci...'"
     exit 1
 fi
 
-SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+# Use whichever key is provided
+SERVICE_ROLE_KEY="${SUPABASE_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}"
 SUPABASE_URL="https://pdgpktwmqxrljtdbnvyu.supabase.co"
 
 echo -e "${BLUE}Step 1: Checking Supabase CLI...${NC}"
@@ -48,8 +56,14 @@ echo -e "${GREEN}✅ Logged in to Supabase${NC}"
 echo ""
 
 echo -e "${BLUE}Step 3: Setting Edge Function secrets...${NC}"
-echo "Setting SUPABASE_SERVICE_ROLE_KEY..."
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" --project-ref pdgpktwmqxrljtdbnvyu
+# Set the appropriate key based on what was provided
+if [ -n "$SUPABASE_SECRET_KEY" ]; then
+    echo "Setting SUPABASE_SECRET_KEY (new Secret API key format)..."
+    supabase secrets set SUPABASE_SECRET_KEY="$SERVICE_ROLE_KEY" --project-ref pdgpktwmqxrljtdbnvyu
+else
+    echo "Setting SUPABASE_SERVICE_ROLE_KEY (JWT format)..."
+    supabase secrets set SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" --project-ref pdgpktwmqxrljtdbnvyu
+fi
 echo "Setting SUPABASE_URL..."
 supabase secrets set SUPABASE_URL="$SUPABASE_URL" --project-ref pdgpktwmqxrljtdbnvyu
 echo -e "${GREEN}✅ Secrets configured${NC}"
