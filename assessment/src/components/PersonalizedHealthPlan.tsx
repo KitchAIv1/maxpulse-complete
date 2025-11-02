@@ -21,6 +21,7 @@ import { AssessmentResults } from '../types/assessment';
 import styles from './PersonalizedHealthPlan.module.css';
 import { ActivationCodeDisplay } from './ActivationCodeDisplay';
 import { ActivationCodeManager } from '../services/ActivationCodeManager';
+import { PurchaseManager } from '../services/PurchaseManager';
 
 interface PersonalizedHealthPlanProps {
   results: AssessmentResults;
@@ -161,6 +162,32 @@ export function PersonalizedHealthPlan({
       
       if (result.success && result.code) {
         setActivationCode(result.code);
+        
+        // ✅ INTEGRATION: Create commission record from purchase
+        // This connects activation_codes → commissions → Client Hub → Earnings
+        const purchaseManager = new PurchaseManager();
+        const purchaseAmount = selectedPlan === 'annual' ? 49.99 : 8.00;
+        const commissionRate = selectedPlan === 'annual' ? 50 : 40; // 50% annual, 40% monthly
+        
+        purchaseManager.processPurchase({
+          distributorId: distributorInfo?.distributorId || '',
+          productId: 'maxpulse-app',
+          productName: `MAXPULSE App (${selectedPlan})`,
+          productType: 'app',
+          clientName: distributorInfo?.customerName || 'MAXPULSE User',
+          clientEmail: distributorInfo?.customerEmail || '',
+          price: purchaseAmount,
+          commissionRate: commissionRate,
+          assessmentSessionId: distributorInfo?.code || '',
+          purchaseId: result.code // Link activation code to commission
+        });
+        
+        console.log('✅ Purchase processed and commission created:', {
+          activationCode: result.code,
+          plan: selectedPlan,
+          amount: purchaseAmount,
+          commission: (purchaseAmount * commissionRate) / 100
+        });
         
         // ✅ NEW: Save purchase state for persistence
         savePurchaseState(result.code, selectedPlan);
