@@ -201,15 +201,15 @@ export function CampaignCustomerCapture({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white py-3 sm:py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
-              style={{ maxWidth: '100%' }}
+              className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white hover:text-white py-3 sm:py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+              style={{ maxWidth: '100%', color: 'white' }}
             >
               {isSubmitting ? (
-                <span>Processing...</span>
+                <span style={{ color: 'white' }}>Processing...</span>
               ) : (
-                <span className="flex items-center justify-center gap-2">
+                <span className="flex items-center justify-center gap-2" style={{ color: 'white' }}>
                   Continue to Assessment
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'white' }} />
                 </span>
               )}
             </Button>
