@@ -291,12 +291,23 @@ export default function App() {
 
   // Data persistence and recovery
   useEffect(() => {
-    // Load saved progress on mount
+    // Don't restore progress if there's a new link in URL (fresh start)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasNewLink = urlParams.get('distributor') && urlParams.get('code');
+    
+    if (hasNewLink) {
+      console.log('🚫 Skipping progress restoration - new link detected');
+      localStorage.removeItem('assessment-progress'); // Clear old progress
+      return;
+    }
+    
+    // Load saved progress on mount (only if NO new link)
     const savedProgress = localStorage.getItem('assessment-progress');
     if (savedProgress) {
       try {
         const progress = JSON.parse(savedProgress);
         if (progress.timestamp && Date.now() - progress.timestamp < 24 * 60 * 60 * 1000) { // 24 hours
+          console.log('📂 Restoring saved progress from previous session');
           setAnswers(progress.answers || {});
           setCurrentQuestionIndex(progress.currentQuestionIndex || 0);
           setUserProfile(progress.userProfile || {});
@@ -940,6 +951,8 @@ export default function App() {
 
         {/* Main Content */}
         <main className={`${(appState === 'campaign-capture' || appState === 'welcome' || appState === 'assessment' || appState === 'motivational' || appState === 'educational-slide' || appState === 'section-complete' || appState === 'longevity-insight') ? '' : 'px-4 py-8'}`}>
+          {/* Debug: Show current appState */}
+          {console.log('🎭 RENDERING with appState:', appState)}
           <AnimatePresence mode="wait">
             {/* Campaign Customer Capture Screen */}
             {appState === 'campaign-capture' && (
