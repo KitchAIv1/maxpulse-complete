@@ -29,21 +29,59 @@ supabase secrets list --project-ref pdgpktwmqxrljtdbnvyu
 
 ---
 
-## 🎯 **Step 2: Apply Database Migration**
+## 🎯 **Step 2: Apply Database Migrations**
 
 Go to: https://supabase.com/dashboard/project/pdgpktwmqxrljtdbnvyu/sql/new
 
 **Paste and run this SQL:**
 
 ```sql
+-- Migration 1: Add auth_user_id to activation_codes
 ALTER TABLE activation_codes
 ADD COLUMN IF NOT EXISTS auth_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_activation_codes_auth_user_id 
 ON activation_codes(auth_user_id);
+
+-- Migration 2: Fix ambiguous user_id in log_client_activity function
+CREATE OR REPLACE FUNCTION log_client_activity(
+  client_uuid UUID,
+  activity_type_param TEXT,
+  description_param TEXT,
+  activity_data_param JSONB DEFAULT '{}'
+)
+RETURNS UUID AS $$
+DECLARE
+  activity_id UUID;
+  current_user_id UUID; -- Explicitly declare variable
+BEGIN
+  -- Explicitly get the current user ID to avoid ambiguity
+  current_user_id := auth.uid();
+  
+  INSERT INTO client_activities (
+    client_id,
+    activity_type,
+    description,
+    activity_data,
+    created_by
+  ) VALUES (
+    client_uuid,
+    activity_type_param,
+    description_param,
+    activity_data_param,
+    current_user_id -- Use the explicit variable
+  ) RETURNING id INTO activity_id;
+  
+  RETURN activity_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 **Click "Run"** ✅
+
+**Why Two Migrations?**
+- First migration adds `auth_user_id` column for linking auth users to activation codes
+- Second migration fixes a critical bug that prevented client record creation after assessment completion
 
 ---
 

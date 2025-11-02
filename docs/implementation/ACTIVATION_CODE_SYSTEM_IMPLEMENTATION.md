@@ -25,17 +25,23 @@ The **Activation Code System** provides seamless transition from assessment comp
 - Handles missing data gracefully with fallbacks
 
 #### 3. UI Components
-**File**: `assessment/src/components/ActivationCodeDisplay.tsx` (175 lines)
-- Modal display for activation code
-- Copy-to-clipboard functionality
-- Device-specific app store links
-- Clean, minimalist Cal AI design
+**File**: `assessment/src/components/ActivationCodeDisplay.tsx` (~225 lines)
+- Modal display for activation code with professional branding
+- Copy-to-clipboard functionality with visual feedback
+- **NEW**: TestFlight App Store link (`https://apps.apple.com/us/app/testflight/id899247664`)
+- **NEW**: Unified button styling (red-to-amber gradient for actions, dark gray for close)
+- **NEW**: Two prominent TestFlight download buttons (one in step card, one standalone)
+- **NEW**: Enhanced UX with security notice ("Keep this code safe!")
+- Clean, minimalist Cal AI design with proper text visibility
 
-**File**: `assessment/src/components/PersonalizedHealthPlan.tsx` (682 lines)
+**File**: `assessment/src/components/PersonalizedHealthPlan.tsx` (~682 lines)
 - CTA page with purchase flow
-- Purchase state persistence via localStorage
+- **ENHANCED**: Purchase state persistence via localStorage (survives page refreshes)
+- **NEW**: "Already Purchased" state with "View My Activation Code" and "Download TestFlight App" buttons
+- **NEW**: TestFlight App Store link integration in purchase confirmation page
 - Activation code generation trigger
-- Post-purchase UI state management
+- Post-purchase UI state management with modal control
+- Modal state management prevents unwanted re-opening after user closes
 
 #### 4. Database Integration
 **Migration**: `supabase/migrations/20251010000001_create_activation_codes_table.sql`
@@ -48,6 +54,12 @@ The **Activation Code System** provides seamless transition from assessment comp
 - **NEW**: `auth_user_id` column linking to Supabase auth users
 - **NEW**: Index for efficient auth user lookups
 - Foreign key to `auth.users` table
+
+**Migration**: `supabase/migrations/20250103000003_fix_ambiguous_user_id_in_clients.sql`
+- **NEW**: Fixes ambiguous `user_id` reference in `log_client_activity` function
+- **Issue**: Function had ambiguous column reference when called from triggers
+- **Solution**: Explicitly declares `current_user_id UUID` variable and assigns `auth.uid()` to it
+- **Impact**: Resolves database errors during client record creation
 
 #### 5. Auth User Creation Service
 **File**: `assessment/src/services/AuthUserCreationService.ts` (~200 lines)
@@ -235,40 +247,115 @@ CREATE POLICY "Allow anonymous insert of activation codes during assessment"
 
 ## UI/UX Features
 
-### 1. Purchase State Persistence
+### 1. Purchase State Persistence (Enhanced)
 ```typescript
-// localStorage key per distributor
+// localStorage key per distributor (ensures isolation)
 const purchaseStateKey = `maxpulse_purchase_${distributorInfo?.code || 'unknown'}`;
 
-// Persistent state across page refreshes
-const purchaseState = {
-  purchased: true,
-  code: activationCode,
-  plan: selectedPlan,
-  timestamp: new Date().toISOString()
-};
-```
-
-### 2. Modal State Management
-- **Auto-Show**: Modal appears automatically after code generation
-- **User Control**: Close button with proper state management
-- **Re-Open**: "View My Activation Code" button for re-access
-- **Prevent Re-Trigger**: `hasUserClosedModal` state prevents unwanted re-opening
-
-### 3. Device-Specific App Links
-```typescript
-const handleDownloadApp = () => {
-  const userAgent = navigator.userAgent || navigator.vendor;
-  
-  if (/iPad|iPhone|iPod/.test(userAgent)) {
-    window.open('https://apps.apple.com/app/maxpulse', '_blank');
-  } else if (/android/i.test(userAgent)) {
-    window.open('https://play.google.com/store/apps/details?id=com.maxpulse', '_blank');
-  } else {
-    window.open('https://maxpulse.app/download', '_blank');
+// Load state on mount (survives page refreshes)
+useEffect(() => {
+  const savedPurchaseState = localStorage.getItem(purchaseStateKey);
+  if (savedPurchaseState) {
+    const { purchased, code, plan } = JSON.parse(savedPurchaseState);
+    if (purchased) {
+      setPurchaseCompleted(true);
+      setActivationCode(code);
+      setSelectedPlan(plan);
+    }
   }
+}, [purchaseStateKey]);
+
+// Save state when purchase completes
+const savePurchaseState = (code: string, plan: 'annual' | 'monthly') => {
+  const purchaseState = {
+    purchased: true,
+    code,
+    plan,
+    timestamp: new Date().toISOString()
+  };
+  localStorage.setItem(purchaseStateKey, JSON.stringify(purchaseState));
 };
 ```
+
+**Key Benefits**:
+- ✅ State persists across page refreshes
+- ✅ Users see "Already Purchased" state when returning
+- ✅ "Activate My Plan" button hidden after purchase
+- ✅ Per-distributor isolation (different links = different state)
+
+### 2. Modal State Management (Enhanced)
+- **Auto-Show**: Modal appears automatically after code generation
+- **User Control**: Close button with proper state management (dark gray styling)
+- **Re-Open**: "View My Activation Code" button resets `hasUserClosedModal` for re-access
+- **Prevent Re-Trigger**: `hasUserClosedModal` state prevents unwanted re-opening after user manually closes
+- **Unified Design**: All buttons follow consistent styling (red-to-amber gradient for actions, dark gray for close)
+
+**State Flow**:
+```typescript
+const [showActivationModal, setShowActivationModal] = useState(false);
+const [hasUserClosedModal, setHasUserClosedModal] = useState(false);
+
+// Auto-show when code generated (but not if user closed it)
+useEffect(() => {
+  if (activationCode && !showActivationModal && !hasUserClosedModal) {
+    setShowActivationModal(true);
+  }
+}, [activationCode, showActivationModal, hasUserClosedModal]);
+
+// User closes modal
+const handleClose = () => {
+  setShowActivationModal(false);
+  setHasUserClosedModal(true);
+};
+
+// User re-opens via "View My Activation Code" button
+const handleViewCode = () => {
+  setShowActivationModal(true);
+  setHasUserClosedModal(false); // Reset to allow auto-show
+};
+```
+
+### 3. TestFlight App Store Integration (Updated)
+```typescript
+// All download buttons now point to TestFlight App Store
+const TESTFLIGHT_LINK = 'https://apps.apple.com/us/app/testflight/id899247664';
+
+// In ActivationCodeDisplay.tsx (activation modal)
+<a
+  href={TESTFLIGHT_LINK}
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{
+    display: 'block',
+    width: '100%',
+    padding: '14px 0',
+    background: 'linear-gradient(to right, #dc2626, #f59e0b)',
+    color: '#ffffff',
+    textAlign: 'center',
+    borderRadius: '24px',
+    fontWeight: '700',
+    fontSize: '16px',
+    textDecoration: 'none',
+    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)'
+  }}
+>
+  Download TestFlight App
+</a>
+
+// In PersonalizedHealthPlan.tsx (purchase confirmation page)
+<button
+  onClick={() => window.open(TESTFLIGHT_LINK, '_blank')}
+  className={styles.downloadButton}
+>
+  <ExternalLink className={styles.actionIcon} />
+  Download TestFlight App
+</button>
+```
+
+**Why TestFlight?**
+- MAXPULSE app is currently in beta (iOS only)
+- Users need TestFlight app to access beta
+- Android version coming soon (noted in UI with "Currently available on iOS only - Android version coming soon!")
 
 ## Integration Points
 

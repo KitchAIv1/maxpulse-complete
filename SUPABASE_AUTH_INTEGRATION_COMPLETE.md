@@ -21,11 +21,13 @@ Successfully integrated automatic Supabase auth user creation into the activatio
 
 ### Supabase Edge Functions (Server-Side)
 1. **`supabase/functions/create-auth-user/index.ts`** (~180 lines)
-   - Secure auth user creation with service role key
-   - Cryptographically secure password generation
-   - Duplicate email handling
-   - Auto-email confirmation
-   - Comprehensive error handling
+   - **UPDATED**: Uses direct REST API calls to Supabase Auth Admin endpoints (`/auth/v1/admin/users`)
+   - **Why**: `supabase-js` SDK's `auth.admin` methods not compatible with Deno Edge Function environment
+   - Secure auth user creation with service role key (supports both JWT and Secret API keys)
+   - Cryptographically secure password generation (16-char base64)
+   - Duplicate email handling (returns 409 status)
+   - Auto-email confirmation (`email_confirm: true`)
+   - Comprehensive error handling and logging
 
 2. **`supabase/functions/welcome-email/index.ts`** (~150 lines)
    - Professional branded email template
@@ -42,11 +44,17 @@ Successfully integrated automatic Supabase auth user creation into the activatio
    - Duplicate email handling
    - Reusable for individual/group assessments
 
-### Database Migration
+### Database Migrations
 4. **`supabase/migrations/20250103000002_add_auth_user_id_to_activation_codes.sql`**
    - Added `auth_user_id` column to `activation_codes` table
    - Foreign key to `auth.users` table
    - Index for performance
+
+5. **`supabase/migrations/20250103000003_fix_ambiguous_user_id_in_clients.sql`**
+   - **NEW**: Fixes ambiguous `user_id` reference in `log_client_activity` function
+   - **Issue**: Function had ambiguous column reference (`column reference "user_id" is ambiguous`) when called from `log_client_creation` trigger
+   - **Solution**: Explicitly declares `current_user_id UUID` variable, assigns `auth.uid()` to it, then uses this variable in INSERT statement
+   - **Impact**: Resolves database errors during client record creation after assessment completion
 
 ### Documentation
 5. **`supabase/EDGE_FUNCTION_SETUP.md`**
@@ -210,14 +218,20 @@ supabase functions deploy welcome-email
 supabase functions list
 ```
 
-### Step 3: Run Database Migration
+### Step 3: Run Database Migrations
 ```bash
-# Apply migration to add auth_user_id column
+# Apply all migrations including auth_user_id and ambiguous user_id fix
 supabase db push
 
-# Or manually run:
+# Or manually run each migration:
 # supabase migration up
 ```
+
+**Required Migrations**:
+1. `20250103000002_add_auth_user_id_to_activation_codes.sql` - Adds `auth_user_id` column
+2. `20250103000003_fix_ambiguous_user_id_in_clients.sql` - Fixes `log_client_activity` function ambiguity
+
+**Important**: Both migrations must be applied. The second one fixes critical database errors during client record creation.
 
 ### Step 4: Enable Feature Flag
 ```bash
