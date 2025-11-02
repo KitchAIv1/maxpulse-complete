@@ -32,21 +32,6 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
     }
   };
   
-  const handleDownloadApp = () => {
-    // Open app store links based on device
-    const userAgent = navigator.userAgent || navigator.vendor;
-    
-    if (/iPad|iPhone|iPod/.test(userAgent)) {
-      // iOS - Open App Store
-      window.open('https://apps.apple.com/app/maxpulse', '_blank');
-    } else if (/android/i.test(userAgent)) {
-      // Android - Open Play Store
-      window.open('https://play.google.com/store/apps/details?id=com.maxpulse', '_blank');
-    } else {
-      // Desktop - Show both options
-      window.open('https://maxpulse.app/download', '_blank');
-    }
-  };
   
   return (
     <div className="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-200 relative z-50">
@@ -96,29 +81,42 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
       </div>
       
       {/* Important Notice */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-        <p className="text-sm text-amber-900">
-          <strong>📌 Save this code!</strong> You'll need it to activate the MAXPULSE app. 
-          This code expires in 30 days.
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+        <p className="text-sm text-blue-900">
+          <strong>🔐 Keep this code safe!</strong> Save it for future reference and security purposes.
         </p>
       </div>
       
       {/* Next Steps */}
-      <div className="space-y-3 mb-6">
-        <div className="flex items-start gap-3">
-          <Smartphone className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-gray-900">Step 1: Download MAXPULSE App</p>
-            <p className="text-xs text-gray-600">Available on iOS & Android</p>
+      <div className="space-y-4 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="flex items-start gap-3 mb-3">
+            <Smartphone className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Step 1: Join TestFlight Beta</p>
+              <p className="text-xs text-gray-600 mt-1">
+                Download the TestFlight app from the App Store, then follow the link below to join the MAXPULSE beta.
+              </p>
+            </div>
           </div>
+          <a
+            href="https://testflight.apple.com/join/tUWxQNBK"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full py-2.5 bg-gradient-to-r from-red-600 to-amber-500 text-white text-center rounded-lg font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] text-sm"
+          >
+            Open TestFlight Beta Link
+          </a>
         </div>
+
         <div className="flex items-start gap-3">
           <Key className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm font-medium text-gray-900">Step 2: Enter Your Code</p>
-            <p className="text-xs text-gray-600">One-time activation on first launch</p>
+            <p className="text-sm font-medium text-gray-900">Step 2: Simple Sign In</p>
+            <p className="text-xs text-gray-600">Use the email you provided to sign in. No code entry needed!</p>
           </div>
         </div>
+
         <div className="flex items-start gap-3">
           <Rocket className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
           <div>
@@ -128,13 +126,13 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
         </div>
       </div>
       
-      {/* CTA Button */}
-      <button
-        onClick={handleDownloadApp}
-        className="w-full py-3 bg-gradient-to-r from-red-600 to-amber-500 text-white rounded-full font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-      >
-        Download MAXPULSE App
-      </button>
+      {/* Platform Notice */}
+      <div className="bg-gray-50 rounded-lg p-3 mb-6">
+        <p className="text-xs text-gray-600 text-center">
+          <strong>📱 Currently available on iOS only</strong><br/>
+          Android version coming soon!
+        </p>
+      </div>
       
       {/* Close Button - Clean Design */}
       <div style={{ marginTop: '24px', textAlign: 'center' }}>
