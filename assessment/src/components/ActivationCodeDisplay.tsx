@@ -103,7 +103,8 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
             href="https://testflight.apple.com/join/tUWxQNBK"
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full py-2.5 bg-gradient-to-r from-red-600 to-amber-500 text-white text-center rounded-lg font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] text-sm"
+            className="block w-full py-2.5 bg-gradient-to-r from-red-600 to-amber-500 text-center rounded-lg font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] text-sm"
+            style={{ color: '#ffffff', textDecoration: 'none' }}
           >
             Open TestFlight Beta Link
           </a>
@@ -134,8 +135,19 @@ export const ActivationCodeDisplay: React.FC<ActivationCodeDisplayProps> = ({
         </p>
       </div>
       
+      {/* Additional TestFlight Button */}
+      <a
+        href="https://testflight.apple.com/join/tUWxQNBK"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full py-3 bg-gradient-to-r from-red-600 to-amber-500 text-center rounded-full font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] mb-4"
+        style={{ color: '#ffffff', textDecoration: 'none' }}
+      >
+        Open TestFlight Beta Link
+      </a>
+      
       {/* Close Button - Clean Design */}
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
         <button
           onClick={() => {
             if (onClose) onClose();
