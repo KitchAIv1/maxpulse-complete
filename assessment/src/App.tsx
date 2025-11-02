@@ -231,34 +231,35 @@ export default function App() {
   }, [distributorInfo?.distributorId, dualWriteManager, realtimeManager, completionManager]);
 
   // Parse URL parameters for distributor tracking with session isolation
+  // NOTE: Campaign link detection now happens in useState initializer above
+  // This useEffect only handles setting distributorInfo for personal links
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const distributorId = urlParams.get('distributor');
     const code = urlParams.get('code');
     const customerName = urlParams.get('customer');
     const customerEmail = urlParams.get('email');
-    const sessionId = urlParams.get('session');
     const campaignName = urlParams.get('campaign');
 
     if (distributorId && code) {
-      // Check if this is a campaign link without customer info
+      // Skip if this is a campaign link without customer - already handled in useState
       const isCampaignLinkWithoutCustomer = campaignName && !customerName && !customerEmail;
-      
       if (isCampaignLinkWithoutCustomer) {
-        console.log('🎯 Campaign link detected - customer capture required:', campaignName);
-        // Store campaign info temporarily in sessionStorage
-        sessionStorage.setItem('pending_campaign', JSON.stringify({
-          campaignName,
-          distributorId,
-          code,
-          sessionId
-        }));
-        // DON'T set distributorInfo yet - wait for customer details
-        setAppState('campaign-capture');
-        return; // Exit early - don't process as normal link
+        console.log('⏭️ Campaign link detection - handled by useState initializer');
+        // Store pending campaign data for the capture screen (if not already stored)
+        if (!sessionStorage.getItem('pending_campaign')) {
+          const sessionId = urlParams.get('session');
+          sessionStorage.setItem('pending_campaign', JSON.stringify({
+            campaignName,
+            distributorId,
+            code,
+            sessionId
+          }));
+        }
+        return; // Skip - useState initializer already set state to 'campaign-capture'
       }
 
-      // Normal personal link flow (has customer info or no campaign)
+      // Only process personal links (with customer info) or non-campaign links
       const info: DistributorInfo = {
         distributorId,
         code,
