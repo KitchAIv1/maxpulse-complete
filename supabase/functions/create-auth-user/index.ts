@@ -145,59 +145,58 @@ serve(async (req) => {
       }
     });
     
-    // Check if user already exists
-    const { data: existingUser, error: checkError } = await supabaseAdmin.auth.admin.getUserByEmail(body.email);
-    
-    if (existingUser && !checkError) {
-      console.warn('⚠️ User already exists:', body.email);
-      
-      // Send password reset email instead
-      const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(body.email);
-      
-      if (resetError) {
-        console.error('❌ Password reset failed:', resetError);
-      } else {
-        console.log('✅ Password reset email sent to existing user');
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'An account with this email already exists. A password reset email has been sent.' 
-        }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
     // Generate secure temporary password
     const temporaryPassword = generateSecurePassword();
     
-    // Create auth user with Admin API
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: body.email,
-      password: temporaryPassword,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        full_name: body.name,
-        activation_code_id: body.metadata.activation_code_id,
-        distributor_id: body.metadata.distributor_id,
-        assessment_type: body.metadata.assessment_type,
-        plan_type: body.metadata.plan_type,
-        group_id: body.metadata.group_id || null,
-        created_via: 'activation_code',
-        created_at: new Date().toISOString()
-      }
+    // Create auth user using REST API (Admin Auth endpoint)
+    const createUserResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+        'apikey': supabaseServiceRoleKey
+      },
+      body: JSON.stringify({
+        email: body.email,
+        password: temporaryPassword,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          full_name: body.name,
+          activation_code_id: body.metadata.activation_code_id,
+          distributor_id: body.metadata.distributor_id,
+          assessment_type: body.metadata.assessment_type,
+          plan_type: body.metadata.plan_type,
+          group_id: body.metadata.group_id || null,
+          created_via: 'activation_code',
+          created_at: new Date().toISOString()
+        }
+      })
     });
     
-    if (authError || !authData.user) {
-      console.error('❌ Auth user creation failed:', authError);
+    if (!createUserResponse.ok) {
+      const errorText = await createUserResponse.text();
+      console.error('❌ Auth user creation failed:', errorText);
+      
+      // Check if user already exists
+      if (createUserResponse.status === 422 || errorText.includes('already registered')) {
+        console.warn('⚠️ User already exists:', body.email);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: 'An account with this email already exists.' 
+          }),
+          { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to create user account' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log('✅ Auth user created:', authData.user.id);
+    const authData = await createUserResponse.json();
+    console.log('✅ Auth user created:', authData.id);
     
     // Call welcome-email Edge Function
     try {
@@ -230,7 +229,7 @@ serve(async (req) => {
     
     // Log success
     console.log('✅ Auth user creation completed:', {
-      auth_user_id: authData.user.id,
+      auth_user_id: authData.id,
       email: body.email,
       duration_ms: duration,
       timestamp: new Date().toISOString()
@@ -239,7 +238,7 @@ serve(async (req) => {
     // Return success response
     const response: CreateAuthUserResponse = {
       success: true,
-      auth_user_id: authData.user.id,
+      auth_user_id: authData.id,
       temporary_password: temporaryPassword
     };
     
