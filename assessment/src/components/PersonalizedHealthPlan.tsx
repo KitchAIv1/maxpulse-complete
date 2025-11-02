@@ -178,8 +178,7 @@ export function PersonalizedHealthPlan({
           clientEmail: distributorInfo?.customerEmail || '',
           price: purchaseAmount,
           commissionRate: commissionRate,
-          assessmentSessionId: distributorInfo?.code || '',
-          purchaseId: result.code // Link activation code to commission
+          assessmentSessionId: distributorInfo?.code || '' // Links via session_id
         });
         
         console.log('✅ Purchase processed and commission created:', {
