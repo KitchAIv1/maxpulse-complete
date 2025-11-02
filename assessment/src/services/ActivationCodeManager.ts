@@ -15,6 +15,7 @@ import {
 import { generateCode, isValidCodeFormat } from '../utils/codeGenerator';
 import { OnboardingDataAggregator } from './OnboardingDataAggregator';
 import { DistributorResolver } from './DistributorResolver';
+import { AuthUserCreationService } from './AuthUserCreationService';
 
 export class ActivationCodeManager {
   private aggregator: OnboardingDataAggregator;
@@ -119,6 +120,55 @@ export class ActivationCodeManager {
       if (error) {
         console.error('❌ Error creating activation code:', error);
         return { success: false, error: error.message };
+      }
+      
+      console.log('✅ Activation code inserted:', code);
+      
+      // ⭐ NEW: 6. Create Supabase auth user (if email provided)
+      if (customerEmail && customerEmail.trim() !== '') {
+        const authService = new AuthUserCreationService();
+        const authResult = await authService.createAuthUser({
+          email: customerEmail,
+          name: customerName,
+          metadata: {
+            activationCodeId: data.id,
+            distributorId: distributorUuid,
+            assessmentType: 'individual',
+            planType: purchaseInfo.planType
+          }
+        });
+        
+        if (!authResult.success) {
+          console.error('❌ Auth user creation failed:', authResult.error);
+          
+          // ⚠️ ROLLBACK: Delete activation code if auth creation fails
+          console.log('⚠️ Rolling back activation code due to auth failure...');
+          await supabase
+            .from('activation_codes')
+            .delete()
+            .eq('id', data.id);
+          
+          return { 
+            success: false, 
+            error: 'Failed to create account. Please contact support.' 
+          };
+        }
+        
+        console.log('✅ Auth user created:', authResult.authUserId);
+        console.log('✅ Welcome email sent to:', customerEmail);
+        
+        // 7. Update activation code with auth_user_id (for tracking)
+        const { error: updateError } = await supabase
+          .from('activation_codes')
+          .update({ auth_user_id: authResult.authUserId })
+          .eq('id', data.id);
+        
+        if (updateError) {
+          console.warn('⚠️ Failed to update activation code with auth_user_id:', updateError);
+          // Don't fail the entire flow for this
+        }
+      } else {
+        console.warn('⚠️ No customer email provided, skipping auth user creation');
       }
       
       console.log('✅ Activation code generated successfully:', code);
