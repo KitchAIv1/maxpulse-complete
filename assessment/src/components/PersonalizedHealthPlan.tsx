@@ -613,11 +613,11 @@ export function PersonalizedHealthPlan({
                 </button>
                 
                 <button
-                  onClick={() => window.open('https://apps.apple.com/app/maxpulse', '_blank')}
+                  onClick={() => window.open('https://apps.apple.com/us/app/testflight/id899247664', '_blank')}
                   className={styles.downloadButton}
                 >
                   <ExternalLink className={styles.actionIcon} />
-                  Download MAXPULSE App
+                  Download TestFlight App
                 </button>
               </div>
               
