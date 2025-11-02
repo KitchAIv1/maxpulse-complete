@@ -42,7 +42,7 @@ echo "Sending test request..."
 
 RESPONSE=$(curl -s -X POST http://localhost:54321/functions/v1/create-auth-user \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ3BrdHdtcXhybGp0ZGJudnl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg5MDI0ODEsImV4cCI6MjA3NDQ3ODQ4MX0.3O7t2WpOvZxvU2r1eH0K2KPSDjIUhfg-XpxU7KQRuX8" \
+  -H "Authorization: Bearer YOUR_ANON_KEY_HERE" \
   -d '{
     "email": "test-'$(date +%s)'@maxpulse.com",
     "name": "Test User",

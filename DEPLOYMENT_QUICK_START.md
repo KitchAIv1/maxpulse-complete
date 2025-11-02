@@ -38,7 +38,9 @@ supabase login
 
 ### Step 2: Set Secrets
 ```bash
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ3BrdHdtcXhybGp0ZGJudnl1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODkwMjQ4MSwiZXhwIjoyMDc0NDc4NDgxfQ.pNag8hQEnmlXH5ZSnUMm0Pj6pIb4m2z848SHWhuZKSc" --project-ref pdgpktwmqxrljtdbnvyu
+# Get your service role key from Supabase Dashboard → Settings → API
+# NEVER commit this key to git!
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY="YOUR_NEW_SERVICE_ROLE_KEY_HERE" --project-ref pdgpktwmqxrljtdbnvyu
 
 supabase secrets set SUPABASE_URL="https://pdgpktwmqxrljtdbnvyu.supabase.co" --project-ref pdgpktwmqxrljtdbnvyu
 ```

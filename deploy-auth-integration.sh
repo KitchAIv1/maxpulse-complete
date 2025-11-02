@@ -16,7 +16,16 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Configuration
-SERVICE_ROLE_KEY="REDACTED_SERVICE_ROLE_KEY"
+# IMPORTANT: Get your service role key from Supabase Dashboard
+# DO NOT hardcode it here! Pass it as an environment variable instead.
+if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+    echo -e "${RED}❌ SUPABASE_SERVICE_ROLE_KEY environment variable not set${NC}"
+    echo "Please set it before running this script:"
+    echo "  export SUPABASE_SERVICE_ROLE_KEY='your_service_role_key_here'"
+    exit 1
+fi
+
+SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 SUPABASE_URL="https://pdgpktwmqxrljtdbnvyu.supabase.co"
 
 echo -e "${BLUE}Step 1: Checking Supabase CLI...${NC}"
