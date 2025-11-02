@@ -81,46 +81,47 @@ export function CampaignCustomerCapture({
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 md:p-8">
       <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-orange-50" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 w-full max-w-lg"
+        className="relative z-10 w-full max-w-[520px]"
+        style={{ maxWidth: '520px' }}
       >
-        <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl p-8">
+        <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl p-6 sm:p-8" style={{ minWidth: '320px', maxWidth: '520px' }}>
           
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-orange-500 rounded-full flex items-center justify-center"
+              className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-orange-500 rounded-full flex items-center justify-center"
             >
-              <User className="w-8 h-8 text-white" />
+              <User className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </motion.div>
             
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2 px-2 break-words">
               {campaignName}
             </h1>
-            <p className="text-slate-600 text-sm">
+            <p className="text-slate-600 text-xs sm:text-sm">
               MAXPULSE Health & Wealth Assessment
             </p>
           </div>
 
           {/* Welcome message */}
-          <div className="bg-gradient-to-r from-purple-50 to-orange-50 border border-purple-200 rounded-xl p-4 mb-6">
-            <p className="text-sm text-slate-700 leading-relaxed">
+          <div className="bg-gradient-to-r from-purple-50 to-orange-50 border border-purple-200 rounded-xl p-3 sm:p-4 mb-5">
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
               Welcome! To provide you with personalized insights, we need a few quick details. 
               This takes just <strong>30 seconds</strong>.
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Name field */}
             <div>
@@ -133,9 +134,10 @@ export function CampaignCustomerCapture({
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Enter your full name"
-                className={`w-full px-4 py-3 border ${
+                className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${
                   errors.name ? 'border-red-500' : 'border-slate-300'
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all`}
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-sm sm:text-base`}
+                style={{ maxWidth: '100%' }}
               />
               {errors.name && (
                 <p className="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -153,9 +155,10 @@ export function CampaignCustomerCapture({
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="your.email@example.com"
-                className={`w-full px-4 py-3 border ${
+                className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${
                   errors.email ? 'border-red-500' : 'border-slate-300'
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all`}
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-sm sm:text-base`}
+                style={{ maxWidth: '100%' }}
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -173,9 +176,10 @@ export function CampaignCustomerCapture({
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="(555) 123-4567"
-                className={`w-full px-4 py-3 border ${
+                className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${
                   errors.phone ? 'border-red-500' : 'border-slate-300'
-                } rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all`}
+                } rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-sm sm:text-base`}
+                style={{ maxWidth: '100%' }}
               />
               {errors.phone && (
                 <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
@@ -197,21 +201,22 @@ export function CampaignCustomerCapture({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white py-3 sm:py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+              style={{ maxWidth: '100%' }}
             >
               {isSubmitting ? (
                 <span>Processing...</span>
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   Continue to Assessment
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </span>
               )}
             </Button>
           </form>
 
           {/* Footer note */}
-          <p className="text-center text-xs text-slate-500 mt-6">
+          <p className="text-center text-[11px] sm:text-xs text-slate-500 mt-5">
             Takes less than 5 minutes · 100% private · Science-backed results
           </p>
         </div>
