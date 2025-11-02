@@ -89,7 +89,34 @@ export default function App() {
   }
   
   const [appState, setAppState] = useState<AppState>(() => {
-    // Only restore Analysis/CTA pages (not assessment flow)
+    // Check if this is a NEW campaign/personal link FIRST before restoring state
+    const urlParams = new URLSearchParams(window.location.search);
+    const distributorId = urlParams.get('distributor');
+    const code = urlParams.get('code');
+    const campaignName = urlParams.get('campaign');
+    const customerName = urlParams.get('customer');
+    const customerEmail = urlParams.get('email');
+    
+    // If there's a distributor link in URL, this is a NEW assessment session
+    // Clear any old state and start fresh
+    if (distributorId && code) {
+      console.log('🆕 New assessment link detected - clearing old session state');
+      sessionStorage.removeItem('maxpulse_app_state');
+      sessionStorage.removeItem('maxpulse_priority');
+      
+      // Check if this is a campaign link without customer info
+      const isCampaignLinkWithoutCustomer = campaignName && !customerName && !customerEmail;
+      
+      if (isCampaignLinkWithoutCustomer) {
+        console.log('🎯 Campaign link without customer - will show capture screen');
+        return 'campaign-capture';
+      }
+      
+      // Personal link or campaign with customer info - start at welcome
+      return 'welcome';
+    }
+    
+    // Only restore Analysis/CTA pages if NO new link in URL
     const saved = sessionStorage.getItem('maxpulse_app_state');
     const validStates = ['health-insights', 'personalized-plan', 'wealth-results', 'hybrid-results'];
     
@@ -103,6 +130,14 @@ export default function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [selectedPriority, setSelectedPriority] = useState<Priority | null>(() => {
+    // Don't restore priority if there's a new link in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasNewLink = urlParams.get('distributor') && urlParams.get('code');
+    
+    if (hasNewLink) {
+      return null; // Fresh start for new link
+    }
+    
     const saved = sessionStorage.getItem('maxpulse_priority');
     return (saved as Priority | null) || null;
   });
